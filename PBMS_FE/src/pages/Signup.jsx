@@ -1,6 +1,6 @@
 import { useState } from 'react'
-import './styles/Login.css'
-import './styles/Signup.css'
+import '../styles/Login.css'
+import '../styles/Signup.css'
 
 function Signup({ onNavigateToLogin }) {
   const [showPassword, setShowPassword] = useState(false)

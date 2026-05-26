@@ -1,5 +1,5 @@
-import './styles/Home.css'
-import Navbar from './components/common/Navbar'
+import '../styles/Home.css'
+import Navbar from '../components/common/Navbar'
 function Home({ onNavigateToLogin }) {
   return (
     <div className="page-wrapper">
