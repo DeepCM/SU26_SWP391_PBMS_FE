@@ -1,0 +1,12 @@
+.signup-card {
+  padding-bottom: 40px;
+}
+
+.signup-input-no-icon {
+  padding-left: 14px;
+}
+
+.signup-select {
+  appearance: none;
+  cursor: pointer;
+}
