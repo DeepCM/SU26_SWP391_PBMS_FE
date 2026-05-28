@@ -1,4 +1,4 @@
-export default function Navbar({ onNavigateToLogin }) {
+export default function Navbar({ onNavigateToLogin, isLoggedIn, onLogout, userAvatar }) {
   return (
     <nav className="navbar">
       <div className="navbar-inner">
@@ -11,7 +11,20 @@ export default function Navbar({ onNavigateToLogin }) {
           <li><a href="#">Liên hệ</a></li>
           <li><a href="#">Giới thiệu</a></li>
         </ul>
-        <button className="btn-login" onClick={onNavigateToLogin}>Đăng nhập</button>
+        {isLoggedIn ? (
+          <div className="navbar-user-actions">
+            {userAvatar && (
+              <img
+                src={userAvatar}
+                alt="avatar"
+                className="navbar-avatar"
+              />
+            )}
+            <button className="btn-logout" onClick={onLogout}>Đăng xuất</button>
+          </div>
+        ) : (
+          <button className="btn-login" onClick={onNavigateToLogin}>Đăng nhập</button>
+        )}
       </div>
     </nav>
   )

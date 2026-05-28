@@ -81,6 +81,35 @@ body {
   flex-shrink: 0;
 }
 
+.navbar-user-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-left: auto;
+}
+
+.navbar-avatar {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  border: 1.6px solid #EAF0FF;
+  object-fit: cover;
+  flex-shrink: 0;
+}
+
+.btn-logout {
+  padding: 8px 20px;
+  background: #1B5EF7;
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
 /* ─── Hero ─── */
 .hero-section {
   background: #3c82d8;
