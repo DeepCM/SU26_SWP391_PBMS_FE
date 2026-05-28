@@ -1,14 +1,19 @@
 import { useState } from 'react'
+import { useForm } from 'react-hook-form'
 import '../styles/Login.css'
 
 function Login({ onLogin, onSignup }) {
   const [showPassword, setShowPassword] = useState(false)
-  const [phone, setPhone] = useState('')
-  const [password, setPassword] = useState('')
-  const [remember, setRemember] = useState(false)
+  const { register, handleSubmit, watch, formState: { errors } } = useForm({
+    defaultValues: {
+      phone: '',
+      password: '',
+      remember: false
+    }
+  })
 
-  function handleSubmit(e) {
-    e.preventDefault()
+  const onSubmit = (data) => {
+    console.log('Form data:', data)
     onLogin()
   }
 
@@ -62,7 +67,7 @@ function Login({ onLogin, onSignup }) {
             <span className="login-divider-line" />
           </div>
 
-          <form onSubmit={handleSubmit} className="login-form">
+          <form onSubmit={handleSubmit(onSubmit)} className="login-form">
             <div className="login-field-group">
               <label className="login-field-label">Số Điện Thoại</label>
               <div className="login-input-wrap">
@@ -78,9 +83,9 @@ function Login({ onLogin, onSignup }) {
                   type="tel"
                   className="login-input"
                   placeholder="0777 777 777"
-                  value={phone}
-                  onChange={e => setPhone(e.target.value)}
+                  {...register('phone', { required: 'Phone is required' })}
                 />
+                {errors.phone && <span className="error">{errors.phone.message}</span>}
               </div>
             </div>
 
@@ -98,8 +103,7 @@ function Login({ onLogin, onSignup }) {
                   type={showPassword ? 'text' : 'password'}
                   className="login-input login-input--password"
                   placeholder="••••••••"
-                  value={password}
-                  onChange={e => setPassword(e.target.value)}
+                  {...register('password', { required: 'Password is required' })}
                 />
                 <button
                   type="button"
@@ -118,14 +122,14 @@ function Login({ onLogin, onSignup }) {
                   </svg>
                 </button>
               </div>
+              {errors.password && <span className="error">{errors.password.message}</span>}
             </div>
 
             <label className="login-remember-row">
               <input
                 type="checkbox"
                 className="login-checkbox"
-                checked={remember}
-                onChange={e => setRemember(e.target.checked)}
+                {...register('remember')}
               />
               <span className="login-remember-text">Ghi nhớ đăng nhập</span>
             </label>

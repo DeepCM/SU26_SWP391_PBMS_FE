@@ -11,7 +11,7 @@ function App() {
   }
 
   if (page === 'signup') {
-    return <Signup onNavigateToLogin={() => setPage('login')} />
+    return <Signup onNavigateToLogin={() => setPage('login')} onNavigateToHome={() => setPage('home')} />
   }
 
   return <Home onNavigateToLogin={() => setPage('login')} />
