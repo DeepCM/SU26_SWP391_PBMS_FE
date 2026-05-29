@@ -228,24 +228,16 @@ export default function UserProfile({ onLogout, userAvatar, userData, stats, rec
           {/* Personal info card */}
           <div className="profile-card">
             <h2 className="card-section-title">
-              <svg width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M9 9C10.6569 9 12 7.65685 12 6C12 4.34315 10.6569 3 9 3C7.34315 3 6 4.34315 6 6C6 7.65685 7.34315 9 9 9Z" stroke="#1B5EF7" strokeWidth="1.5"/>
-                <path d="M3 15C3 12 5.7 9.75 9 9.75C12.3 9.75 15 12 15 15" stroke="#1B5EF7" strokeWidth="1.5"/>
-              </svg>
+              <img
+                src="./src/assets/userAvatar.png"
+                alt="avatar"
+                className="navbar-avatar"
+              />
               Thông tin cá nhân
             </h2>
 
             <div className="profile-hero">
-              {userAvatar ? (
-                <img src={userAvatar} alt="avatar" className="profile-avatar" />
-              ) : (
-                <div className="profile-avatar-placeholder">
-                  <svg width="36" height="36" viewBox="0 0 36 36" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M18 18C20.5 18 22.5 16 22.5 13.5C22.5 11 20.5 9 18 9C15.5 9 13.5 11 13.5 13.5C13.5 16 15.5 18 18 18Z" stroke="#1B5EF7" strokeWidth="2"/>
-                    <path d="M6 27C6 22.5 11.4 18.75 18 18.75C24.6 18.75 30 22.5 30 27" stroke="#1B5EF7" strokeWidth="2"/>
-                  </svg>
-                </div>
-              )}
+              
               <div>
                 <p className="profile-display-name">{userData?.fullName || ''}</p>
                 <p className="profile-display-email">{userData?.email || ''}</p>

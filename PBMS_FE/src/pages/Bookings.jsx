@@ -4,66 +4,6 @@ import Navbar from '../components/common/Navbar'
 import '../styles/Home.css'
 import '../styles/Bookings.css'
 
-// ─── Mock data ────────────────────────────────────────────────
-const MOCK_BOOKINGS = [
-  {
-    id: 'BK-2026052301',
-    status: 'active',
-    vehicleType: 'car',
-    vehicleLabel: 'Ô tô',
-    licensePlate: '51A-123.45',
-    entryTime: '07:30 AM',
-    entryDate: '23/05/2026',
-    exitTime: '10:30 AM',
-    exitDate: '23/05/2026',
-    duration: '3 giờ',
-    location: 'Tầng 1',
-    qrUrl: '',
-  },
-  {
-    id: 'BK-2026052602',
-    status: 'upcoming',
-    vehicleType: 'car',
-    vehicleLabel: 'Ô tô',
-    licensePlate: '51A-123.45',
-    entryTime: '08:00 AM',
-    entryDate: '26/05/2026',
-    exitTime: '06:00 PM',
-    exitDate: '26/05/2026',
-    duration: '10 giờ',
-    location: 'Tầng 1',
-    qrUrl: '',
-  },
-  {
-    id: 'BK-2026053003',
-    status: 'upcoming',
-    vehicleType: 'motorbike',
-    vehicleLabel: 'Xe máy',
-    licensePlate: '59B-678.90',
-    entryTime: '01:00 PM',
-    entryDate: '30/05/2026',
-    exitTime: '05:30 PM',
-    exitDate: '30/05/2026',
-    duration: '4 giờ 30 phút',
-    location: 'Tầng 2',
-    qrUrl: '',
-  },
-  {
-    id: 'BK-2026051804',
-    status: 'done',
-    vehicleType: 'ebike',
-    vehicleLabel: 'Xe điện',
-    licensePlate: '59P-112.34',
-    entryTime: '09:00 AM',
-    entryDate: '18/05/2026',
-    exitTime: '11:30 AM',
-    exitDate: '18/05/2026',
-    duration: '2 giờ 30 phút',
-    location: 'Tầng 3',
-    qrUrl: '',
-  },
-]
-
 // ─── SVG Icons ────────────────────────────────────────────────
 function IconCar() {
   return (
@@ -315,7 +255,7 @@ export default function Bookings() {
   const [activeTab, setActiveTab] = useState('all')
 
   // Replace with API call when available
-  const bookings = MOCK_BOOKINGS
+  const [bookings, setBookings] = useState([])
 
   const counts = {
     all: bookings.length,
@@ -330,7 +270,7 @@ export default function Bookings() {
 
   return (
     <div className="bookings-page">
-      <Navbar isLoggedIn userAvatar={null} />
+      <Navbar isLoggedIn userAvatar={true} />
 
       <main className="bookings-main">
         {/* Page header */}
@@ -339,6 +279,7 @@ export default function Bookings() {
             <h1 className="bookings-title">Đặt chỗ của tôi</h1>
             <p className="bookings-subtitle">Quản lý và theo dõi tất cả các lượt đặt chỗ đỗ xe</p>
           </div>
+          {/*
           <button className="btn-new-booking" onClick={() => navigate('/')}>
             <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
               <path d="M8 3.33337V12.6667" stroke="white" strokeWidth="1.66667" />
@@ -346,6 +287,7 @@ export default function Bookings() {
             </svg>
             Đặt chỗ mới
           </button>
+          */}
         </div>
 
         {/* Summary strip */}

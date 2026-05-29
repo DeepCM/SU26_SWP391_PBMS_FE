@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react'
 import { useForm } from 'react-hook-form'
 import '../styles/Home.css'
 import Navbar from '../components/common/Navbar'
+import BookingPopup from '../components/common/BookingPopup'
 
 function Home({ onNavigateToLogin }) {
 
@@ -49,8 +50,7 @@ function Home({ onNavigateToLogin }) {
     <div className="page-wrapper">
       {/* Navbar */}
       <Navbar
-        isLoggedIn={false}
-        userAvatar={null}
+        isLoggedIn={true}
       />
 
       {/* Hero */}
@@ -97,13 +97,19 @@ function Home({ onNavigateToLogin }) {
               </div>
                   */}
               <button
-               type="submit"
+                type="submit"
                 className="btn-book"
                 onClick={() => setShowBookingPopup(true)}
               >
                 Đặt chỗ ngay
               </button>
             </form>
+            {showBookingPopup && (
+              <BookingPopup
+                selectedVehicle={selectedVehicle}
+                onClose={() => setShowBookingPopup(false)}
+              />
+            )}
           </div>
 
           <div className="status-card">

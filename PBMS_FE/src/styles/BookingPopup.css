@@ -1,0 +1,158 @@
+.booking-overlay {
+  position: fixed;
+  inset: 0;
+
+  background: rgba(0, 0, 0, 0.45);
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  z-index: 999;
+}
+
+.booking-popup {
+  position: relative;
+
+  width: 460px;
+  max-width: 90%;
+
+  background: white;
+
+  border-radius: 18px;
+
+  padding: 32px;
+
+  box-shadow:
+    0 10px 40px rgba(0, 0, 0, 0.15);
+
+  animation: popupFade 0.25s ease;
+}
+
+@keyframes popupFade {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.booking-close-btn {
+  position: absolute;
+
+  top: 16px;
+  right: 16px;
+
+  border: none;
+  background: transparent;
+
+  font-size: 20px;
+
+  cursor: pointer;
+}
+
+.booking-title {
+  margin-bottom: 24px;
+
+  font-size: 24px;
+  font-weight: 700;
+}
+
+.booking-form {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.booking-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.booking-group label {
+  font-weight: 600;
+}
+
+.booking-group input,
+.booking-group select {
+  height: 46px;
+
+  border: 1px solid #d1d5db;
+  border-radius: 10px;
+
+  padding: 0 14px;
+
+  font-size: 14px;
+}
+
+.booking-payment {
+  margin-top: 8px;
+
+  padding: 18px;
+
+  border-radius: 14px;
+
+  background: #f8fafc;
+
+  text-align: center;
+}
+
+.booking-price {
+  margin-top: 8px;
+  font-weight: 700;
+}
+
+.booking-qr {
+  width: 180px;
+  height: 180px;
+
+  object-fit: contain;
+
+  margin: 16px auto;
+
+  display: block;
+}
+
+.booking-note {
+  color: #6b7280;
+  font-size: 14px;
+}
+
+.booking-checkbox-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+
+  margin-top: 6px;
+}
+
+.booking-submit-btn {
+  height: 50px;
+
+  border: none;
+  border-radius: 12px;
+
+  background: #2563eb;
+  color: white;
+
+  font-size: 15px;
+  font-weight: 600;
+
+  cursor: pointer;
+
+  transition: 0.2s;
+}
+
+.booking-submit-btn:hover {
+  opacity: 0.92;
+}
+
+.booking-error {
+  color: #dc2626;
+  font-size: 13px;
+}

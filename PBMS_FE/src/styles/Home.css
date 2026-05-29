@@ -97,6 +97,13 @@ body {
   flex-shrink: 0;
 }
 
+.navbar-avatar-btn {
+  border: none;
+  background: transparent;
+  padding: 0;
+  cursor: pointer;
+}
+
 .btn-logout {
   padding: 8px 20px;
   background: #1B5EF7;

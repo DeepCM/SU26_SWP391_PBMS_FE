@@ -1,15 +1,15 @@
 import { useNavigate } from 'react-router-dom'
 import '../../styles/Home.css'
 
-export default function Navbar({ isLoggedIn, userAvatar }) { 
+export default function Navbar({ isLoggedIn }) {
   const navigate = useNavigate()
   return (
     <nav className="navbar">
       <div className="navbar-inner">
         <span className="nav-logo">PBMS</span>
         <ul className="nav-links">
-          <li><a href="#">Tổng quan</a></li>
-          <li><a href="#">Đặt chỗ</a></li>
+          <li><a href="#" onClick={() => navigate('/')}>Tổng quan</a></li>
+          <li><a href="#" onClick={() => navigate('/bookings')}>Đặt chỗ</a></li>
           <li><a href="#">Hỗ trợ</a></li>
           <li><a href="#">Hướng dẫn</a></li>
           <li><a href="#">Liên hệ</a></li>
@@ -17,13 +17,18 @@ export default function Navbar({ isLoggedIn, userAvatar }) {
         </ul>
         {isLoggedIn ? (
           <div className="navbar-user-actions">
-            {userAvatar && (
+
+            <button
+              className="navbar-avatar-btn"
+              onClick={() => navigate('/profile')}
+            >
               <img
-                src={userAvatar}
+                src="./src/assets/userAvatar.png"
                 alt="avatar"
                 className="navbar-avatar"
               />
-            )}
+            </button>
+            
             <button className="btn-logout" onClick={() => navigate('/')}>Đăng xuất</button>
           </div>
         ) : (
