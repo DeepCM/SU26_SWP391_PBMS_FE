@@ -2,10 +2,11 @@ import { useState } from 'react'
 import '../styles/Login.css'
 import '../styles/Signup.css'
 import { useForm } from 'react-hook-form'
+import { useNavigate } from 'react-router-dom'
 import Footer from '../components/common/Footer'
 import Header from '../components/common/Header'
 
-function Signup({ onNavigateToLogin, onNavigateToProfile }) {
+function Signup({ }) {
   const [showPassword, setShowPassword] = useState(false)
   const [showConfirmPassword, setShowConfirmPassword] = useState(false)
   const { register, handleSubmit, watch, formState: { errors } } = useForm({
@@ -17,16 +18,13 @@ function Signup({ onNavigateToLogin, onNavigateToProfile }) {
       confirmPassword: '',
     }
   })
-
+  const navigate = useNavigate()
   const onSubmit = (data) => {
-    console.log(data)
+    console.log('Form data:', data)
 
-    if (data.password !== data.confirmPassword) {
-      alert("Passwords do not match")
-      return
-    }
+    // later this is where API login goes
 
-    onNavigateToProfile()
+    navigate('/profile')
   }
 
 
@@ -34,7 +32,7 @@ function Signup({ onNavigateToLogin, onNavigateToProfile }) {
     <div className="login-page">
       <div className="login-bg-gradient" />
 
-      <Header onLogin={onNavigateToProfile} />
+      <Header/>
 
       <main className="login-main">
         <div className="login-card signup-card">
@@ -51,7 +49,7 @@ function Signup({ onNavigateToLogin, onNavigateToProfile }) {
             <p>Đăng ký để quản lý đặt chỗ của bạn.</p>
             <p>
               Đã có tài khoản?{' '}
-              <a href="#" className="login-link" onClick={e => { e.preventDefault(); onNavigateToLogin() }}>
+              <a href="#" className="login-link" onClick={e => { e.preventDefault(); navigate('/login') }}>
                 Đăng nhập ngay
               </a>
             </p>
@@ -84,6 +82,7 @@ function Signup({ onNavigateToLogin, onNavigateToProfile }) {
                 <input
                   type="text"
                   className="login-input"
+                  placeholder="Nguyễn Văn An"
                   {...register('fullName', { required: 'Full name is required' })}
                 />
               </div>
@@ -227,12 +226,7 @@ function Signup({ onNavigateToLogin, onNavigateToProfile }) {
         </div>
       </main>
 
-      <footer className="login-footer">
-        <span>© 2026 PBMS – Parking Building Management System · </span>
-        <a href="#" className="login-footer-link">Hỗ trợ</a>
-        <span> · </span>
-        <a href="#" className="login-footer-link">Điều khoản</a>
-      </footer>
+      <Footer />
     </div>
   )
 }

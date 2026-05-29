@@ -1,12 +1,15 @@
 import '../../styles/Login.css'
-export default function Header(onLogin) {
+import { useNavigate } from 'react-router-dom'
+
+export default function Header() {
+  const navigate = useNavigate()
     return (
         <header className="login-header">
         <div className="login-logo">
-          <span className="login-logo-pbms">PBMS</span>
+          <span className="login-logo -pbms">PBMS</span>
           <span className="login-logo-parking">| Parking</span>
         </div>
-        <a href="#" className="login-home-link" onClick={onLogin}>
+        <a href="#" className="login-home-link" onClick={()=> navigate('/')}>
           <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
             <path d="M2 5.99992L8 1.33325L14 5.99992V13.3333C14 13.6869 13.8595 14.026 13.6095 14.2761C13.3594 14.5261 13.0203 14.6666 12.6667 14.6666H3.33333C2.97971 14.6666 2.64057 14.5261 2.39052 14.2761C2.14048 14.026 2 13.6869 2 13.3333V5.99992Z" stroke="#6B7280" strokeWidth="1.33333" />
             <path d="M6 14.6667V8H10V14.6667" stroke="#6B7280" strokeWidth="1.33333" />

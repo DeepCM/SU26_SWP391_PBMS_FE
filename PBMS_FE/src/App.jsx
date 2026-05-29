@@ -1,40 +1,56 @@
-import { useState } from 'react'
+import { BrowserRouter, Routes, Route } from 'react-router-dom'
+
 import Home from './pages/Home.jsx'
 import Login from './pages/Login.jsx'
 import Signup from './pages/Signup.jsx'
 import UserProfile from './pages/UserProfile.jsx'
+import Bookings from './pages/Bookings.jsx'
 
 function App() {
-  const [page, setPage] = useState('home')
+  return (
+    <BrowserRouter>
+      <Routes>
+        <Route
+          path="/"
+          element={<Home />}
+        />
 
-  if (page === 'login') {
-    return <Login onLogin={() => setPage('profile')} onSignup={() => setPage('signup')} />
-  }
+        <Route
+          path="/login"
+          element={<Login />}
+        />
 
-  if (page === 'signup') {
-    return <Signup onNavigateToLogin={() => setPage('login')} onNavigateToProfile={() => setPage('profile')} />
-  }
+        <Route
+          path="/signup"
+          element={<Signup />}
+        />
 
-  if (page === 'profile') {
-    return (
-      <UserProfile
-        onLogout={() => setPage('home')}
-        userAvatar={null}
-        userData={null}
-        stats={null}
-        recentHistory={[]}
-        notificationSettings={null}
-        onSaveProfile={(data) => console.log('Save profile:', data)}
-        onNotifChange={(settings) => console.log('Notif settings:', settings)}
-        onChangePassword={() => console.log('Change password')}
-        onActivate2FA={() => console.log('Activate 2FA')}
-        onManageDevices={() => console.log('Manage devices')}
-        onDeleteAccount={() => console.log('Delete account')}
-      />
-    )
-  }
+        <Route
+          path="/bookings"
+          element={<Bookings />}
+        />
 
-  return <Home onNavigateToLogin={() => setPage('login')} />
+        <Route
+          path="/profile"
+          element={
+            <UserProfile
+              userAvatar={null}
+              userData={null}
+              stats={null}
+              recentHistory={[]}
+              notificationSettings={null}
+              onSaveProfile={(data) => console.log('Save profile:', data)}
+              onNotifChange={(settings) => console.log('Notif settings:', settings)}
+              onChangePassword={() => console.log('Change password')}
+              onActivate2FA={() => console.log('Activate 2FA')}
+              onManageDevices={() => console.log('Manage devices')}
+              onDeleteAccount={() => console.log('Delete account')}
+            />
+          }
+        />
+      </Routes>
+    </BrowserRouter>
+  )
 }
 
 export default App

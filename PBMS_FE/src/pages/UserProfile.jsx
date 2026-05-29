@@ -92,8 +92,8 @@ function ToggleSwitch({ checked, onChange }) {
 const SIDEBAR_ITEMS = [
   { key: 'profile', label: 'Hồ sơ chung', icon: <IconProfile /> },
   { key: 'history', label: 'Lịch sử', icon: <IconHistory /> },
-  { key: 'settings', label: 'Cài đặt', icon: <IconSettings /> },
-  { key: 'security', label: 'Bảo mật', icon: <IconSecurity /> },
+  //{ key: 'settings', label: 'Cài đặt', icon: <IconSettings /> },
+  //{ key: 'security', label: 'Bảo mật', icon: <IconSecurity /> },
 ]
 
 const SIDEBAR_SUPPORT = [
@@ -344,8 +344,8 @@ export default function UserProfile({ onLogout, userAvatar, userData, stats, rec
 
             <a href="#" className="history-view-all">Xem toàn bộ lịch sử →</a>
           </div>
-
-          {/* Notification settings */}
+            
+          {/* Notification settings  Unused?
           <div className="profile-card">
             <h2 className="card-section-title">
               <svg width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -400,7 +400,7 @@ export default function UserProfile({ onLogout, userAvatar, userData, stats, rec
             </div>
           </div>
 
-          {/* Account security */}
+          {/* Account security 
           <div className="profile-card">
             <h2 className="card-section-title">
               <svg width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -445,6 +445,7 @@ export default function UserProfile({ onLogout, userAvatar, userData, stats, rec
               <button className="btn-outline-danger" onClick={onDeleteAccount}>Xóa tài khoản</button>
             </div>
           </div>
+          */}
         </main>
       </div>
     </div>

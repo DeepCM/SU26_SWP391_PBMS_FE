@@ -1,4 +1,8 @@
-export default function Navbar({ onNavigateToLogin, isLoggedIn, onLogout, userAvatar }) {
+import { useNavigate } from 'react-router-dom'
+import '../../styles/Home.css'
+
+export default function Navbar({ isLoggedIn, userAvatar }) { 
+  const navigate = useNavigate()
   return (
     <nav className="navbar">
       <div className="navbar-inner">
@@ -20,10 +24,12 @@ export default function Navbar({ onNavigateToLogin, isLoggedIn, onLogout, userAv
                 className="navbar-avatar"
               />
             )}
-            <button className="btn-logout" onClick={onLogout}>Đăng xuất</button>
+            <button className="btn-logout" onClick={() => navigate('/')}>Đăng xuất</button>
           </div>
         ) : (
-          <button className="btn-login" onClick={onNavigateToLogin}>Đăng nhập</button>
+          <button className="btn-login" onClick={() => navigate('/login')}>
+            Đăng nhập
+          </button>
         )}
       </div>
     </nav>
