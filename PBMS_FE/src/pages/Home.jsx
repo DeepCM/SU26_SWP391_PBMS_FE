@@ -50,7 +50,7 @@ function Home({ onNavigateToLogin }) {
     <div className="page-wrapper">
       {/* Navbar */}
       <Navbar
-        isLoggedIn={true}
+        isLoggedIn={false}
       />
 
       {/* Hero */}

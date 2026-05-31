@@ -1,4 +1,5 @@
 import '../../styles/Login.css'
+import '../../styles/Home.css'
 import { useNavigate } from 'react-router-dom'
 
 export default function Header() {
