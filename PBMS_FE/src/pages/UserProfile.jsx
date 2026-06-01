@@ -1,5 +1,6 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useForm } from 'react-hook-form'
+import { getUser } from "../services/authService"
 import Navbar from '../components/common/Navbar'
 import '../styles/Home.css'
 import '../styles/UserProfile.css'
@@ -142,9 +143,9 @@ function HistoryVehicleIcon({ type }) {
 }
 
 // ─── Main Page ────────────────────────────────────────────────
-export default function UserProfile({ onLogout, userAvatar, userData, stats, recentHistory, notificationSettings, onSaveProfile, onNotifChange, onChangePassword, onActivate2FA, onManageDevices, onDeleteAccount }) {
+export default function UserProfile({ onLogout, userAvatar, stats, recentHistory, notificationSettings, onSaveProfile, onNotifChange, onChangePassword, onActivate2FA, onManageDevices, onDeleteAccount }) {
   const [activeNav, setActiveNav] = useState('profile')
-
+  const userData = getUser()
   const [notifState, setNotifState] = useState(
     notificationSettings ?? {
       reminderBooking: false,
@@ -156,12 +157,22 @@ export default function UserProfile({ onLogout, userAvatar, userData, stats, rec
 
   const { register, handleSubmit, reset, formState: { errors, isDirty } } = useForm({
     defaultValues: {
-      fullName: userData?.fullName ?? '',
-      dateOfBirth: userData?.dateOfBirth ?? '',
-      email: userData?.email ?? '',
-      phone: userData?.phone ?? '',
+      fullName: '',
+      email: '',
+      phone: '',
     },
   })
+  
+  useEffect(() => {
+    if (userData) {
+      reset({
+        fullName: userData.fullName ?? '',
+        email: userData.email ?? '',
+        phone: userData.phone ?? '',
+      })
+    }
+  }, [userData, reset])
+
 
   const historyList = recentHistory ?? []
 
@@ -205,7 +216,7 @@ export default function UserProfile({ onLogout, userAvatar, userData, stats, rec
             <div className="stat-card">
               <span className="stat-card-label">Tổng lượt đỗ</span>
               <span className="stat-card-value stat-card-value--blue">
-                {stats?.totalVisits ?? '—'}
+                {stats?.totalVisits ?? '0'}
               </span>
               <span className="stat-card-sub">
                 {stats?.monthlyVisits != null ? `Tháng này: ${stats.monthlyVisits} lượt` : ''}
@@ -214,13 +225,13 @@ export default function UserProfile({ onLogout, userAvatar, userData, stats, rec
             <div className="stat-card">
               <span className="stat-card-label">Chi tiêu tháng này</span>
               <span className="stat-card-value stat-card-value--green">
-                {stats?.monthlySpending ?? '—'}
+                {stats?.monthlySpending ?? '0'}
               </span>
             </div>
             <div className="stat-card">
               <span className="stat-card-label">Thời gian đỗ tháng này</span>
               <span className="stat-card-value stat-card-value--teal">
-                {stats?.monthlyHours ?? '—'}
+                {stats?.monthlyHours ?? '0'}
               </span>
             </div>
           </div>
@@ -235,35 +246,38 @@ export default function UserProfile({ onLogout, userAvatar, userData, stats, rec
               />
               Thông tin cá nhân
             </h2>
-
+            {/*
             <div className="profile-hero">
 
               <div>
-                <p className="profile-display-name">{userData?.fullName || ''}</p>
-                <p className="profile-display-email">{userData?.email || ''}</p>
+                <p className="profile-display-name">{user?.fullName || ''}</p>
+                <p className="profile-display-email">{user?.email || ''}</p>
               </div>
             </div>
-
+            */}
             <form onSubmit={handleSubmit(onSubmit)}>
               <div className="profile-form-row">
                 <div className="form-group">
                   <label className="form-label">
-                    Họ và tên
+                    Họ và tên,
                     <span className="form-label-required">(*)</span>
                   </label>
+
                   <input
                     className={`form-input${errors.fullName ? ' input-error' : ''}`}
                     type="text"
+                    placeholder={userData?.fullName || ''}
                     {...register('fullName', { required: 'Vui lòng nhập họ và tên' })}
                   />
                   {errors.fullName && <span className="form-error-msg">{errors.fullName.message}</span>}
                 </div>
-               
+
                 <div className="form-group">
                   <label className="form-label">Email
                     <span className="form-label-required">(*)</span>
                   </label>
                   <input
+                    placeholder={userData?.email || ''}
                     className={`form-input${errors.email ? ' input-error' : ''}`}
                     {...register('email', {
                       required: 'Vui lòng nhập email',
@@ -276,7 +290,7 @@ export default function UserProfile({ onLogout, userAvatar, userData, stats, rec
                   {errors.email && <span className="form-error-msg">{errors.email.message}</span>}
                 </div>
               </div>
-              
+
               <div className="profile-form-row">
                 {/* 
                 <div className="form-group">
@@ -294,6 +308,7 @@ export default function UserProfile({ onLogout, userAvatar, userData, stats, rec
                     Số điện thoại
                   </label>
                   <input
+                    placeholder={userData?.phone || ''}
                     className={`form-input${errors.phone ? ' input-error' : ''}`}
                     type="tel"
                     {...register('phone', {

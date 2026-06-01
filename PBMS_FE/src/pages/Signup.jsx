@@ -7,7 +7,7 @@ import { registerUser } from '../services/authService'
 import Footer from '../components/common/Footer'
 import Header from '../components/common/Header'
 
-function Signup({ }) {
+function Signup() {
   const [showPassword, setShowPassword] = useState(false)
   const [showConfirmPassword, setShowConfirmPassword] = useState(false)
   const [isRegistered, setIsRegistered] = useState(false)

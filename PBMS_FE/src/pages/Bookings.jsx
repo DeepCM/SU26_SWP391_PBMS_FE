@@ -1,5 +1,6 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { getMyBookings } from '../services/bookingService'
 import Navbar from '../components/common/Navbar'
 import '../styles/Home.css'
 import '../styles/Bookings.css'
@@ -133,8 +134,8 @@ const STATUS_CONFIG = {
 
 // ─── Booking Card ──────────────────────────────────────────────
 function BookingCard({ booking }) {
-  const status = STATUS_CONFIG[booking.status]
-  const vehicle = VEHICLE_ICON[booking.vehicleType]
+  const status = STATUS_CONFIG[booking.status] || STATUS_CONFIG['active'];
+  const vehicle = VEHICLE_ICON[booking.vehicleType] || VEHICLE_ICON['car'];
 
   return (
     <div className="booking-card">
@@ -170,17 +171,7 @@ function BookingCard({ booking }) {
         <div className="time-arrow">
           <IconArrow />
         </div>
-        <div className="time-block time-block--right">
-          <span className="time-label">Giờ ra (dự kiến)</span>
-          <span className="time-value">{booking.exitTime}</span>
-          <span className="time-date">{booking.exitDate}</span>
-        </div>
-      </div>
 
-      {/* Duration */}
-      <div className="duration-pill">
-        <IconClock />
-        <span>{booking.duration}</span>
       </div>
 
       {/* Location */}
@@ -253,10 +244,37 @@ const TABS = [
 export default function Bookings() {
   const navigate = useNavigate()
   const [activeTab, setActiveTab] = useState('all')
-
+  const [loading, setLoading] = useState(true) // Add loading state
   // Replace with API call when available
   const [bookings, setBookings] = useState([])
+  useEffect(() => {
+    const fetchBookings = async () => {
+      try { // <--- Added missing opening brace here
+        const data = await getMyBookings();
 
+        // TRANSFORM the API data to match your component
+        const formattedData = data.map(item => ({
+          id: item.id,
+          status: item.status.toLowerCase(),
+          vehicleType: item.vehicleTypeName.toLowerCase(),
+          vehicleLabel: item.vehicleTypeName,
+          licensePlate: item.licensePlate,
+          // Only keep entry information
+          entryTime: new Date(item.scheduledCheckin).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+          entryDate: new Date(item.scheduledCheckin).toLocaleDateString(),
+          location: `Tầng ${item.floorNumber}`,
+          qrUrl: item.qrCodeImage
+        }));
+
+        setBookings(formattedData);
+        setLoading(false);
+      } catch (err) {
+        console.error("Error fetching bookings:", err);
+      }
+    };
+
+    fetchBookings();
+  }, []);
   const counts = {
     all: bookings.length,
     active: bookings.filter(b => b.status === 'active').length,

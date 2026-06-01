@@ -25,3 +25,22 @@ export const registerUser = async (userData) => {
     data
   }
 }
+
+export const getUser = () => {
+  const user = localStorage.getItem("user")
+
+  if (!user || user === "undefined" || user === "null") {
+    return null
+  }
+
+  try {
+    return JSON.parse(user)
+  } catch (e) {
+    console.error("Invalid user in localStorage:", user)
+    return null
+  }
+}
+
+export const getToken = () => {
+  return localStorage.getItem("token")
+}

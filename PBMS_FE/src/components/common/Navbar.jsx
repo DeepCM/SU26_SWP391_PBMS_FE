@@ -28,15 +28,21 @@ export default function Navbar({ isLoggedIn }) {
                 className="navbar-avatar"
               />
             </button>
-            
-            <button className="btn-logout" onClick={() => navigate('/')}>Đăng xuất</button>
+
+            <button className="btn-logout" onClick={() => {
+              localStorage.removeItem("token");
+              localStorage.removeItem("user");
+              navigate('/');
+            }}>
+              Đăng xuất
+            </button>
           </div>
-        ) : (
-          <button className="btn-login" onClick={() => navigate('/login')}>
-            Đăng nhập
-          </button>
+      ) : (
+      <button className="btn-login" onClick={() => navigate('/login')}>
+        Đăng nhập
+      </button>
         )}
-      </div>
-    </nav>
+    </div>
+    </nav >
   )
 }

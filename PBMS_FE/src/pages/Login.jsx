@@ -5,23 +5,56 @@ import '../styles/Login.css'
 import Footer from '../components/common/Footer'
 import Header from '../components/common/Header'
 
-function Login(onLogin) {
+function Login() {
   const [showPassword, setShowPassword] = useState(false)
   const { register, handleSubmit, watch, formState: { errors } } = useForm({
     defaultValues: {
-      phone: '',
+      email: '',
       password: '',
       remember: false
     }
   })
   const navigate = useNavigate()
 
-  const onSubmit = (data) => {
+  const onSubmit = async (data) => {
     console.log('Form data:', data)
 
-    // later this is where API login goes
+    try {
 
-    navigate('/')
+      const response = await fetch('http://localhost:5021/api/Auth/login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          email: data.email,
+          password: data.password
+        })
+      })
+
+      const result = await response.json()
+
+      if (response.ok) {
+          const user = {
+            email: result.email,
+            fullName: result.fullName,
+            role: result.role
+          }
+
+          localStorage.setItem("token", result.accessToken)
+          localStorage.setItem("user", JSON.stringify(user))
+
+          console.log("STORED USER:", user)
+
+        navigate('/')
+      } else {
+        alert(result.message || 'Login failed')
+      }
+
+    } catch (error) {
+      console.error(error)
+    }
+
   }
 
   return (

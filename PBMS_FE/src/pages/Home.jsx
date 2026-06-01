@@ -1,32 +1,104 @@
-import { useNavigate } from 'react-router-dom'
+import { useSearchParams, useNavigate } from 'react-router-dom';
 import { useEffect, useState } from 'react'
 import { useForm } from 'react-hook-form'
 import '../styles/Home.css'
 import Navbar from '../components/common/Navbar'
 import BookingPopup from '../components/common/BookingPopup'
-
-function Home({ onNavigateToLogin }) {
+import { getVehicleTypes, getAvailableSlots } from '../services/vehicleTypeService'
+import { getMyBookings } from '../services/bookingService'
+import { } from '../services/paymentService'
+function Home({ }) {
 
   const navigate = useNavigate();
-  const [parkingData, setParkingData] = useState(null)
-  const [loading, setLoading] = useState(true)
-  const [selectedVehicle, setSelectedVehicle] = useState('Ô tô')
-  const [showBookingPopup, setShowBookingPopup] = useState(false)
-  const {
-    register,
-    handleSubmit,
-    setValue,
-    watch
+  const { register, handleSubmit, setValue, watch
   } = useForm({
     defaultValues: {
-      vehicleType: 'Ô tô',
-      entryTime: ''
+      vehicleTypeID: 'Xe máy',
+      licensePlate: '',
+      scheduledCheckin: ''
     }
   })
+  const [parkingData, setParkingData] = useState(null)
+  const [loading, setLoading] = useState(true)
+  const [selectedVehicle, setSelectedVehicle] = useState('')
+  const [vehicleTypes, setVehicleTypes] = useState([])
+  const [slotStatus, setSlotStatus] = useState([])
+  // Remove the duplicate loadVehicleTypes and the second loadVehicleData
+  useEffect(() => {
+    async function initializeHome() {
+      try {
+        setLoading(true);
+        const types = await getVehicleTypes();
+        setVehicleTypes(types);
+
+        if (types.length > 0) {
+          setSelectedVehicle(types[0].name);
+          setValue('vehicleTypeID', types[0].id);
+        }
+
+        const statusData = await Promise.all(
+          types.map(async (type) => {
+            const slots = await getAvailableSlots(type.id);
+            return { ...type, available: slots.available, total: slots.total };
+          })
+        );
+        setSlotStatus(statusData);
+      } catch (err) {
+        console.error("Failed to load init data:", err);
+      } finally {
+        setLoading(false);
+      }
+    }
+    initializeHome();
+  }, [setValue]);
+  const selectedType = vehicleTypes.find(
+    x => x.name === selectedVehicle
+  )
+  const [pendingBooking, setPendingBooking] = useState(null);
+  const [showBookingPopup, setShowBookingPopup] = useState(false);
+  const [showPaymentPopup, setShowPaymentPopup] = useState(false);
+
+  const handleProceedToPayment = (bookingData) => {
+    setPendingBooking(bookingData); // Save the data collected from BookingPopup
+    setShowBookingPopup(false);
+    setShowPaymentPopup(true);      // Open the next step
+  };
+  const [isLoggedIn, setIsLoggedIn] = useState(
+    !!localStorage.getItem("token")
+  )
+
+  useEffect(() => {
+    setIsLoggedIn(!!localStorage.getItem("token"))
+  }, [])
+
   const onSubmit = (data) => {
     console.log(data)
   }
+  const handleBookingClick = async () => {
+    try {
+      const type = vehicleTypes.find(
+        x => x.name === selectedVehicle
+      )
 
+      if (!type) {
+        alert("Không tìm thấy loại phương tiện")
+        return
+      }
+
+      const slots = await getAvailableSlots(type.id)
+
+      if (slots.floors.availableSlots <= 0) {
+        alert("Không còn chỗ trống")
+        return
+      }
+      setShowBookingPopup(true)
+
+    } catch (err) {
+      console.error(err)
+      alert(err.message)
+    }
+  }
+/*
   useEffect(() => {
     async function fetchHomeData() {
       try {
@@ -43,6 +115,24 @@ function Home({ onNavigateToLogin }) {
 
     fetchHomeData()
   }, [])
+*/
+
+  const [searchParams] = useSearchParams();
+  const paymentStatus = searchParams.get('payment');
+
+  useEffect(() => {
+    if (paymentStatus === 'success') {
+      // 1. Show success alert/popup
+      alert("Thanh toán thành công!");
+      // 2. Redirect to bookings page
+      navigate('/bookings');
+    } else if (paymentStatus === 'cancel') {
+      // Show local state alert instead of redirecting
+      alert("Giao dịch đã bị hủy.");
+      // Optional: Clean the URL
+      navigate('/', { replace: true });
+    }
+  }, [paymentStatus, navigate]);
   if (loading) {
     return <div>Loading...</div>
   }
@@ -50,7 +140,7 @@ function Home({ onNavigateToLogin }) {
     <div className="page-wrapper">
       {/* Navbar */}
       <Navbar
-        isLoggedIn={false}
+        isLoggedIn={isLoggedIn}
       />
 
       {/* Hero */}
@@ -64,26 +154,26 @@ function Home({ onNavigateToLogin }) {
               onSubmit={handleSubmit(onSubmit)}
             >
               <div className="vehicle-tabs">
-                {['Ô tô', 'Xe máy', 'Xe đạp điện'].map(vehicle => (
+                {vehicleTypes.map(vehicle => (
                   <button
                     type="button"
-                    key={vehicle}
-                    className={`vtab ${selectedVehicle === vehicle
+                    key={vehicle.id}
+                    className={`vtab ${selectedVehicle === vehicle.name
                       ? 'vtab--active'
                       : ''
                       }`}
                     onClick={() => {
-                      setSelectedVehicle(vehicle)
-                      setValue('vehicleType', vehicle)
+                      setSelectedVehicle(vehicle.name)
+                      setValue('vehicleType', vehicle.name)
                     }}
                   >
-                    {vehicle}
+                    {vehicle.name}
+
                     <input
                       type="hidden"
                       {...register('vehicleType')}
                     />
                   </button>
-
                 ))}
               </div>
               {/*
@@ -99,7 +189,7 @@ function Home({ onNavigateToLogin }) {
               <button
                 type="submit"
                 className="btn-book"
-                onClick={() => setShowBookingPopup(true)}
+                onClick={handleBookingClick}
               >
                 Đặt chỗ ngay
               </button>
@@ -107,6 +197,7 @@ function Home({ onNavigateToLogin }) {
             {showBookingPopup && (
               <BookingPopup
                 selectedVehicle={selectedVehicle}
+                vehicleTypeId={selectedType?.id}
                 onClose={() => setShowBookingPopup(false)}
               />
             )}
@@ -114,27 +205,30 @@ function Home({ onNavigateToLogin }) {
 
           <div className="status-card">
             <p className="status-card-title">TÌNH TRẠNG HÔM NAY</p>
-            <div className="status-row">
-              <span className="status-vehicle">Ô tô</span>
-              <div className="status-count-group">
-                <span className="status-count">
-                  {parkingData?.carStatus?.available}/
-                  {parkingData?.carStatus?.total}
-                </span>
-                <span className="status-unit">chỗ trống</span>
+
+            {slotStatus.map((type, index) => (
+              <div key={type.id}>
+                <div className="status-row">
+                  <span className="status-vehicle">
+                    {type.name}
+                  </span>
+
+                  <div className="status-count-group">
+                    <span className="status-count">
+                      {type.available}/{type.total}
+                    </span>
+
+                    <span className="status-unit">
+                      chỗ trống
+                    </span>
+                  </div>
+                </div>
+
+                {index < slotStatus.length - 1 && (
+                  <div className="status-divider" />
+                )}
               </div>
-            </div>
-            <div className="status-divider" />
-            <div className="status-row">
-              <span className="status-vehicle">Xe máy/<br />đạp điện</span>
-              <div className="status-count-group">
-                <span className="status-count">
-                  {parkingData?.bikeStatus?.available}/
-                  {parkingData?.bikeStatus?.total}
-                </span>
-                <span className="status-unit">chỗ trống</span>
-              </div>
-            </div>
+            ))}
           </div>
         </div>
       </section >
