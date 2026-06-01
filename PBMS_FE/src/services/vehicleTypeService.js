@@ -13,7 +13,6 @@ export async function getAvailableSlots(vehicleTypeId) {
   const response = await fetch(
     `http://localhost:5021/api/vehicle-types/${vehicleTypeId}/slots`
   )
-  console.log(await response.text())
   if (!response.ok) { 
     throw new Error("Không thể tải thông tin chỗ trống")
   }
