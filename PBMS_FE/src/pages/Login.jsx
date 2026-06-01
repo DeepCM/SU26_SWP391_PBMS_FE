@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom'
 import '../styles/Login.css'
 import Footer from '../components/common/Footer'
 import Header from '../components/common/Header'
+import { loginUser } from '../services/authService'
 
 function Login() {
   const [showPassword, setShowPassword] = useState(false)
@@ -17,44 +18,24 @@ function Login() {
   const navigate = useNavigate()
 
   const onSubmit = async (data) => {
-    console.log('Form data:', data)
-
     try {
+      const result = await loginUser(data.email, data.password)
 
-      const response = await fetch('http://localhost:5021/api/Auth/login', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          email: data.email,
-          password: data.password
-        })
-      })
-
-      const result = await response.json()
-
-      if (response.ok) {
-          const user = {
-            email: result.email,
-            fullName: result.fullName,
-            role: result.role
-          }
-
-          localStorage.setItem("token", result.accessToken)
-          localStorage.setItem("user", JSON.stringify(user))
-
-          console.log("STORED USER:", user)
-
+      if (result.status === 200) {
+        const user = {
+          email: result.data.email,
+          fullName: result.data.fullName,
+          role: result.data.role
+        }
+        localStorage.setItem("token", result.data.accessToken)
+        localStorage.setItem("user", JSON.stringify(user))
         navigate('/')
       } else {
-        alert(result.message || 'Login failed')
+        alert(result.data.message || 'Đăng nhập thất bại')
       }
-
     } catch (error) {
       console.error(error)
     }
-
   }
 
   return (

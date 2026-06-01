@@ -3,7 +3,7 @@ import '../styles/Login.css'
 import '../styles/Signup.css'
 import { useForm } from 'react-hook-form'
 import { useNavigate } from 'react-router-dom'
-import { registerUser } from '../services/authService'
+import { registerUser, verifyEmail } from '../services/authService'
 import Footer from '../components/common/Footer'
 import Header from '../components/common/Header'
 
@@ -44,30 +44,13 @@ function Signup() {
   }
   const handleVerify = async () => {
     try {
-      console.log({
-        email: registeredEmail,
-        otp: otp
-      })
-      const response = await fetch('http://localhost:5021/api/Auth/verify-email', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          email: registeredEmail,
-          otp: otp
-        })
-      })
-
-      const result = await response.json()
-
-      if (response.ok) {
-        alert('Email verified successfully')
+      const result = await verifyEmail(registeredEmail, otp)
+      if (result.status === 200) {
+        alert('Xác thực email thành công')
         navigate('/login')
       } else {
-        alert(result.message || 'Verification failed')
+        alert(result.data.message || 'Xác thực thất bại')
       }
-
     } catch (error) {
       console.error(error)
     }

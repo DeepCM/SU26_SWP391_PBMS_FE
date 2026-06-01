@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { getMyBookings } from '../services/bookingService'
+import { getMyBookings, cancelBooking } from '../services/bookingService'
 import Navbar from '../components/common/Navbar'
 import '../styles/Home.css'
 import '../styles/Bookings.css'
@@ -103,6 +103,26 @@ function QRPlaceholder() {
   )
 }
 
+// ─── Helpers ──────────────────────────────────────────────────
+function mapBookingStatus(status) {
+  switch (status) {
+    case 'pending_payment': return 'upcoming'
+    case 'pending':
+    case 'confirmed': return 'active'
+    case 'cancelled':
+    case 'expired': return 'done'
+    default: return 'upcoming'
+  }
+}
+
+function getVehicleIconKey(vehicleTypeName) {
+  const name = vehicleTypeName.toLowerCase()
+  if (name.includes('ô tô') || name.includes('car') || name.includes('xe hơi')) return 'car'
+  if (name.includes('điện') || name.includes('ebike') || name.includes('electric')) return 'ebike'
+  if (name.includes('máy') || name.includes('motorbike') || name.includes('motor')) return 'motorbike'
+  return 'car'
+}
+
 // ─── Vehicle icon mapper ───────────────────────────────────────
 const VEHICLE_ICON = {
   car: { icon: <IconCar />, bg: '#EAF0FF' },
@@ -132,13 +152,29 @@ const STATUS_CONFIG = {
   },
 }
 
+// ─── QR Modal ─────────────────────────────────────────────────
+function QRModal({ qrUrl, onClose }) {
+  return (
+    <div className="qr-modal-overlay" onClick={onClose}>
+      <div className="qr-modal-box" onClick={e => e.stopPropagation()}>
+        <button className="qr-modal-close" onClick={onClose}>✕</button>
+        <p className="qr-modal-title">Mã QR Check-in</p>
+        <img src={qrUrl} alt="QR phóng to" className="qr-modal-image" />
+        <p className="qr-modal-hint">Xuất trình mã này tại cổng vào để check-in</p>
+      </div>
+    </div>
+  )
+}
+
 // ─── Booking Card ──────────────────────────────────────────────
-function BookingCard({ booking }) {
+function BookingCard({ booking, onCancel }) {
+  const [showQR, setShowQR] = useState(false)
   const status = STATUS_CONFIG[booking.status] || STATUS_CONFIG['active'];
   const vehicle = VEHICLE_ICON[booking.vehicleType] || VEHICLE_ICON['car'];
 
   return (
     <div className="booking-card">
+      {showQR && booking.qrUrl && <QRModal qrUrl={booking.qrUrl} onClose={() => setShowQR(false)} />}
       <div className={`card-top-strip ${status.stripClass}`} />
 
       {/* Header */}
@@ -194,7 +230,7 @@ function BookingCard({ booking }) {
         <div className="qr-info">
           <span className="qr-title">Mã QR Check-in</span>
           <p className="qr-desc">Xuất trình mã này tại cổng vào bãi để check-in tự động.</p>
-          <button className="qr-expand-btn">
+          <button className="qr-expand-btn" onClick={() => booking.qrUrl && setShowQR(true)}>
             <IconExpand />
             Phóng to mã QR
           </button>
@@ -205,20 +241,20 @@ function BookingCard({ booking }) {
       <div className="card-footer">
         {booking.status === 'active' && (
           <>
-            <button className="btn-action btn-action--blue">
+            <button className="btn-action btn-action--blue" onClick={() => booking.qrUrl && setShowQR(true)}>
               <IconEye /> Xem QR
             </button>
             <button className="btn-action btn-action--outline">⏱ Gia hạn</button>
-            <button className="btn-action btn-action--danger">Hủy</button>
+            <button className="btn-action btn-action--danger" onClick={() => onCancel(booking.id)}>Hủy</button>
           </>
         )}
         {booking.status === 'upcoming' && (
           <>
-            <button className="btn-action btn-action--blue">
+            <button className="btn-action btn-action--blue" onClick={() => booking.qrUrl && setShowQR(true)}>
               <IconEye /> Xem QR
             </button>
             <button className="btn-action btn-action--outline">✏️ Sửa</button>
-            <button className="btn-action btn-action--danger">Hủy</button>
+            <button className="btn-action btn-action--danger" onClick={() => onCancel(booking.id)}>Hủy</button>
           </>
         )}
         {booking.status === 'done' && (
@@ -258,15 +294,15 @@ export default function Bookings() {
         // TRANSFORM the API data to match your component
         const formattedData = data.map(item => ({
           id: item.id,
-          status: item.status.toLowerCase(),
-          vehicleType: item.vehicleTypeName.toLowerCase(),
+          status: mapBookingStatus(item.status),
+          vehicleType: getVehicleIconKey(item.vehicleTypeName),
           vehicleLabel: item.vehicleTypeName,
           licensePlate: item.licensePlate,
           // Only keep entry information
           entryTime: new Date(item.scheduledCheckin).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
           entryDate: new Date(item.scheduledCheckin).toLocaleDateString(),
           location: `Tầng ${item.floorNumber}`,
-          qrUrl: item.qrCodeImage
+          qrUrl: item.qrCodeImage ? `data:image/png;base64,${item.qrCodeImage}` : null
         }));
 
         setBookings(formattedData);
@@ -278,6 +314,16 @@ export default function Bookings() {
 
     fetchBookings();
   }, []);
+  const handleCancel = async (id) => {
+    if (!window.confirm('Bạn có chắc muốn hủy đặt chỗ này không?')) return
+    try {
+      await cancelBooking(id)
+      setBookings(prev => prev.map(b => b.id === id ? { ...b, status: 'done' } : b))
+    } catch (err) {
+      alert(err.message)
+    }
+  }
+
   const counts = {
     all: bookings.length,
     active: bookings.filter(b => b.status === 'active').length,
@@ -372,7 +418,7 @@ export default function Bookings() {
         {/* Cards grid */}
         <div className="bookings-grid">
           {filtered.map(booking => (
-            <BookingCard key={booking.id} booking={booking} />
+            <BookingCard key={booking.id} booking={booking} onCancel={handleCancel} />
           ))}
         </div>
       </main>

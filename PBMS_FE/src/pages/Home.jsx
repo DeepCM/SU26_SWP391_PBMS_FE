@@ -61,22 +61,21 @@ function Home({ }) {
     }
     initializeHome();
   }, [setValue]);
-  const allFloors = slotStatus.flatMap(vehicleType =>
-    (vehicleType.floors || []).map(floor => ({
-      id: floor.floorId,
-      name: floor.floorName,
-      badge: floor.hasAvailability ? "Còn chỗ" : "Hết chỗ",
-      badgeType: floor.hasAvailability ? "green" : "red",
-      tags: [`Tầng ${floor.floorNumber}`], // You can customize these tags
-      available: floor.availableSlots,
-      inUse: floor.occupiedSlots,
-      total: floor.totalSlots,
-      fillPercent: floor.totalSlots > 0
-        ? Math.round((floor.occupiedSlots / floor.totalSlots) * 100)
-        : 0,
-      fillColor: floor.availableSlots > 0 ? "#22C55E" : "#EF4444"
-    }))
-  );
+  const selectedSlotStatus = slotStatus.find(type => type.name === selectedVehicle)
+  const allFloors = (selectedSlotStatus?.floors || []).map(floor => ({
+    id: floor.floorId,
+    name: floor.floorName,
+    badge: floor.hasAvailability ? "Còn chỗ" : "Hết chỗ",
+    badgeType: floor.hasAvailability ? "green" : "red",
+    tags: [`Tầng ${floor.floorNumber}`],
+    available: floor.availableSlots,
+    inUse: floor.occupiedSlots,
+    total: floor.totalSlots,
+    fillPercent: floor.totalSlots > 0
+      ? Math.round((floor.occupiedSlots / floor.totalSlots) * 100)
+      : 0,
+    fillColor: floor.availableSlots > 0 ? "#22C55E" : "#EF4444"
+  }));
   const selectedType = vehicleTypes.find(
     x => x.name === selectedVehicle
   )
@@ -100,29 +99,18 @@ function Home({ }) {
   const onSubmit = (data) => {
     console.log(data)
   }
-  const handleBookingClick = async () => {
-    try {
-      const type = vehicleTypes.find(
-        x => x.name === selectedVehicle
-      )
-
-      if (!type) {
-        alert("Không tìm thấy loại phương tiện")
-        return
-      }
-
-      const slots = await getAvailableSlots(type.id)
-
-      if (slots.floors.availableSlots <= 0) {
-        alert("Không còn chỗ trống")
-        return
-      }
-      setShowBookingPopup(true)
-
-    } catch (err) {
-      console.error(err)
-      alert(err.message)
+  const handleBookingClick = () => {
+    if (!selectedSlotStatus) {
+      alert("Không tìm thấy loại phương tiện")
+      return
     }
+
+    if (selectedSlotStatus.available <= 0) {
+      alert("Không còn chỗ trống")
+      return
+    }
+
+    setShowBookingPopup(true)
   }
 
 

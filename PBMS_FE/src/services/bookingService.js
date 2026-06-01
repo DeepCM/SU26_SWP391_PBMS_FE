@@ -16,13 +16,18 @@ export async function createBooking(bookingData) {
     body: JSON.stringify(bookingData)
   })
 
-  const data = await response.json()
-
   if (!response.ok) {
-    throw new Error(data.detail || data.title)
+    const text = await response.text()
+    let message = response.status === 401
+      ? 'Phiên đăng nhập hết hạn, vui lòng đăng nhập lại'
+      : 'Có lỗi xảy ra'
+    if (text) {
+      try { message = JSON.parse(text).message || message } catch {}
+    }
+    throw new Error(message)
   }
 
-  return data
+  return await response.json()
 }
 
 export async function getMyBookings() {
@@ -45,7 +50,7 @@ export async function cancelBooking(id) {
 
   if (!response.ok) {
     const data = await response.json()
-    throw new Error(data.detail || data.title)
+    throw new Error(data.message)
   }
 
   return true

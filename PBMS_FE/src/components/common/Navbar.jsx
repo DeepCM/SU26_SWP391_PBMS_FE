@@ -32,7 +32,7 @@ export default function Navbar({ isLoggedIn }) {
             <button className="btn-logout" onClick={() => {
               localStorage.removeItem("token");
               localStorage.removeItem("user");
-              navigate('/');
+              navigate('/login');
             }}>
               Đăng xuất
             </button>
