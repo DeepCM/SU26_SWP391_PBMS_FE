@@ -40,6 +40,12 @@ function BookingPopup({ selectedVehicle, vehicleTypeId, onClose }) {
       setLoading(false);
     }
   };
+  const VEHICLE_NAME_MAP = {
+    "Xe máy": "Xe máy",
+    "Ô tô": "Ô tô",
+    "Xe đạp": "Xe máy điện"
+    
+  };
 
 
   return (
@@ -49,7 +55,7 @@ function BookingPopup({ selectedVehicle, vehicleTypeId, onClose }) {
 
 
           <form onSubmit={handleSubmit(onSubmit)} className="booking-form">
-            <h2 className="booking-title">Đặt chỗ {selectedVehicle}</h2>
+            <h2 className="booking-title">Đặt chỗ {VEHICLE_NAME_MAP[selectedVehicle] || selectedVehicle}</h2>
 
             <div className="booking-group">
               <label>Giờ vào</label>

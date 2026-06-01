@@ -22,9 +22,18 @@ function Home({ }) {
   const [loading, setLoading] = useState(true)
   const [selectedVehicle, setSelectedVehicle] = useState('')
   const [vehicleTypes, setVehicleTypes] = useState([])
+  const VEHICLE_NAME_MAP = {
+    "Xe máy": "Xe máy",
+    "Ô tô": "Ô tô",
+    "Xe đạp": "Xe máy điện"
+  };
+  const FLOOR_TO_VEHICLE_MAP = {
+    "Tầng B1": "Xe máy",
+    "Tầng B2": "Ô tô",
+    "Tầng B3": "Xe máy điện"
+  };
   const [slotStatus, setSlotStatus] = useState([])
   const [parkingData, setParkingData] = useState(true)
-  // Remove the duplicate loadVehicleTypes and the second loadVehicleData
   useEffect(() => {
     async function initializeHome() {
       try {
@@ -164,7 +173,6 @@ function Home({ }) {
         <div className="hero-inner">
           <div className="hero-left">
             <h1 className="hero-title">Đặt chỗ đỗ xe nhanh, tiện lợi</h1>
-
             <form
               className="search-card"
               onSubmit={handleSubmit(onSubmit)}
@@ -183,7 +191,7 @@ function Home({ }) {
                       setValue('vehicleType', vehicle.name)
                     }}
                   >
-                    {vehicle.name}
+                    {VEHICLE_NAME_MAP[vehicle.name] || vehicle.name}
 
                     <input
                       type="hidden"
@@ -226,7 +234,7 @@ function Home({ }) {
               <div key={type.id}>
                 <div className="status-row">
                   <span className="status-vehicle">
-                    {type.name}
+                    {VEHICLE_NAME_MAP[type.name] || type.name}
                   </span>
 
                   <div className="status-count-group">
@@ -265,6 +273,7 @@ function Home({ }) {
               total={floor.total}
               fillPercent={floor.fillPercent}
               fillColor={floor.fillColor}
+              FLOOR_TO_VEHICLE_MAP={FLOOR_TO_VEHICLE_MAP}
             />
           ))}
         </div>
@@ -316,11 +325,11 @@ function Home({ }) {
   )
 }
 
-function FloorCard({ name, badge, badgeType, tags, available, inUse, total, fillPercent, fillColor }) {
+function FloorCard({ name, badge, badgeType, tags, available, inUse, total, fillPercent, fillColor, FLOOR_TO_VEHICLE_MAP }) {
   return (
     <div className="floor-card">
       <div className="floor-card-header">
-        <span className="floor-name">{name}</span>
+        <span className="floor-name">{name} - {FLOOR_TO_VEHICLE_MAP[name] || ''}</span>
         <span className={`floor-badge floor-badge--${badgeType}`}>{badge}</span>
       </div>
       <div className="floor-tags">

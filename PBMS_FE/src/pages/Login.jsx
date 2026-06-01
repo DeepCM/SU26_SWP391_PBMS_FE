@@ -79,7 +79,7 @@ function Login() {
 
             <div className="login-divider">
               <span className="login-divider-line" />
-              <span className="login-divider-text">hoặc đăng nhập bằng số điện thoại</span>
+              <span className="login-divider-text">hoặc đăng nhập bằng email</span>
               <span className="login-divider-line" />
             </div>
 

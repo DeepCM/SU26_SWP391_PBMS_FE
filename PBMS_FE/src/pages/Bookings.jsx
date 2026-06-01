@@ -171,7 +171,12 @@ function BookingCard({ booking, onCancel }) {
   const [showQR, setShowQR] = useState(false)
   const status = STATUS_CONFIG[booking.status] || STATUS_CONFIG['active'];
   const vehicle = VEHICLE_ICON[booking.vehicleType] || VEHICLE_ICON['car'];
-
+  const VEHICLE_NAME_MAP = {
+    "Xe máy": "Xe máy",
+    "Ô tô": "Ô tô",
+    "Xe đạp": "Xe máy điện"
+    
+  };
   return (
     <div className="booking-card">
       {showQR && booking.qrUrl && <QRModal qrUrl={booking.qrUrl} onClose={() => setShowQR(false)} />}
@@ -193,7 +198,7 @@ function BookingCard({ booking, onCancel }) {
         </div>
         <div className="vehicle-info">
           <span className="vehicle-plate">{booking.licensePlate}</span>
-          <span className="vehicle-type">{booking.vehicleLabel}</span>
+          <span className="vehicle-type">{VEHICLE_NAME_MAP[booking.vehicleLabel] || booking.vehicleLabel}</span>
         </div>
       </div>
 
