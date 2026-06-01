@@ -243,6 +243,9 @@ const TABS = [
 // ─── Main Page ─────────────────────────────────────────────────
 export default function Bookings() {
   const navigate = useNavigate()
+  const [isLoggedIn, setIsLoggedIn] = useState(
+    !!localStorage.getItem("token")
+  )
   const [activeTab, setActiveTab] = useState('all')
   const [loading, setLoading] = useState(true) // Add loading state
   // Replace with API call when available
@@ -288,7 +291,7 @@ export default function Bookings() {
 
   return (
     <div className="bookings-page">
-      <Navbar isLoggedIn userAvatar={true} />
+      <Navbar isLoggedIn={isLoggedIn} />
 
       <main className="bookings-main">
         {/* Page header */}

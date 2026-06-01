@@ -18,11 +18,12 @@ function Home({ }) {
       scheduledCheckin: ''
     }
   })
-  const [parkingData, setParkingData] = useState(null)
+
   const [loading, setLoading] = useState(true)
   const [selectedVehicle, setSelectedVehicle] = useState('')
   const [vehicleTypes, setVehicleTypes] = useState([])
   const [slotStatus, setSlotStatus] = useState([])
+  const [parkingData, setParkingData] = useState(true)
   // Remove the duplicate loadVehicleTypes and the second loadVehicleData
   useEffect(() => {
     async function initializeHome() {
@@ -39,7 +40,16 @@ function Home({ }) {
         const statusData = await Promise.all(
           types.map(async (type) => {
             const slots = await getAvailableSlots(type.id);
-            return { ...type, available: slots.available, total: slots.total };
+
+            // Calculate the total across all floors
+            const totalSlots = slots.floors.reduce((sum, floor) => sum + floor.totalSlots, 0);
+
+            return {
+              ...type,
+              available: slots.totalAvailableSlots,
+              total: totalSlots, // Use the calculated sum
+              floors: slots.floors
+            };
           })
         );
         setSlotStatus(statusData);
@@ -51,6 +61,22 @@ function Home({ }) {
     }
     initializeHome();
   }, [setValue]);
+  const allFloors = slotStatus.flatMap(vehicleType =>
+    (vehicleType.floors || []).map(floor => ({
+      id: floor.floorId,
+      name: floor.floorName,
+      badge: floor.hasAvailability ? "Còn chỗ" : "Hết chỗ",
+      badgeType: floor.hasAvailability ? "green" : "red",
+      tags: [`Tầng ${floor.floorNumber}`], // You can customize these tags
+      available: floor.availableSlots,
+      inUse: floor.occupiedSlots,
+      total: floor.totalSlots,
+      fillPercent: floor.totalSlots > 0
+        ? Math.round((floor.occupiedSlots / floor.totalSlots) * 100)
+        : 0,
+      fillColor: floor.availableSlots > 0 ? "#22C55E" : "#EF4444"
+    }))
+  );
   const selectedType = vehicleTypes.find(
     x => x.name === selectedVehicle
   )
@@ -98,24 +124,26 @@ function Home({ }) {
       alert(err.message)
     }
   }
-/*
-  useEffect(() => {
-    async function fetchHomeData() {
-      try {
-        const response = await fetch('') //need API
-        const data = await response.json()
 
-        setParkingData(data)
-      } catch (error) {
-        console.error('Failed to fetch home data:', error)
-      } finally {
-        setLoading(false)
+
+  /*
+    useEffect(() => {
+      async function fetchHomeData() {
+        try {
+          const response = await fetch('') //need API
+          const data = await response.json()
+  
+          setParkingData(data)
+        } catch (error) {
+          console.error('Failed to fetch home data:', error)
+        } finally {
+          setLoading(false)
+        }
       }
-    }
-
-    fetchHomeData()
-  }, [])
-*/
+  
+      fetchHomeData()
+    }, [])
+  */
 
   const [searchParams] = useSearchParams();
   const paymentStatus = searchParams.get('payment');
@@ -237,7 +265,7 @@ function Home({ }) {
       < section className="floors-section" >
         <h2 className="section-title">Tình trạng các tầng đỗ xe</h2>
         <div className="floor-grid">
-          {parkingData?.floors?.map(floor => (
+          {allFloors.map(floor => (
             <FloorCard
               key={floor.id}
               name={floor.name}
@@ -262,7 +290,7 @@ function Home({ }) {
             <thead>
               <tr>
                 <th>Phương tiện</th>
-                <th>2 giờ đầu</th>
+                <th>Giờ đầu</th>
                 <th>Mỗi giờ thêm</th>
               </tr>
             </thead>
