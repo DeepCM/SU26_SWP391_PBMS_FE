@@ -7,6 +7,16 @@ import BookingPopup from '../components/common/BookingPopup'
 import { getVehicleTypes, getAvailableSlots } from '../services/vehicleTypeService'
 import { getMyBookings } from '../services/bookingService'
 import { } from '../services/paymentService'
+import {
+  IconCar,
+  IconMotorbike,
+  IconEbike,
+  IconEye,
+  IconExpand,
+  IconClock,
+  IconPin,
+  IconArrow,
+} from '../components/svg/Icons'
 function Home({ }) {
 
   const navigate = useNavigate();
@@ -23,14 +33,24 @@ function Home({ }) {
   const [selectedVehicle, setSelectedVehicle] = useState('')
   const [vehicleTypes, setVehicleTypes] = useState([])
   const VEHICLE_NAME_MAP = {
-    "Xe máy": "Xe máy",
-    "Ô tô": "Ô tô",
-    "Xe đạp": "Xe máy điện"
-  };
+  "Xe máy": {
+    icon: <IconMotorbike />,
+    label: " Xe máy"
+  },
+  "Ô tô": {
+    icon: <IconCar />,
+    label: " Ô tô"
+  },
+  "Xe đạp": {
+    icon: <IconEbike />,
+    label: " Xe máy điện"
+  }
+};
+  
   const FLOOR_TO_VEHICLE_MAP = {
-    "Tầng B1": "Xe máy",
-    "Tầng B2": "Ô tô",
-    "Tầng B3": "Xe máy điện"
+    "Tầng B1": "",
+    "Tầng B2": "",
+    "Tầng B3": ""
   };
   const [slotStatus, setSlotStatus] = useState([])
   const [parkingData, setParkingData] = useState(true)
@@ -70,6 +90,7 @@ function Home({ }) {
     }
     initializeHome();
   }, [setValue]);
+ 
   const selectedSlotStatus = slotStatus.find(type => type.name === selectedVehicle)
   const allFloors = (selectedSlotStatus?.floors || []).map(floor => ({
     id: floor.floorId,
@@ -122,26 +143,6 @@ function Home({ }) {
     setShowBookingPopup(true)
   }
 
-
-  /*
-    useEffect(() => {
-      async function fetchHomeData() {
-        try {
-          const response = await fetch('') //need API
-          const data = await response.json()
-  
-          setParkingData(data)
-        } catch (error) {
-          console.error('Failed to fetch home data:', error)
-        } finally {
-          setLoading(false)
-        }
-      }
-  
-      fetchHomeData()
-    }, [])
-  */
-
   const [searchParams] = useSearchParams();
   const paymentStatus = searchParams.get('payment');
 
@@ -158,6 +159,7 @@ function Home({ }) {
       navigate('/', { replace: true });
     }
   }, [paymentStatus, navigate]);
+
   if (loading) {
     return <div>Loading...</div>
   }
@@ -191,7 +193,8 @@ function Home({ }) {
                       setValue('vehicleType', vehicle.name)
                     }}
                   >
-                    {VEHICLE_NAME_MAP[vehicle.name] || vehicle.name}
+                    {VEHICLE_NAME_MAP[vehicle.name].icon} 
+                    {VEHICLE_NAME_MAP[vehicle.name].label || vehicle.name}
 
                     <input
                       type="hidden"
@@ -234,7 +237,7 @@ function Home({ }) {
               <div key={type.id}>
                 <div className="status-row">
                   <span className="status-vehicle">
-                    {VEHICLE_NAME_MAP[type.name] || type.name}
+                    {VEHICLE_NAME_MAP[type.name].icon} {VEHICLE_NAME_MAP[type.name].label || type.vehicleType}
                   </span>
 
                   <div className="status-count-group">
@@ -329,7 +332,7 @@ function FloorCard({ name, badge, badgeType, tags, available, inUse, total, fill
   return (
     <div className="floor-card">
       <div className="floor-card-header">
-        <span className="floor-name">{name} - {FLOOR_TO_VEHICLE_MAP[name] || ''}</span>
+        <span className="floor-name">{name}{FLOOR_TO_VEHICLE_MAP[name] || ''}</span>
         <span className={`floor-badge floor-badge--${badgeType}`}>{badge}</span>
       </div>
       <div className="floor-tags">
