@@ -1,13 +1,5 @@
 const API_URL = "http://localhost:5021/api/bookings"
-
-function getAuthHeader() {
-  const token = localStorage.getItem("token")
-
-  return {
-    "Content-Type": "application/json",
-    Authorization: `Bearer ${token}`
-  }
-}
+import getAuthHeader from "../components/auth/authHeader"
 
 export async function createBooking(bookingData) {
   const response = await fetch(API_URL, {
@@ -36,7 +28,7 @@ export async function getMyBookings() {
   })
 
   if (!response.ok) {
-    throw new Error("Failed to fetch bookings")
+    throw new Error("Không thể tải lịch sử đặt xe của bạn")
   }
 
   return await response.json()

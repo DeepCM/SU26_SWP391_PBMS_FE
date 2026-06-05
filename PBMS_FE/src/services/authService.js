@@ -1,4 +1,5 @@
 const API_URL = 'http://localhost:5021/api/Auth'
+import getAuthHeader from "../components/auth/authHeader"
 
 export const loginUser = async (email, password) => {
   const response = await fetch(`${API_URL}/login`, {
@@ -13,27 +14,11 @@ export const loginUser = async (email, password) => {
 export const registerUser = async (userData) => {
   const response = await fetch(`${API_URL}/register`, {
     method: 'POST',
-    headers: {
-      'Content-Type': 'application/json'
-    },
+    headers: {'Content-Type': 'application/json'},
     body: JSON.stringify(userData)
   })
-
   const text = await response.text()
-
-  console.log("RAW RESPONSE:", text)
-
-  let data
-  try {
-    data = JSON.parse(text)
-  } catch {
-    data = text
-  }
-
-  return {
-    status: response.status,
-    data
-  }
+  return {status: response.status, data}
 }
 
 export const verifyEmail = async (email, otp) => {

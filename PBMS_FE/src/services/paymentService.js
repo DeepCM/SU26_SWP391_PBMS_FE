@@ -1,13 +1,5 @@
 const API_URL = "http://localhost:5021/api/payments"
-
-function getAuthHeader() {
-  const token = localStorage.getItem("token")
-
-  return {
-    "Content-Type": "application/json",
-    Authorization: `Bearer ${token}`
-  }
-}
+import getAuthHeader from "../components/auth/authHeader"
 
 export async function getPaymentLink(bookingId) {
   const response = await fetch(
