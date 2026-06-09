@@ -18,3 +18,13 @@ export async function getAvailableSlots(vehicleTypeId) {
 
   return data
 }
+
+export async function getPricingPreview(vehicleTypeId) {
+  const response = await fetch(`${API_URL}/${vehicleTypeId}/pricing-preview`)
+  const data = await response.json()
+  if (!response.ok) {
+    throw new Error("Không thể tải thông tin giá")
+  }
+
+  return data
+}

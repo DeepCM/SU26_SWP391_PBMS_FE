@@ -4,7 +4,7 @@ import { useForm } from 'react-hook-form'
 import '../styles/Home.css'
 import Navbar from '../components/common/Navbar'
 import BookingPopup from '../components/common/BookingPopup'
-import { getVehicleTypes, getAvailableSlots } from '../services/vehicleTypeService'
+import { getVehicleTypes, getAvailableSlots, getPricingPreview } from '../services/vehicleTypeService'
 import { getMyBookings } from '../services/bookingService'
 import { } from '../services/paymentService'
 import {
@@ -33,24 +33,25 @@ function Home({ }) {
   const [selectedVehicle, setSelectedVehicle] = useState('')
   const [vehicleTypes, setVehicleTypes] = useState([])
   const VEHICLE_NAME_MAP = {
-  "Xe máy": {
-    icon: <IconMotorbike />,
-    label: " Xe máy"
-  },
-  "Ô tô": {
-    icon: <IconCar />,
-    label: " Ô tô"
-  },
-  "Xe đạp": {
-    icon: <IconEbike />,
-    label: " Xe máy điện"
-  }
-};
-  
+    "Xe máy": {
+      icon: <IconMotorbike />,
+      label: " Xe máy"
+    },
+    "Xe máy điện": {
+      icon: <IconEbike />,
+      label: " Xe máy điện"
+    },
+    "Ô tô": {
+      icon: <IconCar />,
+      label: " Ô tô"
+    }
+
+  };
+
   const FLOOR_TO_VEHICLE_MAP = {
-    "Tầng B1": "",
-    "Tầng B2": "",
-    "Tầng B3": ""
+    "Tầng B1": " - Xe máy",
+    "Tầng B2": " - Xe máy điện",
+    "Tầng B3": " - Ô tô"
   };
   const [slotStatus, setSlotStatus] = useState([])
   const [parkingData, setParkingData] = useState(true)
@@ -69,6 +70,7 @@ function Home({ }) {
         const statusData = await Promise.all(
           types.map(async (type) => {
             const slots = await getAvailableSlots(type.id);
+            const pricing = await getPricingPreview(type.id);
 
             // Calculate the total across all floors
             const totalSlots = slots.floors.reduce((sum, floor) => sum + floor.totalSlots, 0);
@@ -77,7 +79,9 @@ function Home({ }) {
               ...type,
               available: slots.totalAvailableSlots,
               total: totalSlots, // Use the calculated sum
-              floors: slots.floors
+              floors: slots.floors,
+              pricePerHour: pricing.pricePerHour,
+              deposit: pricing.depositAmount
             };
           })
         );
@@ -90,7 +94,7 @@ function Home({ }) {
     }
     initializeHome();
   }, [setValue]);
- 
+
   const selectedSlotStatus = slotStatus.find(type => type.name === selectedVehicle)
   const allFloors = (selectedSlotStatus?.floors || []).map(floor => ({
     id: floor.floorId,
@@ -99,13 +103,18 @@ function Home({ }) {
     badgeType: floor.hasAvailability ? "green" : "red",
     tags: [`Tầng ${floor.floorNumber}`],
     available: floor.availableSlots,
-    inUse: floor.occupiedSlots,
+    inUse: Math.round(((floor.occupiedSlots) + (floor.reservedSlots))),
     total: floor.totalSlots,
+    deposit: selectedSlotStatus?.deposit,
+    pricePerHour: selectedSlotStatus?.pricePerHour,
     fillPercent: floor.totalSlots > 0
-      ? Math.round((floor.occupiedSlots / floor.totalSlots) * 100)
+      ? Math.round(
+        ((floor.availableSlots) / floor.totalSlots) * 100
+      )
       : 0,
     fillColor: floor.availableSlots > 0 ? "#22C55E" : "#EF4444"
   }));
+
   const selectedType = vehicleTypes.find(
     x => x.name === selectedVehicle
   )
@@ -193,7 +202,7 @@ function Home({ }) {
                       setValue('vehicleType', vehicle.name)
                     }}
                   >
-                    {VEHICLE_NAME_MAP[vehicle.name].icon} 
+                    {VEHICLE_NAME_MAP[vehicle.name].icon}
                     {VEHICLE_NAME_MAP[vehicle.name].label || vehicle.name}
 
                     <input
@@ -224,7 +233,7 @@ function Home({ }) {
             {showBookingPopup && (
               <BookingPopup
                 selectedVehicle={selectedVehicle}
-                vehicleTypeId={selectedType?.id}
+                vehicleTypes={slotStatus}
                 onClose={() => setShowBookingPopup(false)}
               />
             )}
@@ -274,6 +283,8 @@ function Home({ }) {
               available={floor.available}
               inUse={floor.inUse}
               total={floor.total}
+              deposit={floor.deposit}
+              pricePerHour={floor.pricePerHour}
               fillPercent={floor.fillPercent}
               fillColor={floor.fillColor}
               FLOOR_TO_VEHICLE_MAP={FLOOR_TO_VEHICLE_MAP}
@@ -290,16 +301,16 @@ function Home({ }) {
             <thead>
               <tr>
                 <th>Phương tiện</th>
-                <th>Giờ đầu</th>
-                <th>Mỗi giờ thêm</th>
+                <th>Giá cọc</th>
+                <th>Mỗi giờ</th>
               </tr>
             </thead>
             <tbody>
-              {parkingData?.pricing?.map((item, index) => (
-                <tr key={index}>
-                  <td>{item.vehicle}</td>
-                  <td>{item.firstHours}</td>
-                  <td>{item.extraHours}</td>
+              {slotStatus.map((item) => (
+                <tr key={item.id}>
+                  <td>{item.name}</td>
+                  <td>{item.deposit?.toLocaleString()} VNĐ</td>
+                  <td>{item.pricePerHour?.toLocaleString()} VNĐ</td>
                 </tr>
               ))}
             </tbody>
@@ -328,7 +339,8 @@ function Home({ }) {
   )
 }
 
-function FloorCard({ name, badge, badgeType, tags, available, inUse, total, fillPercent, fillColor, FLOOR_TO_VEHICLE_MAP }) {
+function FloorCard({ name, badge, badgeType, tags, available, inUse, total, deposit, pricePerHour, fillPercent, fillColor, FLOOR_TO_VEHICLE_MAP }) {
+
   return (
     <div className="floor-card">
       <div className="floor-card-header">
@@ -340,6 +352,10 @@ function FloorCard({ name, badge, badgeType, tags, available, inUse, total, fill
       </div>
       <div className="floor-stats">
         <div className="floor-stat">
+          <span className="floor-stat-number">{total}</span>
+          <span className="floor-stat-label">Tổng chỗ</span>
+        </div>
+        <div className="floor-stat">
           <span className="floor-stat-number">{available}</span>
           <span className="floor-stat-label">Còn trống</span>
         </div>
@@ -347,9 +363,14 @@ function FloorCard({ name, badge, badgeType, tags, available, inUse, total, fill
           <span className="floor-stat-number">{inUse}</span>
           <span className="floor-stat-label">Đang dùng</span>
         </div>
+
         <div className="floor-stat">
-          <span className="floor-stat-number">{total}</span>
-          <span className="floor-stat-label">Tổng chỗ</span>
+          <span className="floor-stat-number">{deposit?.toLocaleString()} VNĐ</span>
+          <span className="floor-stat-label">Giá cọc</span>
+        </div>
+        <div className="floor-stat">
+          <span className="floor-stat-number">{pricePerHour?.toLocaleString()} VNĐ</span>
+          <span className="floor-stat-label">Giá mỗi giờ</span>
         </div>
       </div>
       <div className="floor-bar-bg">
