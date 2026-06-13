@@ -17,11 +17,13 @@ function BookingPopup({ selectedVehicle, vehicleTypes, onClose }) {
   const onSubmit = async (data) => {
     setLoading(true);
     try {
-      // 1. Create the booking
+      // 0. Set time
+      const localDate = new Date(data.entryTime);
+
       const booking = await createBooking({
         vehicleTypeId: selectedVehicleInfo.id,
         licensePlate: data.licensePlate,
-        scheduledCheckin: new Date(data.entryTime).toISOString()
+        scheduledCheckin: localDate.toISOString()
       });
 
       // 2. Fetch the payment URL
@@ -41,17 +43,29 @@ function BookingPopup({ selectedVehicle, vehicleTypes, onClose }) {
     }
   };
 
-  const getMinBookingTime = () => {
-    const now = new Date();
-
-    // UTC+7
-    const utc7 = new Date(
-      now.getTime() + (7 * 60 + now.getTimezoneOffset()) * 60000
+  const getVietnamTime = () => {
+    return new Date(
+      new Date().toLocaleString("en-US", {
+        timeZone: "Asia/Ho_Chi_Minh"
+      })
     );
+  };
 
-    utc7.setHours(utc7.getHours() + 4);
+  const formatDateTimeLocal = (date) => {
+    const pad = (n) => String(n).padStart(2, "0");
 
-    return utc7.toISOString().slice(0, 16);
+    return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}`;
+  };
+
+  const getMinDateTime = () => {
+    return formatDateTimeLocal(getVietnamTime());
+  };
+
+  const getMaxDateTime = () => {
+    const max = getVietnamTime();
+    max.setHours(max.getHours() + 4);
+
+    return formatDateTimeLocal(max);
   };
 
   const VEHICLE_OPTIONS = [
@@ -112,21 +126,22 @@ function BookingPopup({ selectedVehicle, vehicleTypes, onClose }) {
             <label>Thời gian vào</label>
             <input
               type="datetime-local"
-              min={getMinBookingTime()}
-              {...register('entryTime', {
-                required: 'Vui lòng chọn giờ vào',
+              min={getMinDateTime()}
+              max={getMaxDateTime()}
+              {...register("entryTime", {
+                required: "Vui lòng chọn giờ vào",
                 validate: (value) => {
                   const selected = new Date(value);
 
-                  const now = new Date();
-                  const utc7 = new Date(
-                    now.getTime() + (7 * 60 + now.getTimezoneOffset()) * 60000
-                  );
+                  const now = getVietnamTime();
 
-                  utc7.setHours(utc7.getHours() + 4);
+                  const max = new Date(now);
+                  max.setHours(max.getHours() + 4);
 
-                  return selected >= utc7 ||
-                    'Giờ vào phải cách thời điểm hiện tại ít nhất 4 giờ';
+                  return (
+                    selected >= now &&
+                    selected <= max
+                  ) || "Giờ đặt vào phải nằm trong vòng 4 giờ từ bây giờ";
                 }
               })}
             />

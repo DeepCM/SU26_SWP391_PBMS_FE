@@ -4,6 +4,7 @@ import Login from './pages/Login.jsx'
 import Signup from './pages/Signup.jsx'
 import UserProfile from './pages/UserProfile.jsx'
 import Bookings from './pages/Bookings.jsx'
+import Vehicles from './pages/Vehicles.jsx'
 
 function App() {
   return (
@@ -27,6 +28,11 @@ function App() {
         <Route
           path="/bookings"
           element={<Bookings />}
+        />
+
+        <Route
+          path="/vehicles"
+          element={<Vehicles />}
         />
 
         <Route

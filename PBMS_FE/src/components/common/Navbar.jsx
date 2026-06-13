@@ -9,7 +9,8 @@ export default function Navbar({ isLoggedIn }) {
         <span className="nav-logo">PBMS</span>
         <ul className="nav-links">
           <li><a href="#" onClick={() => navigate('/')}>Tổng quan</a></li>
-          <li><a href="#" onClick={() => navigate('/bookings')}>Đặt chỗ</a></li>
+          <li><a href="#" onClick={() => navigate('/bookings')}>Đặt chỗ của tôi</a></li>
+          <li><a href="#" onClick={() => navigate('/vehicles')}>Xe của tôi</a></li>
           <li><a href="#">Hỗ trợ</a></li>
           <li><a href="#">Hướng dẫn</a></li>
           <li><a href="#">Liên hệ</a></li>

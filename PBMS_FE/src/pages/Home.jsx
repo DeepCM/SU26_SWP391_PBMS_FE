@@ -149,6 +149,11 @@ function Home({ }) {
       return
     }
 
+    if (!localStorage.getItem("token")) {
+      alert("Vui lòng đăng nhập để đặt chỗ.");
+      return;
+    }
+
     setShowBookingPopup(true)
   }
 

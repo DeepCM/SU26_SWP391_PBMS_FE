@@ -136,6 +136,8 @@
 
   border: none;
   border-radius: 12px;
+  padding-left: 12px;
+  padding-right: 12px;
 
   background: #2563eb;
   color: white;
