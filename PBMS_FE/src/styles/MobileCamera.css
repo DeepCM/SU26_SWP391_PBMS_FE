@@ -1,0 +1,419 @@
+@import url('https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600&display=swap');
+
+/* ── Page shell ──────────────────────────────────────── */
+.mc-page {
+  position: fixed;
+  inset: 0;
+  background: #000;
+  font-family: 'Be Vietnam Pro', -apple-system, Roboto, Helvetica, sans-serif;
+  overflow: hidden;
+}
+
+/* ── Viewfinder ──────────────────────────────────────── */
+.mc-viewfinder {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.mc-video {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* ── Corner-bracket frame ────────────────────────────── */
+.mc-frame {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -58%);
+  width: min(80vw, 320px);
+  aspect-ratio: 4 / 3;
+  pointer-events: none;
+}
+
+.mc-corner {
+  position: absolute;
+  width: 24px;
+  height: 24px;
+  border-color: #fff;
+  border-style: solid;
+  opacity: 0.9;
+}
+
+.mc-corner--tl { top: 0; left: 0;  border-width: 3px 0 0 3px; border-radius: 4px 0 0 0; }
+.mc-corner--tr { top: 0; right: 0; border-width: 3px 3px 0 0; border-radius: 0 4px 0 0; }
+.mc-corner--bl { bottom: 0; left: 0;  border-width: 0 0 3px 3px; border-radius: 0 0 0 4px; }
+.mc-corner--br { bottom: 0; right: 0; border-width: 0 3px 3px 0; border-radius: 0 0 4px 0; }
+
+/* ── Overlay messages (loading / error) ──────────────── */
+.mc-overlay-msg {
+  position: absolute;
+  inset: 0;
+  z-index: 10;
+  background: rgba(0, 0, 0, 0.65);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  color: #fff;
+  text-align: center;
+  padding: 24px;
+}
+
+.mc-overlay-msg p {
+  font-size: 15px;
+  margin: 0;
+  line-height: 1.5;
+}
+
+.mc-error-text {
+  color: #fca5a5;
+}
+
+/* ── Spinner ─────────────────────────────────────────── */
+.mc-spinner {
+  display: block;
+  width: 40px;
+  height: 40px;
+  border: 3px solid rgba(255, 255, 255, 0.3);
+  border-top-color: #fff;
+  border-radius: 50%;
+  animation: mc-spin 0.8s linear infinite;
+}
+
+@keyframes mc-spin {
+  to { transform: rotate(360deg); }
+}
+
+/* ── Controls bar ────────────────────────────────────── */
+.mc-controls {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  padding: 28px 32px max(28px, env(safe-area-inset-bottom));
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: linear-gradient(to top, rgba(0,0,0,0.55) 0%, transparent 100%);
+  z-index: 5;
+}
+
+/* ── Capture button ──────────────────────────────────── */
+.mc-capture-btn {
+  width: 72px;
+  height: 72px;
+  border-radius: 50%;
+  border: 3px solid #fff;
+  background: rgba(255, 255, 255, 0.15);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  padding: 0;
+  transition: transform 0.1s ease, background 0.15s ease;
+  flex-shrink: 0;
+}
+
+.mc-capture-btn:active:not(:disabled) {
+  transform: scale(0.92);
+  background: rgba(255, 255, 255, 0.3);
+}
+
+.mc-capture-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.mc-capture-inner {
+  display: block;
+  width: 54px;
+  height: 54px;
+  border-radius: 50%;
+  background: #fff;
+}
+
+/* ── Flip button ─────────────────────────────────────── */
+.mc-flip-btn {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  border: none;
+  background: rgba(255, 255, 255, 0.18);
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  padding: 0;
+  transition: background 0.15s ease;
+  flex-shrink: 0;
+}
+
+.mc-flip-btn:active {
+  background: rgba(255, 255, 255, 0.35);
+}
+
+/* ── Preview ─────────────────────────────────────────── */
+.mc-preview {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.mc-preview-img {
+  flex: 1;
+  width: 100%;
+  object-fit: cover;
+  min-height: 0;
+}
+
+.mc-preview-bar {
+  display: flex;
+  gap: 12px;
+  padding: 20px 24px max(20px, env(safe-area-inset-bottom));
+  background: #000;
+}
+
+/* ── Shared buttons ──────────────────────────────────── */
+.mc-btn {
+  flex: 1;
+  padding: 14px;
+  border-radius: 10px;
+  font-size: 15px;
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+  border: none;
+  transition: opacity 0.15s ease;
+}
+
+.mc-btn:active {
+  opacity: 0.75;
+}
+
+.mc-btn--primary {
+  background: #1a56db;
+  color: #fff;
+}
+
+.mc-btn--outline {
+  background: transparent;
+  color: #fff;
+  border: 1.5px solid rgba(255, 255, 255, 0.55);
+}
+
+/* ── Step header (viewfinder) ────────────────────────── */
+.mc-step-header {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 5;
+  padding: 16px 20px 12px;
+  background: linear-gradient(to bottom, rgba(0,0,0,0.55) 0%, transparent 100%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+
+.mc-step-dots {
+  display: flex;
+  gap: 6px;
+}
+
+.mc-step-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.35);
+  transition: background 0.2s;
+}
+
+.mc-step-dot--active {
+  background: #fff;
+  width: 20px;
+  border-radius: 4px;
+}
+
+.mc-step-dot--done {
+  background: #4ade80;
+}
+
+.mc-step-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: #fff;
+  margin: 0;
+  text-shadow: 0 1px 3px rgba(0,0,0,0.5);
+}
+
+/* ── Preview header ──────────────────────────────────── */
+.mc-preview-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 14px 16px;
+  background: #000;
+}
+
+.mc-step-badge {
+  background: #1a56db;
+  color: #fff;
+  font-size: 11px;
+  font-weight: 700;
+  border-radius: 10px;
+  padding: 3px 8px;
+  flex-shrink: 0;
+}
+
+.mc-preview-label {
+  color: #e2e8f0;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+/* ── Hint text ───────────────────────────────────────── */
+.mc-hint-text {
+  position: absolute;
+  bottom: 130px;
+  left: 0;
+  right: 0;
+  text-align: center;
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.7);
+  pointer-events: none;
+  z-index: 5;
+  margin: 0;
+}
+
+/* ── Upload error ─────────────────────────────────────── */
+.mc-upload-error {
+  background: rgba(220, 38, 38, 0.9);
+  color: #fff;
+  font-size: 13px;
+  text-align: center;
+  padding: 10px 16px;
+  margin: 0;
+}
+
+/* ── Full-center layout (invalid / success) ──────────── */
+.mc-page--center {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #0f172a;
+}
+
+/* ── Invalid link screen ─────────────────────────────── */
+.mc-invalid {
+  text-align: center;
+  padding: 32px 24px;
+}
+
+.mc-invalid-icon {
+  font-size: 48px;
+  margin-bottom: 16px;
+}
+
+.mc-invalid-title {
+  font-size: 20px;
+  font-weight: 600;
+  color: #f1f5f9;
+  margin: 0 0 10px;
+}
+
+.mc-invalid-desc {
+  font-size: 14px;
+  color: #94a3b8;
+  margin: 0;
+  line-height: 1.6;
+}
+
+/* ── Success screen ──────────────────────────────────── */
+.mc-success {
+  text-align: center;
+  padding: 32px 24px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+}
+
+.mc-success-icon {
+  width: 72px;
+  height: 72px;
+  border-radius: 50%;
+  background: #16a34a;
+  color: #fff;
+  font-size: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 4px;
+}
+
+.mc-success-title {
+  font-size: 20px;
+  font-weight: 600;
+  color: #f1f5f9;
+  margin: 0;
+}
+
+.mc-success-desc {
+  font-size: 14px;
+  color: #94a3b8;
+  margin: 0;
+  line-height: 1.6;
+}
+
+.mc-btn--outline-dark {
+  background: transparent;
+  color: #94a3b8;
+  border: 1.5px solid #334155;
+  border-radius: 10px;
+  padding: 12px 32px;
+  font-size: 14px;
+  font-weight: 500;
+  font-family: inherit;
+  cursor: pointer;
+  margin-top: 8px;
+}
+
+.mc-btn--outline-dark:active {
+  opacity: 0.7;
+}
+
+/* ── Tablet+ tweaks ──────────────────────────────────── */
+@media (min-width: 600px) {
+  .mc-page {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #111;
+  }
+
+  .mc-viewfinder,
+  .mc-preview {
+    position: relative;
+    width: 390px;
+    height: 844px;
+    max-height: 100vh;
+    border-radius: 24px;
+    overflow: hidden;
+    box-shadow: 0 24px 60px rgba(0, 0, 0, 0.6);
+  }
+
+  .mc-video {
+    border-radius: 24px;
+  }
+}

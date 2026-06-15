@@ -5,6 +5,9 @@ import Signup from './pages/Signup.jsx'
 import UserProfile from './pages/UserProfile.jsx'
 import Bookings from './pages/Bookings.jsx'
 import Vehicles from './pages/Vehicles.jsx'
+import StaffCheckIn from './pages/StaffCheckIn.jsx'
+import MobileCamera from './pages/MobileCamera.jsx'
+import MobileBookingScanner from './pages/MobileBookingScanner.jsx'
 
 function App() {
   return (
@@ -51,6 +54,21 @@ function App() {
               onDeleteAccount={() => console.log('Delete account')}
             />
           }
+        />
+
+        <Route
+          path="/checkin"
+          element={<StaffCheckIn />}
+        />
+
+        <Route
+          path="/mobile-camera"
+          element={<MobileCamera />}
+        />
+
+        <Route
+          path="/mobile-booking-scanner"
+          element={<MobileBookingScanner />}
         />
       </Routes>
     </BrowserRouter>
