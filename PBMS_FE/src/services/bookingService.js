@@ -1,4 +1,4 @@
-const API_URL = "http://localhost:5021/api/bookings"
+const API_URL = `${import.meta.env.VITE_API_URL}/api/bookings`
 import getAuthHeader from "../components/auth/authHeader"
 
 export async function createBooking(bookingData) {

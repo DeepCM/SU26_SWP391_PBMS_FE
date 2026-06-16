@@ -1,4 +1,4 @@
-const API_URL = "http://localhost:5021/api/vehicles"
+const API_URL = `${import.meta.env.VITE_API_URL}/api/vehicles`
 import getAuthHeader from "../components/auth/authHeader"
 export const createVehicle = async (formData) => {
   const token = localStorage.getItem("token")
