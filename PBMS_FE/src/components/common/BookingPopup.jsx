@@ -57,7 +57,7 @@ function BookingPopup({ selectedVehicle, vehicleTypes, onClose }) {
       }
     } catch (err) {
       console.error("Booking error:", err);
-      alert("Có lỗi xảy ra, vui lòng thử lại!");
+      alert(err.message || "Có lỗi xảy ra, vui lòng thử lại!");
     } finally {
       setLoading(false);
     }

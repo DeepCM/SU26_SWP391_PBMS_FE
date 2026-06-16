@@ -18,7 +18,7 @@ export async function createBooking(bookingData) {
     throw new Error(message)
   }
 
-  return data
+  return await response.json()
 }
 
 export async function getMyBookings() {
