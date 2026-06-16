@@ -1,0 +1,492 @@
+@import url('https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600&display=swap');
+
+/* ── Page shell ─────────────────────────────────────── */
+.sci-page {
+  min-height: 100vh;
+  background: #f3f4f6;
+  display: flex;
+  flex-direction: column;
+  font-family: 'Be Vietnam Pro', -apple-system, Roboto, Helvetica, sans-serif;
+}
+
+/* ── Navbar ─────────────────────────────────────────── */
+.sci-navbar {
+  width: 100%;
+  height: 56px;
+  background: #fff;
+  border-bottom: 1px solid #e5e7eb;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 24px;
+  box-sizing: border-box;
+  flex-shrink: 0;
+}
+
+.sci-navbar-left {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.sci-logo {
+  color: #1a56db;
+  font-size: 18px;
+  letter-spacing: -0.18px;
+}
+
+.sci-nav-divider {
+  width: 2px;
+  height: 32px;
+  background: #e5e7eb;
+}
+
+.sci-nav-link {
+  color: #374151;
+  font-size: 13px;
+  text-decoration: none;
+  padding: 4px 0 6px;
+  border-bottom: 2px solid transparent;
+  cursor: pointer;
+}
+
+.sci-nav-link--active {
+  color: #1a56db;
+  border-bottom-color: #1a56db;
+}
+
+.sci-navbar-right {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.sci-role-badge {
+  background: #dbeafe;
+  color: #1e40af;
+  font-size: 11px;
+  border-radius: 12px;
+  padding: 3px 10px;
+}
+
+.sci-avatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: #1a56db;
+  color: #fff;
+  font-size: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.sci-logout-btn {
+  height: 28px;
+  padding: 0 10px;
+  border: none;
+  border-radius: 6px;
+  background: #1a56db;
+  color: #fff;
+  font-size: 13px;
+  font-family: inherit;
+  cursor: pointer;
+}
+
+.sci-logout-btn:hover {
+  background: #1e40af;
+}
+
+/* ── Body layout ────────────────────────────────────── */
+.sci-body {
+  display: flex;
+  flex: 1;
+}
+
+/* ── Sidebar ─────────────────────────────────────────── */
+.sci-sidebar {
+  width: 200px;
+  background: #fff;
+  border-right: 1px solid #e5e7eb;
+  padding: 20px 0;
+  flex-shrink: 0;
+}
+
+.sci-section-label {
+  font-size: 11px;
+  font-weight: 600;
+  color: #9ca3af;
+  letter-spacing: 0.06em;
+  padding: 0 16px;
+  margin: 0 0 6px;
+}
+
+.sci-section-label--support {
+  margin-top: 20px;
+}
+
+.sci-sidebar-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.sci-sidebar-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 16px;
+  font-size: 13px;
+  color: #374151;
+  cursor: pointer;
+  border-radius: 6px;
+  margin: 0 8px 2px;
+}
+
+.sci-sidebar-item:hover {
+  background: #f3f4f6;
+}
+
+.sci-sidebar-item--active {
+  background: #1a56db;
+  color: #fff;
+}
+
+.sci-sidebar-item--active:hover {
+  background: #1e40af;
+}
+
+.sci-incident-badge {
+  background: #f97316;
+  color: #fff;
+  font-size: 11px;
+  font-weight: 600;
+  border-radius: 10px;
+  padding: 1px 7px;
+  min-width: 18px;
+  text-align: center;
+}
+
+/* ── Main ────────────────────────────────────────────── */
+.sci-main {
+  flex: 1;
+  padding: 24px 28px;
+  overflow-y: auto;
+}
+
+.sci-page-title {
+  font-size: 22px;
+  font-weight: 600;
+  color: #111827;
+  margin: 0 0 4px;
+}
+
+.sci-page-subtitle {
+  font-size: 13px;
+  color: #6b7280;
+  margin: 0 0 20px;
+}
+
+/* ── Tabs ────────────────────────────────────────────── */
+.sci-tabs {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 20px;
+}
+
+.sci-tab-btn {
+  padding: 8px 20px;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  font-size: 14px;
+  font-family: inherit;
+  background: #fff;
+  color: #374151;
+  cursor: pointer;
+}
+
+.sci-tab-btn--active {
+  background: #1a56db;
+  color: #fff;
+  border-color: #1a56db;
+}
+
+/* ── Content grid ────────────────────────────────────── */
+.sci-content {
+  display: grid;
+  grid-template-columns: 1fr 1fr 320px;
+  gap: 16px;
+  align-items: start;
+}
+
+.sci-content--guest {
+  grid-template-columns: 1fr 320px;
+}
+
+/* ── Detection panels (camera + photo) ───────────────── */
+.sci-detection-panel {
+  background: #fff;
+  border-radius: 12px;
+  padding: 20px;
+  border: 1px solid #e5e7eb;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.sci-panel-heading {
+  font-size: 15px;
+  font-weight: 600;
+  color: #111827;
+  margin: 0;
+}
+
+.sci-camera-box {
+  border: 1.5px dashed #d1d5db;
+  border-radius: 10px;
+  height: 220px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-end;
+  padding-bottom: 16px;
+  background: #fafafa;
+}
+
+.sci-camera-label {
+  font-size: 13px;
+  color: #374151;
+  margin: 0 0 4px;
+}
+
+.sci-camera-status {
+  font-size: 12px;
+  color: #1a56db;
+  background: #eff6ff;
+  border-radius: 12px;
+  padding: 2px 10px;
+}
+
+/* ── Form panel ──────────────────────────────────────── */
+.sci-form-panel {
+  background: #fff;
+  border-radius: 12px;
+  padding: 20px;
+  border: 1px solid #e5e7eb;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.sci-qr-prompt-label {
+  font-size: 12px;
+  color: #9ca3af;
+  text-align: center;
+  margin: 0;
+}
+
+.sci-qr-btn {
+  width: 100%;
+  padding: 11px;
+  border: 1.5px dashed #9ca3af;
+  border-radius: 8px;
+  background: transparent;
+  color: #374151;
+  font-size: 13px;
+  font-family: inherit;
+  cursor: pointer;
+}
+
+.sci-qr-btn:hover {
+  border-color: #1a56db;
+  color: #1a56db;
+}
+
+.sci-field-group {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.sci-field-label {
+  font-size: 11px;
+  font-weight: 600;
+  color: #374151;
+  letter-spacing: 0.04em;
+}
+
+.sci-field-input {
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  padding: 9px 12px;
+  font-size: 14px;
+  font-family: inherit;
+  color: #111827;
+  background: #fff;
+  outline: none;
+  box-sizing: border-box;
+  width: 100%;
+}
+
+.sci-field-input:focus {
+  border-color: #1a56db;
+  box-shadow: 0 0 0 3px rgba(26, 86, 219, 0.1);
+}
+
+.sci-field-select {
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%236b7280' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 10px center;
+  padding-right: 32px;
+  cursor: pointer;
+}
+
+.sci-confirm-btn {
+  width: 100%;
+  padding: 13px;
+  border: none;
+  border-radius: 8px;
+  background: #1a56db;
+  color: #fff;
+  font-size: 15px;
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+  margin-top: 4px;
+}
+
+.sci-confirm-btn:hover {
+  background: #1e40af;
+}
+
+.sci-form-hint {
+  font-size: 12px;
+  color: #9ca3af;
+  text-align: center;
+  border: 1px dashed #e5e7eb;
+  border-radius: 8px;
+  padding: 10px;
+  margin: 0;
+}
+
+/* ── QR Modal ──────────────────────────────────────── */
+.sci-qr-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.45);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 999;
+}
+
+.sci-qr-modal {
+  position: relative;
+  width: 360px;
+  background: #fff;
+  border-radius: 14px;
+  padding: 24px;
+  box-shadow: 0 20px 50px rgba(15, 23, 42, 0.25);
+  text-align: center;
+}
+
+.sci-qr-modal-close {
+  position: absolute;
+  top: 10px;
+  right: 12px;
+  border: none;
+  background: transparent;
+  font-size: 26px;
+  cursor: pointer;
+  color: #64748b;
+}
+
+.sci-qr-image {
+  width: 260px;
+  height: 260px;
+  margin: 16px auto;
+  display: block;
+}
+
+.sci-qr-link {
+  font-size: 13px;
+  color: #475569;
+  word-break: break-all;
+}
+
+
+/* ── Responsive ──────────────────────────────────────── */
+@media (max-width: 1200px) {
+  .sci-content {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .sci-content--guest {
+    grid-template-columns: 1fr 320px;
+  }
+
+  .sci-form-panel {
+    grid-column: 1 / -1;
+  }
+
+  .sci-content--guest .sci-form-panel {
+    grid-column: auto;
+  }
+}
+
+@media (max-width: 1024px) {
+  .sci-content {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 768px) {
+  .sci-sidebar {
+    display: none;
+  }
+
+  .sci-main {
+    padding: 16px;
+  }
+}
+
+/* ── Session status badge ────────────────────────────── */
+.sci-session-badge {
+  margin-left: 8px;
+  font-size: 11px;
+  font-weight: 600;
+  color: #2563eb;
+  animation: sci-pulse 1.2s ease-in-out infinite;
+}
+
+@keyframes sci-pulse {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0.4; }
+}
+
+/* ── Booking info block ──────────────────────────────── */
+.sci-booking-info {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.sci-booking-row {
+  display: flex;
+  gap: 8px;
+  font-size: 13px;
+}
+
+.sci-booking-label {
+  color: #6b7280;
+  min-width: 120px;
+  flex-shrink: 0;
+}
+
+.sci-booking-value {
+  color: #111827;
+  font-weight: 500;
+}
+
