@@ -209,7 +209,7 @@ export default function Bookings() {
   const [bookings, setBookings] = useState([])
   useEffect(() => {
     const fetchBookings = async () => {
-      try { // <--- Added missing opening brace here
+      try { 
         const data = await getMyBookings();
 
         // TRANSFORM the API data to match your component
@@ -219,7 +219,6 @@ export default function Bookings() {
           vehicleType: getVehicleIconKey(item.vehicleTypeName),
           vehicleLabel: item.vehicleTypeName,
           licensePlate: item.licensePlate,
-          // Only keep entry information
           entryTime: new Date(item.scheduledCheckin).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
           entryDate: new Date(item.scheduledCheckin).toLocaleDateString(),
           location: `Tầng ${item.floorNumber}`,
@@ -229,7 +228,7 @@ export default function Bookings() {
         setBookings(formattedData);
         setLoading(false);
       } catch (err) {
-        console.error("Error fetching bookings:", err);
+        console.error("Lỗi khi lấy đặt chỗ:", err);
       }
     };
 
