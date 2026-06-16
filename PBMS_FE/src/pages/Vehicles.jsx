@@ -1,5 +1,4 @@
 import { useState, useEffect } from 'react'
-import { useNavigate } from 'react-router-dom'
 import { getMyVehicles, cancelVehicle, updateVehicle } from '../services/vehicleService'
 import { getVehicleTypes } from '../services/vehicleTypeService'
 import VehiclePopup from '../components/common/VehiclePopup'
@@ -40,18 +39,19 @@ const VEHICLE_ICON = {
 
 // ─── Status config ─────────────────────────────────────────────
 const STATUS_CONFIG = {
-  active: {
-    label: 'Đang đặt chỗ',
-    badgeClass: 'badge--active',
-    stripClass: 'strip--active',
-    dot: '#22C55E',
-  },
   none: {
     label: 'Chưa đăng kí',
     badgeClass: 'badge--upcoming',
     stripClass: 'strip--upcoming',
     dot: '#1B5EF7',
   },
+  active: {
+    label: 'Đang đặt chỗ',
+    badgeClass: 'badge--active',
+    stripClass: 'strip--active',
+    dot: '#22C55E',
+  },
+
 }
 
 
@@ -64,7 +64,6 @@ const TABS = [
 
 // ─── Main Page ─────────────────────────────────────────────────
 export default function Vehicles() {
-  const navigate = useNavigate()
   const [isLoggedIn, setIsLoggedIn] = useState(
     !!localStorage.getItem("token")
   )
@@ -152,7 +151,7 @@ export default function Vehicles() {
   }
 
   function VehicleCard({ vehicle, onCancel }) {
-    const status = STATUS_CONFIG[vehicle.status] || STATUS_CONFIG['active'];
+    const status = STATUS_CONFIG[vehicle.status] || STATUS_CONFIG['none'];
     const vehicleIcon = VEHICLE_ICON[vehicle.vehicleType] || VEHICLE_ICON['car'];
     const VEHICLE_NAME_MAP = {
       "Xe máy": "Xe máy",
@@ -161,12 +160,6 @@ export default function Vehicles() {
     };
     return (
       <div className="booking-card">
-        {selectedImageUrl && (
-          <ImgModal
-            Url={selectedImageUrl}
-            onClose={() => setSelectedImageUrl(null)}
-          />
-        )}
         <div className={`card-top-strip ${status.stripClass}`} />
 
         {/* Header */}
@@ -221,14 +214,7 @@ export default function Vehicles() {
             onClick={() => handleUpdate(vehicle)}>
             Chỉnh sửa
           </button>
-          {showVehiclePopup && (
-            <VehiclePopup
-              vehicle={selectedVehicle}
-              vehicleTypes={vehicleTypes}
-              onClose={() => setShowVehiclePopup(false)}
-              onSave={refreshVehicleList}
-            />
-          )}
+
           <button
             className="btn-action btn-action--danger"
             onClick={() => onCancel(vehicle.id)}
@@ -237,6 +223,7 @@ export default function Vehicles() {
           </button>
         </div>
       </div>
+
     )
   }
 
@@ -255,13 +242,6 @@ export default function Vehicles() {
           <button className="booking-submit-btn" onClick={handleCreate}>
             Thêm phương tiện
           </button>
-          {showVehiclePopup && (
-            <VehiclePopup
-              vehicle={selectedVehicle}
-              vehicleTypes={vehicleTypes}
-              onClose={() => setShowVehiclePopup(false)}
-            />
-          )}
         </div>
 
         {/* Summary strip */}
@@ -310,6 +290,27 @@ export default function Vehicles() {
           ))}
         </div>
       </main>
+      {/* --- SINGLE SOURCE OF TRUTH FOR POPUPS --- */}
+      
+      {/* 1. Only one Modal for images */}
+      {selectedImageUrl && (
+        <ImgModal
+          Url={selectedImageUrl}
+          onClose={() => setSelectedImageUrl(null)}
+        />
+      )}
+
+      {showVehiclePopup && (
+        <VehiclePopup
+          vehicle={selectedVehicle}
+          vehicleTypes={vehicleTypes}
+          onClose={() => setShowVehiclePopup(false)}
+          onSave={() => {
+            refreshVehicleList();
+            setShowVehiclePopup(false);
+          }}
+        />
+      )}
     </div>
   )
 }

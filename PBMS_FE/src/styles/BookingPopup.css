@@ -1,16 +1,3 @@
-.booking-overlay {
-  position: fixed;
-  inset: 0;
-
-  background: rgba(0, 0, 0, 0.45);
-
-  display: flex;
-  align-items: center;
-  justify-content: center;
-
-  z-index: 999;
-}
-
 .booking-popup {
   position: relative;
 
@@ -28,6 +15,21 @@
 
   animation: popupFade 0.25s ease;
 }
+
+/*
+.booking-overlay {
+  position: fixed;
+  inset: 0;
+
+  background: rgba(0, 0, 0, 0.45);
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  z-index: 999;
+}
+*/
 
 @keyframes popupFade {
   from {
@@ -157,4 +159,71 @@
 .booking-error {
   color: #dc2626;
   font-size: 13px;
+}
+
+/* Container to center everything vertically/horizontally */
+.file-upload-container {
+  display: flex;
+  align-items: center;
+  /* Aligns button and text vertically */
+  gap: 12px;
+  /* Space between button and text */
+  margin-top: 8px;
+}
+
+.file-upload-text {
+  font-size: 14px;
+  color: #64748b;
+  /* Muted gray text */
+}
+
+/* Hide the actual file input */
+input[type="file"] {
+  display: none;
+}
+
+/* Style the label to look exactly like your submit button */
+.custom-file-upload {
+  display: inline-block;
+  cursor: pointer;
+  text-align: center;
+  /* Ensure it matches button padding/sizing */
+  padding: 10px 20px;
+}
+
+/* Override any default input outlines */
+.file-upload-container input:focus,
+.file-upload-container label:focus {
+  outline: none !important;
+  box-shadow: none !important;
+}
+
+.file-upload-btn {
+  height: 35px;
+  /* Smaller height */
+  border: 2px solid #2563eb;
+  /* Blue outline */
+  border-radius: 8px;
+  padding: 0 16px;
+
+  background: transparent;
+  /* No color fill */
+  color: #2563eb;
+  /* Text matches the border color */
+
+  font-size: 13px;
+  /* Smaller font */
+  font-weight: 600;
+
+  cursor: pointer;
+  transition: 0.2s;
+
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.file-upload-btn:hover {
+  background: #eff6ff;
+  /* Very light blue on hover */
 }

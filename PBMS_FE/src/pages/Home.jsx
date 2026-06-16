@@ -6,6 +6,7 @@ import Navbar from '../components/common/Navbar'
 import BookingPopup from '../components/common/BookingPopup'
 import { getVehicleTypes, getAvailableSlots, getPricingPreview } from '../services/vehicleTypeService'
 import { getMyBookings } from '../services/bookingService'
+import { getMyVehicles } from '../services/vehicleService'
 import { } from '../services/paymentService'
 import {
   IconCar,
@@ -54,14 +55,18 @@ function Home({ }) {
     "Tầng B3": " - Ô tô"
   };
   const [slotStatus, setSlotStatus] = useState([])
+  const [vehicles, setVehicles] = useState([])
   const [parkingData, setParkingData] = useState(true)
   useEffect(() => {
     async function initializeHome() {
       try {
         setLoading(true);
-        const types = await getVehicleTypes();
+        const [types, vehicles] = await Promise.all([
+          getVehicleTypes(),
+          getMyVehicles()
+        ]);
         setVehicleTypes(types);
-
+        setVehicles(vehicles);
         if (types.length > 0) {
           setSelectedVehicle(types[0].name);
           setValue('vehicleTypeID', types[0].id);
@@ -120,12 +125,10 @@ function Home({ }) {
   )
   const [pendingBooking, setPendingBooking] = useState(null);
   const [showBookingPopup, setShowBookingPopup] = useState(false);
-  const [showPaymentPopup, setShowPaymentPopup] = useState(false);
 
   const handleProceedToPayment = (bookingData) => {
     setPendingBooking(bookingData); // Save the data collected from BookingPopup
     setShowBookingPopup(false);
-    setShowPaymentPopup(true);      // Open the next step
   };
   const [isLoggedIn, setIsLoggedIn] = useState(
     !!localStorage.getItem("token")
@@ -151,6 +154,16 @@ function Home({ }) {
 
     if (!localStorage.getItem("token")) {
       alert("Vui lòng đăng nhập để đặt chỗ.");
+      return;
+    }
+    const hasMatchingVehicle = vehicles.some((v) => {
+      const typeMatches = v.vehicleTypeName === selectedType.name;
+      const isAvailable = v.hasActiveBooking === 'false' || v.hasActiveBooking === false;
+      return typeMatches && isAvailable;
+    });
+    
+    if (!hasMatchingVehicle) {
+      alert("Bạn chưa có phương tiện nào thuộc loại này hoặc phương tiện đã có lịch đặt.");
       return;
     }
 

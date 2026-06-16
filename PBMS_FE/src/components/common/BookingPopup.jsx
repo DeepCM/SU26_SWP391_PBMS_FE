@@ -87,7 +87,7 @@ function BookingPopup({ selectedVehicle, vehicleTypes, onClose }) {
 
     return formatDateTimeLocal(max);
   };
-
+  
   const VEHICLE_OPTIONS = [
     { id: 1, name: "Xe máy" },
     { id: 2, name: "Ô tô" },

@@ -91,7 +91,7 @@ function Login() {
                   <input
                     type="email"
                     className="login-input"
-                    placeholder="example@example.com"
+                    placeholder=""
                     {...register('email', {
                       required: 'Vui lòng nhập email',
                       pattern: {
@@ -115,7 +115,7 @@ function Login() {
                   <input
                     type={showPassword ? 'text' : 'password'}
                     className="login-input login-input--password"
-                    placeholder="••••••••"
+                    placeholder=""
                     {...register('password', { required: 'Password is required' })}
                   />
                   <button

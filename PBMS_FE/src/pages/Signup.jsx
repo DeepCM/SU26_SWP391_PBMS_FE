@@ -37,7 +37,8 @@ function Signup() {
         fullName: data.fullName,
         email: data.email,
         password: data.password,
-        confirmPassword: data.confirmPassword
+        confirmPassword: data.confirmPassword,
+        avatarFile: data.Avatar
       })
 
       if (result.status === 201) {
@@ -108,7 +109,7 @@ function Signup() {
                   <input
                     type="text"
                     className="login-input"
-                    placeholder="Nguyễn Văn An"
+                    placeholder=""
                     {...register('fullName', { required: 'Full name is required' })}
                   />
                 </div>
@@ -122,7 +123,7 @@ function Signup() {
                   <input
                     type="email"
                     className="login-input"
-                    placeholder="example@example.com"
+                    placeholder=""
                     {...register('email', {
                       required: 'Vui lòng nhập email',
                       pattern: {
@@ -142,7 +143,7 @@ function Signup() {
                   <input
                     type={showPassword ? 'text' : 'password'}
                     className="login-input login-input--password"
-                    placeholder="••••••••"
+                    placeholder=""
                     {...register('password', {
                       required: 'Password is required',
                       minLength: {
@@ -170,7 +171,7 @@ function Signup() {
                   <input
                     type={showConfirmPassword ? 'text' : 'password'}
                     className="login-input login-input--password"
-                    placeholder="••••••••"
+                    placeholder=""
                     {...register('confirmPassword', {
                       required: 'Confirm password is required',
                       validate: (value) =>
@@ -201,7 +202,7 @@ function Signup() {
               <div className="login-field-group">
                 <input
                   type="text"
-                  placeholder="Nhập mã xác thực"
+                  placeholder=""
                   value={otp}
                   onChange={(e) => setOtp(e.target.value)}
                 />
