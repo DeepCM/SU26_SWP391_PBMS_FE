@@ -7,19 +7,18 @@ export async function createBooking(bookingData) {
     headers: getAuthHeader(),
     body: JSON.stringify(bookingData)
   })
-
   if (!response.ok) {
     const text = await response.text()
     let message = response.status === 401
       ? 'Phiên đăng nhập hết hạn, vui lòng đăng nhập lại'
       : 'Có lỗi xảy ra'
     if (text) {
-      try { message = JSON.parse(text).message || message } catch {}
+      try { message = JSON.parse(text).message || message } catch { }
     }
     throw new Error(message)
   }
 
-  return await response.json()
+  return data
 }
 
 export async function getMyBookings() {

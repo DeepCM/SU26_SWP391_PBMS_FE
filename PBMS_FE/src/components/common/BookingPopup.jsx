@@ -1,6 +1,7 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { createBooking } from '../../services/bookingService';
+import { getMyVehicles } from '../../services/vehicleService';
 import { getPaymentLink } from '../../services/paymentService';
 import '../../styles/BookingPopup.css';
 
@@ -9,7 +10,28 @@ function BookingPopup({ selectedVehicle, vehicleTypes, onClose }) {
   const [step, setStep] = useState(1);
   const [loading, setLoading] = useState(false);
   const [paymentData, setPaymentData] = useState(null);
+  const [vehicles, setVehicles] = useState([])
+  useEffect(() => {
+    const fetchVehicles = async () => {
+      try {
+        const data = await getMyVehicles();
+        const formattedData = data.map(item => ({
+          id: item.id,
+          status: item.hasActiveBooking ? 'active' : 'none',
+          vehicleTypeName: item.vehicleTypeName,
+          vehicleTypeId: item.vehicleTypeId,
+          licensePlate: item.licensePlate,
+          vehicleImgUrl: item.vehicleImgUrl
+        }));
+        setVehicles(formattedData);
+        setLoading(false);
+      } catch (err) {
+        console.error("Lỗi khi lấy phương tiện:", err);
+      }
+    };
 
+    fetchVehicles();
+  }, []);
   const { register, handleSubmit, watch, formState: { errors } } = useForm({
     defaultValues: { vehicleType: selectedVehicle }
   });
@@ -19,10 +41,8 @@ function BookingPopup({ selectedVehicle, vehicleTypes, onClose }) {
     try {
       // 0. Set time
       const localDate = new Date(data.entryTime);
-
       const booking = await createBooking({
-        vehicleTypeId: selectedVehicleInfo.id,
-        licensePlate: data.licensePlate,
+        vehicleId: data.vehicleId,
         scheduledCheckin: localDate.toISOString()
       });
 
@@ -147,8 +167,21 @@ function BookingPopup({ selectedVehicle, vehicleTypes, onClose }) {
             />
           </div>
           <div className="booking-group">
-            <label>Biển số xe</label>
-            <input {...register('licensePlate', { required: true })} placeholder="VD: 59A-12345" />
+            <label>Phương tiện</label>
+            <select {...register('vehicleId', { required: true })}>
+              <option value="">Chọn phương tiện</option>
+              {vehicles
+                .filter(v =>
+                  v.status === 'none' &&
+                  v.vehicleTypeName === selectedVehicleName
+                )
+                .map(vehicle => (
+                  <option key={vehicle.id} value={vehicle.id}>
+                    {vehicle.licensePlate}
+                  </option>
+                ))
+              }
+            </select>
           </div>
 
 
@@ -162,17 +195,6 @@ function BookingPopup({ selectedVehicle, vehicleTypes, onClose }) {
             {loading ? "Đang xử lý..." : "Tiếp tục thanh toán"}
           </button>
         </form>
-        {/*
-          <div className="booking-payment">
-            <h3>Thanh toán</h3>
-            <p className="booking-price">Phí tạm tính: </p>
-            {/*{paymentData?.amount || '-'}*/}
-        {/* The src will now use the dynamic URL from your backend 
-
-            <p className="booking-note">Quét mã QR để hoàn tất đặt chỗ</p>
-            <button className="booking-submit-btn" onClick={onClose}>Đóng</button>
-          </div>
-*/}
       </div>
     </div>
   );
