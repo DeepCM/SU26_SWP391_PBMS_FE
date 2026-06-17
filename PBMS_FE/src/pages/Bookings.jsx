@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { getMyBookings, cancelBooking } from '../services/bookingService'
+import { syncPaymentStatus } from '../services/paymentService'
 import Navbar from '../components/common/Navbar'
 import '../styles/Home.css'
 import '../styles/Bookings.css'
@@ -208,27 +209,39 @@ export default function Bookings() {
   // Replace with API call when available
   const [bookings, setBookings] = useState([])
   useEffect(() => {
+    // TRANSFORM the API data to match your component
+    const formatBookings = (data) => data.map(item => ({
+      id: item.id,
+      status: mapBookingStatus(item.status),
+      vehicleType: getVehicleIconKey(item.vehicleTypeName),
+      vehicleLabel: item.vehicleTypeName,
+      licensePlate: item.licensePlate,
+      entryTime: new Date(item.scheduledCheckin).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+      entryDate: new Date(item.scheduledCheckin).toLocaleDateString(),
+      location: `Tầng ${item.floorNumber}`,
+      qrUrl: item.qrCodeImage ? `data:image/png;base64,${item.qrCodeImage}` : null
+    }));
+
     const fetchBookings = async () => {
-      try { 
-        const data = await getMyBookings();
+      try {
+        let data = await getMyBookings();
 
-        // TRANSFORM the API data to match your component
-        const formattedData = data.map(item => ({
-          id: item.id,
-          status: mapBookingStatus(item.status),
-          vehicleType: getVehicleIconKey(item.vehicleTypeName),
-          vehicleLabel: item.vehicleTypeName,
-          licensePlate: item.licensePlate,
-          entryTime: new Date(item.scheduledCheckin).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-          entryDate: new Date(item.scheduledCheckin).toLocaleDateString(),
-          location: `Tầng ${item.floorNumber}`,
-          qrUrl: item.qrCodeImage ? `data:image/png;base64,${item.qrCodeImage}` : null
-        }));
+        // Fallback khi webhook PayOS chưa/không tới: với mỗi booking còn pending_payment,
+        // chủ động hỏi backend đồng bộ trạng thái từ PayOS. Nếu có thay đổi → tải lại danh sách.
+        const pending = data.filter(item => item.status === 'pending_payment');
+        if (pending.length > 0) {
+          const results = await Promise.all(pending.map(item => syncPaymentStatus(item.id)));
+          const changed = results.some(r => r && r.status !== 'pending_payment');
+          if (changed) {
+            data = await getMyBookings();
+          }
+        }
 
-        setBookings(formattedData);
-        setLoading(false);
+        setBookings(formatBookings(data));
       } catch (err) {
         console.error("Lỗi khi lấy đặt chỗ:", err);
+      } finally {
+        setLoading(false);
       }
     };
 

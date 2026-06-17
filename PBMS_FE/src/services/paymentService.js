@@ -23,3 +23,22 @@ export async function getPaymentLink(bookingId) {
 
   return await response.json()
 }
+
+// Đồng bộ trạng thái thanh toán từ PayOS (fallback khi webhook không tới).
+// Trả về booking đã cập nhật (kèm QR nếu đã thanh toán). Không throw để không
+// chặn việc render danh sách — chỉ trả về null nếu lỗi.
+export async function syncPaymentStatus(bookingId) {
+  try {
+    const response = await fetch(
+      `${API_URL}/booking/${bookingId}/sync`,
+      {
+        method: "POST",
+        headers: getAuthHeader()
+      }
+    )
+    if (!response.ok) return null
+    return await response.json()
+  } catch {
+    return null
+  }
+}
