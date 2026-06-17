@@ -494,7 +494,7 @@
 }
 
 /* ─── QR Modal ─────────────────────────────────────────────── */
-.qr-modal-overlay {
+.qr-modal-overlay, .booking-overlay{
   position: fixed;
   inset: 0;
   background: rgba(0, 0, 0, 0.6);

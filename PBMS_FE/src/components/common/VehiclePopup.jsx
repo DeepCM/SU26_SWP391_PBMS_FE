@@ -7,13 +7,14 @@ function VehiclePopup({ vehicle, vehicleTypes, onClose, onSave }) {
   const [loading, setLoading] = useState(false);
   const [imageFile, setImageFile] = useState(null);
 
-  const { register, handleSubmit, reset, formState: { errors } } = useForm()
+  const { register, handleSubmit, reset, formState: { errors } } = useForm();
+
   useEffect(() => {
     if (vehicle) {
       reset({
         licensePlate: vehicle.licensePlate,
         vehicleTypeId: vehicle.vehicleTypeId,
-        // Add other fields you want to prefill
+        vehicleImgUrl: vehicle.vehicleImgUrl
       });
     } else {
       reset({
@@ -21,81 +22,42 @@ function VehiclePopup({ vehicle, vehicleTypes, onClose, onSave }) {
         vehicleTypeId: vehicleTypes[0]?.id
       });
     }
-  }, [vehicle, vehicleTypes, reset])
+  }, [vehicle, vehicleTypes, reset]);
 
   const onSubmit = async (data) => {
     setLoading(true);
     try {
-      const formData = new FormData();
-      formData.append("VehicleTypeId", data.vehicleTypeId);
-      formData.append("LicensePlate", data.licensePlate);
-
-      // Only append the file if the user selected one
+      // Create a plain object (or use FormData if your backend strictly requires it)
+      const payload = {
+        vehicleTypeId: data.vehicleTypeId,
+        licensePlate: data.licensePlate,
+        vehicleImgUrl: data.vehicleImgUrl // Use the URL provided by the form/input
+      };
       if (imageFile) {
-        formData.append("VehicleImage", imageFile);
+        formData.append("vehicleImg", imageFile);
       }
-
-      // Your service must be updated to handle FormData instead of JSON
       if (vehicle?.id) {
-        await updateVehicle(vehicle.id, formData);
+        await updateVehicle(vehicle.id, payload);
       } else {
-        await createVehicle(formData);
+        await createVehicle(payload);
       }
 
       onSave();
       onClose();
     } catch (err) {
       console.error("Save error:", err);
+      alert("Lỗi khi lưu thông tin");
     } finally {
       setLoading(false);
     }
   };
-  // This function now talks to your cloud service
-  const uploadImage = async (file) => {
-    const formData = new FormData();
-    formData.append("file", file);
-    formData.append("upload_preset", "PBMS_FE_");
 
-    console.log("Uploading file to Cloudinary...", file);
-
-    try {
-      const response = await fetch(
-        "https://api.cloudinary.com/v1_1/dc1oi7y1i/image/upload",
-        {
-          method: "POST",
-          body: formData,
-        }
-      );
-
-      const data = await response.json();
-      console.log("Cloudinary Response:", data); // Check if this shows 'secure_url'
-
-      if (!response.ok) {
-        throw new Error(data.error?.message || "Upload failed");
-      }
-
-      return data.secure_url;
-    } catch (error) {
-      console.error("Upload error:", error);
-      throw error;
-    }
-  };
-  {/*
-  const handleClose = () => {
-  setImageFile(null); // Clear the file selection
-  onClose();          // Call the original close handler
-};
-// ... In your JSX
-<button className="booking-close-btn" onClick={handleClose}>✕</button>
-*/}
   return (
     <div className="booking-overlay">
       <div className="booking-popup">
         <button className="booking-close-btn" onClick={onClose}>✕</button>
         <form onSubmit={handleSubmit(onSubmit)} className="booking-form">
-          <h2 className="booking-title">
-            {vehicle ? "Chỉnh sửa xe" : "Thêm xe mới"}
-          </h2>
+          <h2 className="booking-title">{vehicle ? "Chỉnh sửa xe" : "Thêm xe mới"}</h2>
 
           <div className="booking-group">
             <label>Loại xe</label>
@@ -113,24 +75,42 @@ function VehiclePopup({ vehicle, vehicleTypes, onClose, onSave }) {
 
           <div className="booking-group">
             <label>Hình ảnh xe</label>
-
-            {/* Show current image if in update mode */}
+            {/* The preview image */}
             {vehicle?.vehicleImgUrl && (
               <div className="current-image">
                 <img className="qr-wrap" src={vehicle.vehicleImgUrl} alt="Current" style={{ width: '100px' }} />
                 <p>Giữ nguyên ảnh cũ nếu không chọn file mới</p>
               </div>
             )}
-
-            <input type="file" onChange={(e) => setImageFile(e.target.files[0])} />
+            <div className="file-upload-container">
+              <label htmlFor="file-upload" className="file-upload-btn">
+                Chọn ảnh
+              </label>
+              <span className="file-upload-text">
+                {imageFile ? imageFile.name : "Tải lên từ máy tính"}
+              </span>
+              <input
+                id="file-upload"
+                type="file"
+                accept="image/*" /* This forces the file picker to show only images */
+                style={{ display: 'none' }}
+                onChange={(e) => {
+                  const file = e.target.files[0];
+                  if (file) {
+                    console.log("Setting file:", file.name);
+                    setImageFile(file); // This MUST trigger the update
+                  }
+                }}
+              />
+            </div>
           </div>
 
-          <button type="submit" disabled={loading}>
+          <button type="submit" disabled={loading} className='booking-submit-btn'>
             {loading ? "Đang xử lý..." : "Lưu thông tin"}
           </button>
         </form>
-      </div>
-    </div>
+      </div >
+    </div >
   );
 }
 
