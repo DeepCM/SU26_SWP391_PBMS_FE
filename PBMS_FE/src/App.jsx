@@ -5,7 +5,8 @@ import Signup from './pages/Signup.jsx'
 import UserProfile from './pages/UserProfile.jsx'
 import Bookings from './pages/Bookings.jsx'
 import Vehicles from './pages/Vehicles.jsx'
-import StaffCheckIn from './pages/StaffCheckIn.jsx'
+import CheckIn from './pages/CheckIn.jsx'
+import CheckOut from './pages/CheckOut.jsx'
 import MobileCamera from './pages/MobileCamera.jsx'
 import MobileBookingScanner from './pages/MobileBookingScanner.jsx'
 
@@ -58,7 +59,12 @@ function App() {
 
         <Route
           path="/checkin"
-          element={<StaffCheckIn />}
+          element={<CheckIn />}
+        />
+
+        <Route
+          path="/checkout"
+          element={<CheckOut />}
         />
 
         <Route

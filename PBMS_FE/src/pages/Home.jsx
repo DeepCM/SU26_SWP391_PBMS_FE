@@ -61,12 +61,17 @@ function Home({ }) {
     async function initializeHome() {
       try {
         setLoading(true);
-        const [types, vehicles] = await Promise.all([
-          getVehicleTypes(),
-          getMyVehicles()
-        ]);
+        const types = await getVehicleTypes();
         setVehicleTypes(types);
-        setVehicles(vehicles);
+
+        if (localStorage.getItem("token")) {
+          try {
+            const vehicles = await getMyVehicles();
+            setVehicles(vehicles);
+          } catch (err) {
+            console.error("Failed to load vehicles:", err);
+          }
+        }
         if (types.length > 0) {
           setSelectedVehicle(types[0].name);
           setValue('vehicleTypeID', types[0].id);

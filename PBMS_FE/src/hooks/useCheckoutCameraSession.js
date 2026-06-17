@@ -1,18 +1,11 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
-import {
-  createCameraSession,
-  getCameraSession,
-  TERMINAL_STATUSES,
-} from '../services/cameraSessionService'
+import { getCameraSession, TERMINAL_STATUSES } from '../services/cameraSessionService'
+import { createCheckoutPhotoSession } from '../services/checkOutService'
 
 const POLL_INTERVAL_MS = 3000
 
 /**
- * Các trạng thái nội bộ của hook (khác với status từ backend).
- * idle      — chưa có session nào
- * creating  — đang gọi POST tạo session
- * active    — session đang tồn tại, đang polling
- * done      — session kết thúc (Completed / Expired / Cancelled)
+ * Các trạng thái nội bộ của hook (giống useCameraSession, dùng riêng cho check-out).
  */
 export const SESSION_PHASES = {
   IDLE: 'idle',
@@ -22,27 +15,17 @@ export const SESSION_PHASES = {
 }
 
 /**
- * useCameraSession
- *
- * Expose:
- *  - phase: 'idle' | 'creating' | 'active' | 'done'
- *  - sessionData: object | null  — response mới nhất từ GET /camera-sessions/{id}
- *  - mobileUrl: string | null    — URL để generate QR
- *  - error: string | null        — thông báo lỗi
- *  - startSession(purpose, gateId) — tạo session với purpose chỉ định
- *  - reset()                       — dọn sạch state, sẵn sàng cho xe tiếp theo
+ * useCheckoutCameraSession — tạo & poll camera session để chụp ảnh check-out
+ * (khuôn mặt + biển số xe ra), gắn với một ParkingSessionId cụ thể.
  */
-export function useCameraSession() {
+export function useCheckoutCameraSession() {
   const [phase, setPhase] = useState(SESSION_PHASES.IDLE)
   const [sessionData, setSessionData] = useState(null)
   const [mobileUrl, setMobileUrl] = useState(null)
   const [error, setError] = useState(null)
 
-  // Lưu sessionId và intervalId vào ref để tránh stale closure trong interval
-  const sessionIdRef = useRef(null)
   const intervalRef = useRef(null)
 
-  // Dừng polling — gọi bất cứ khi nào cần
   const stopPolling = useCallback(() => {
     if (intervalRef.current !== null) {
       clearInterval(intervalRef.current)
@@ -50,15 +33,12 @@ export function useCameraSession() {
     }
   }, [])
 
-  // Cleanup khi component unmount
   useEffect(() => {
     return () => stopPolling()
   }, [stopPolling])
 
-  // Bắt đầu polling GET /camera-sessions/{sessionId}
   const startPolling = useCallback(
     (sessionId) => {
-      // Tránh tạo nhiều interval cùng lúc
       stopPolling()
 
       intervalRef.current = setInterval(async () => {
@@ -66,7 +46,6 @@ export function useCameraSession() {
           const { status, data } = await getCameraSession(sessionId)
 
           if (status !== 200) {
-            // Lỗi từ server — dừng polling, báo lỗi
             stopPolling()
             setError(data?.message || 'Không thể lấy thông tin session.')
             setPhase(SESSION_PHASES.DONE)
@@ -75,13 +54,11 @@ export function useCameraSession() {
 
           setSessionData(data)
 
-          // Dừng polling nếu session đã kết thúc
           if (TERMINAL_STATUSES.includes(data.status)) {
             stopPolling()
             setPhase(SESSION_PHASES.DONE)
           }
-        } catch (err) {
-          // Lỗi network — dừng polling
+        } catch {
           stopPolling()
           setError('Mất kết nối. Vui lòng thử lại.')
           setPhase(SESSION_PHASES.DONE)
@@ -92,37 +69,33 @@ export function useCameraSession() {
   )
 
   /**
-   * Tạo session với purpose chỉ định và bắt đầu polling.
-   * @param {string} purpose
-   * @param {number} gateId
+   * Tạo phiên chụp ảnh check-out cho một ParkingSession cụ thể.
+   * @param {number} parkingSessionId
+   * @param {'GUEST' | 'BOOKING'} flowType
    */
   const startSession = useCallback(
-    async (purpose, gateId) => {
-      // Reset state cũ trước khi tạo session mới — tránh hiển thị ảnh/OCR của session cũ
+    async (parkingSessionId, flowType = 'GUEST') => {
       setSessionData(null)
       setMobileUrl(null)
       setError(null)
-      sessionIdRef.current = null
       setPhase(SESSION_PHASES.CREATING)
 
       try {
-        const { status, data } = await createCameraSession({
-          purpose,
-          // TODO: lấy gateId thực từ context/profile/config
-          gateId,
+        const { status, data } = await createCheckoutPhotoSession({
+          parkingSessionId,
+          flowType,
         })
 
         if (status !== 201) {
-          setError(data?.message || 'Không thể tạo session. Vui lòng thử lại.')
+          setError(data?.message || 'Không thể tạo phiên chụp ảnh. Vui lòng thử lại.')
           setPhase(SESSION_PHASES.IDLE)
           return
         }
 
-        sessionIdRef.current = data.sessionId
         setMobileUrl(data.mobileUrl)
         setPhase(SESSION_PHASES.ACTIVE)
-        startPolling(data.sessionId)
-      } catch (err) {
+        startPolling(data.cameraSessionId)
+      } catch {
         setError('Không thể kết nối server. Vui lòng thử lại.')
         setPhase(SESSION_PHASES.IDLE)
       }
@@ -130,10 +103,8 @@ export function useCameraSession() {
     [startPolling]
   )
 
-
   const reset = useCallback(() => {
     stopPolling()
-    sessionIdRef.current = null
     setSessionData(null)
     setMobileUrl(null)
     setError(null)
