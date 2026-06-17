@@ -12,6 +12,7 @@ export default function Navbar({ isLoggedIn }) {
           <li><a href="#" onClick={() => navigate('/bookings')}>Đặt chỗ của tôi</a></li>
           <li><a href="#" onClick={() => navigate('/vehicles')}>Xe của tôi</a></li>
           <li><a href="#" onClick={() => navigate('/checkin')}>Check-in</a></li>
+          <li><a href="#" onClick={() => navigate('/checkout')}>Check-out</a></li>
           <li><a href="#">Hỗ trợ</a></li>
           <li><a href="#">Hướng dẫn</a></li>
           <li><a href="#">Liên hệ</a></li>

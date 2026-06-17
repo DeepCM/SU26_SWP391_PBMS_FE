@@ -241,22 +241,65 @@
   margin: 0;
 }
 
+.sci-camera-row {
+  display: flex;
+  gap: 12px;
+}
+
+.sci-camera-row--col {
+  flex-direction: column;
+}
+
 .sci-camera-box {
+  flex: 1;
+  min-width: 0;
   border: 1.5px dashed #d1d5db;
   border-radius: 10px;
-  height: 220px;
+  aspect-ratio: 4 / 3;
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: flex-end;
-  padding-bottom: 16px;
+  justify-content: center;
+  padding: 12px;
+  gap: 6px;
   background: #fafafa;
+  overflow: hidden;
+}
+
+/* Tab Booking: 2 ảnh xếp dọc, chiều cao cố định thay vì 4:3 */
+.sci-camera-row--col .sci-camera-box {
+  flex: none;
+  aspect-ratio: unset;
+  height: 160px;
 }
 
 .sci-camera-label {
   font-size: 13px;
   color: #374151;
-  margin: 0 0 4px;
+  margin: 0;
+  flex-shrink: 0;
+}
+
+.sci-camera-img-wrap {
+  flex: 1;
+  min-height: 0;
+  width: 100%;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.sci-camera-photo {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  display: block;
+}
+
+.sci-camera-ocr {
+  font-size: 12px;
+  font-weight: 600;
+  color: #111827;
+  flex-shrink: 0;
 }
 
 .sci-camera-status {
@@ -331,6 +374,18 @@
 .sci-field-input:focus {
   border-color: #1a56db;
   box-shadow: 0 0 0 3px rgba(26, 86, 219, 0.1);
+}
+
+.sci-field-input--readonly {
+  background: #f3f4f6;
+  color: #374151;
+  cursor: default;
+  font-variant-numeric: tabular-nums;
+}
+
+.sci-field-input--readonly:focus {
+  border-color: #d1d5db;
+  box-shadow: none;
 }
 
 .sci-field-select {
@@ -451,6 +506,27 @@
   }
 }
 
+/* ── Confirm feedback ────────────────────────────────── */
+.sci-confirm-error {
+  font-size: 13px;
+  color: #dc2626;
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  border-radius: 8px;
+  padding: 8px 12px;
+  margin: 0;
+}
+
+.sci-confirm-success {
+  font-size: 13px;
+  color: #16a34a;
+  background: #f0fdf4;
+  border: 1px solid #bbf7d0;
+  border-radius: 8px;
+  padding: 8px 12px;
+  margin: 0;
+}
+
 /* ── Session status badge ────────────────────────────── */
 .sci-session-badge {
   margin-left: 8px;
@@ -489,4 +565,3 @@
   color: #111827;
   font-weight: 500;
 }
-
