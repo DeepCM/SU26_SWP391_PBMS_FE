@@ -38,7 +38,7 @@ function Signup() {
         email: data.email,
         password: data.password,
         confirmPassword: data.confirmPassword,
-        avatarFile: data.Avatar
+        avatarFile: data.avatar[0]
       })
 
       if (result.status === 201) {
@@ -188,6 +188,19 @@ function Signup() {
                   </button>
                 </div>
                 {errors.confirmPassword && <span className="error">{errors.confirmPassword.message}</span>}
+              </div>
+
+              <div className="login-field-group">
+                <label className="login-field-label">Ảnh xác thực khuôn mặt</label>
+                <div className="login-input-wrap">
+                  <input
+                    type="file"
+                    accept="image/*"
+                    className="login-input"
+                    {...register('avatar', { required: 'Vui lòng chọn ảnh xác thực' })}
+                  />
+                </div>
+                {errors.avatar && <span className="error">{errors.avatar.message}</span>}
               </div>
 
               <button type="submit" className="login-submit-btn">

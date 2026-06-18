@@ -12,13 +12,20 @@ export const loginUser = async (email, password) => {
 }
 
 export const registerUser = async (userData) => {
+  const formData = new FormData()
+  formData.append('FullName', userData.fullName)
+  formData.append('Email', userData.email)
+  formData.append('Password', userData.password)
+  formData.append('ConfirmPassword', userData.confirmPassword)
+  formData.append('AvatarFile', userData.avatarFile)
+
+  // Do not set Content-Type manually: the browser sets the multipart boundary.
   const response = await fetch(`${API_URL}/register`, {
     method: 'POST',
-    headers: {'Content-Type': 'application/json'},
-    body: JSON.stringify(userData)
+    body: formData
   })
-  const text = await response.text()
-  return {status: response.status, data}
+  const data = await response.json().catch(() => ({}))
+  return { status: response.status, data }
 }
 
 export const verifyEmail = async (email, otp) => {
