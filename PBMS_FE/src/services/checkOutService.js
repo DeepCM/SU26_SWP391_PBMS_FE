@@ -1,6 +1,6 @@
 import getAuthHeader from '../components/auth/authHeader'
 
-const CHECKOUT_API = 'http://localhost:5021/api/check-out'
+const CHECKOUT_API = `${import.meta.env.VITE_API_URL}/api/check-out`
 
 async function post(url, body) {
   const response = await fetch(url, {

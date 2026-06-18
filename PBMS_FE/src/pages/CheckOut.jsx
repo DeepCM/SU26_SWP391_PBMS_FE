@@ -27,7 +27,7 @@ function formatDuration(minutes) {
   return `${h}h${String(m).padStart(2, '0')}m`
 }
 
-const CHECKOUT_SCAN_URL = 'https://parking-car-frontend.vercel.app/staff/checkout/scan'
+const CHECKOUT_SCAN_URL = `${window.location.origin}/staff/checkout/scan`
 const CHECKOUT_SCAN_QR_IMAGE = `https://api.qrserver.com/v1/create-qr-code/?size=220x220&data=${encodeURIComponent(CHECKOUT_SCAN_URL)}`
 
 function ScanTicketModal({ onClose }) {
