@@ -27,19 +27,19 @@ function VehiclePopup({ vehicle, vehicleTypes, onClose, onSave }) {
   const onSubmit = async (data) => {
     setLoading(true);
     try {
-      // Create a plain object (or use FormData if your backend strictly requires it)
-      const payload = {
-        vehicleTypeId: data.vehicleTypeId,
-        licensePlate: data.licensePlate,
-        vehicleImgUrl: data.vehicleImgUrl // Use the URL provided by the form/input
-      };
+      // Backend expects multipart/form-data with these exact field names
+      // (VehicleRequest.cs: VehicleTypeId, LicensePlate, VehicleImage).
+      const formData = new FormData();
+      formData.append("VehicleTypeId", data.vehicleTypeId);
+      formData.append("LicensePlate", data.licensePlate);
       if (imageFile) {
-        formData.append("vehicleImg", imageFile);
+        formData.append("VehicleImage", imageFile); // optional; omit to keep the old image
       }
+
       if (vehicle?.id) {
-        await updateVehicle(vehicle.id, payload);
+        await updateVehicle(vehicle.id, formData);
       } else {
-        await createVehicle(payload);
+        await createVehicle(formData);
       }
 
       onSave();
