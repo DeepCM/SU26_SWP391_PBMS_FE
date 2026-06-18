@@ -1,5 +1,4 @@
-const API_URL = 'http://localhost:5021/api/camera-sessions'
-const NGROK_API_URL = 'https://devouring-impatient-goldmine.ngrok-free.dev/api/camera-sessions'
+const API_URL = `${import.meta.env.VITE_API_URL}/api/camera-sessions`
 
 const getAuthHeader = () => {
   const token = localStorage.getItem('token')
@@ -119,7 +118,7 @@ export const uploadVehiclePhoto = async ({ sessionId, token, photoBlob }) => {
 
   // token truyền qua query string ([FromQuery] phía ASP.NET Core)
   const response = await fetch(
-    `${NGROK_API_URL}/${sessionId}/vehicle-photo?token=${encodeURIComponent(token)}`,
+    `${API_URL}/${sessionId}/vehicle-photo?token=${encodeURIComponent(token)}`,
     { method: 'POST', body: form }
   )
 
@@ -144,7 +143,7 @@ export const uploadFacePhoto = async ({ sessionId, token, photoBlob }) => {
   form.append('photo', photoBlob, 'face.jpg')
 
   const response = await fetch(
-    `${NGROK_API_URL}/${sessionId}/face-photo?token=${encodeURIComponent(token)}`,
+    `${API_URL}/${sessionId}/face-photo?token=${encodeURIComponent(token)}`,
     { method: 'POST', body: form }
   )
 
