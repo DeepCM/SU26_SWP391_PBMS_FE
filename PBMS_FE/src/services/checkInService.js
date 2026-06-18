@@ -1,7 +1,7 @@
 import getAuthHeader from '../components/auth/authHeader'
 
-const CAMERA_API = 'http://localhost:5021/api/camera-sessions'
-const CHECKIN_API = 'http://localhost:5021/api/check-in'
+const CAMERA_API = `${import.meta.env.VITE_API_URL}/api/camera-sessions`
+const CHECKIN_API = `${import.meta.env.VITE_API_URL}/api/check-in`
 
 async function post(url, body) {
   const response = await fetch(url, {
