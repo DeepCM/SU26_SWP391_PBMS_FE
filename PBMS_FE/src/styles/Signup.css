@@ -10,3 +10,31 @@
   appearance: none;
   cursor: pointer;
 }
+
+/* Avatar/face file picker. Higher specificity than the global rule in
+   BookingPopup.css so it stays visible regardless of CSS bundle order. */
+input.signup-file-input[type="file"] {
+  display: block;
+  width: 100%;
+  padding: 8px 12px;
+  border-radius: 10px;
+  border: 0.8px solid #E5E7EB;
+  background: #F4F6FB;
+  color: #757575;
+  font-family: inherit;
+  font-size: 14px;
+  cursor: pointer;
+}
+
+input.signup-file-input[type="file"]::file-selector-button {
+  margin-right: 12px;
+  padding: 8px 14px;
+  border: none;
+  border-radius: 8px;
+  background: #1B5EF7;
+  color: #fff;
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+}
