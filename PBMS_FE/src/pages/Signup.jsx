@@ -196,7 +196,7 @@ function Signup() {
                   <input
                     type="file"
                     accept="image/*"
-                    className="login-input"
+                    className="signup-file-input"
                     {...register('avatar', { required: 'Vui lòng chọn ảnh xác thực' })}
                   />
                 </div>
