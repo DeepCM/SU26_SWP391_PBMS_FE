@@ -75,9 +75,25 @@ export default function Vehicles() {
   const [selectedVehicle, setSelectedVehicle] = useState(null);
   const [vehicles, setVehicles] = useState([])
   const refreshVehicleList = async () => {
-    const data = await getMyVehicles();
-    setVehicles(data);
-  }
+    try {
+      const data = await getMyVehicles();
+
+      // Crucial: Re-apply the transformation here so the UI state remains consistent
+      const formattedData = data.map(item => ({
+        id: item.id,
+        status: item.hasActiveBooking ? 'active' : 'none',
+        vehicleType: getVehicleIconKey(item.vehicleTypeName), // Keeps icon logic
+        vehicleLabel: item.vehicleTypeName,
+        vehicleTypeId: item.vehicleTypeId,
+        licensePlate: item.licensePlate,
+        vehicleImgUrl: item.vehicleImgUrl
+      }));
+
+      setVehicles(formattedData);
+    } catch (err) {
+      console.error("Refresh failed:", err);
+    }
+  };
   useEffect(() => {
     const fetchVehicles = async () => {
       try {
@@ -210,14 +226,17 @@ export default function Vehicles() {
         {/* Footer actions */}
         <div className="card-footer">
           <button
-            className="btn-action btn-action--outline"
-            onClick={() => handleUpdate(vehicle)}>
+            className={`btn-action btn-action--outline ${vehicle.status === 'active' ? 'btn-disabled' : ''}`}
+            onClick={() => vehicle.status !== 'active' && handleUpdate(vehicle)}
+            disabled={vehicle.status === 'active'}
+          >
             Chỉnh sửa
           </button>
 
           <button
-            className="btn-action btn-action--danger"
-            onClick={() => onCancel(vehicle.id)}
+            className={`btn-action btn-action--danger ${vehicle.status === 'active' ? 'btn-disabled' : ''}`}
+            onClick={() => vehicle.status !== 'active' && onCancel(vehicle.id)}
+            disabled={vehicle.status === 'active'}
           >
             Xóa
           </button>
@@ -291,7 +310,7 @@ export default function Vehicles() {
         </div>
       </main>
       {/* --- SINGLE SOURCE OF TRUTH FOR POPUPS --- */}
-      
+
       {/* 1. Only one Modal for images */}
       {selectedImageUrl && (
         <ImgModal

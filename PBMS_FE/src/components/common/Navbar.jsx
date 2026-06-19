@@ -1,8 +1,13 @@
+import { useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { getUser } from "../../services/authService"
 import '../../styles/Home.css'
+import userAvatarPlaceholder from '../../assets/userAvatar.png'
 
 export default function Navbar({ isLoggedIn }) {
   const navigate = useNavigate()
+  const userData = useMemo(() => getUser(), [])
+
   return (
     <nav className="navbar">
       <div className="navbar-inner">
@@ -14,7 +19,6 @@ export default function Navbar({ isLoggedIn }) {
           <li><a href="#" onClick={() => navigate('/checkin')}>Check-in</a></li>
           <li><a href="#" onClick={() => navigate('/checkout')}>Check-out</a></li>
           <li><a href="#">Hỗ trợ</a></li>
-          <li><a href="#">Hướng dẫn</a></li>
           <li><a href="#">Liên hệ</a></li>
           <li><a href="#">Giới thiệu</a></li>
         </ul>
@@ -26,9 +30,11 @@ export default function Navbar({ isLoggedIn }) {
               onClick={() => navigate('/profile')}
             >
               <img
-                src="./src/assets/userAvatar.png"
+                // Use the avatar from userData, or fallback to the imported placeholder
+                src={userData?.avatarUrl || userAvatarPlaceholder} 
                 alt="avatar"
                 className="navbar-avatar"
+                onError={(e) => { e.target.src = userAvatarPlaceholder }} // Safety check if URL is broken
               />
             </button>
 
@@ -40,12 +46,12 @@ export default function Navbar({ isLoggedIn }) {
               Đăng xuất
             </button>
           </div>
-      ) : (
-      <button className="btn-login" onClick={() => navigate('/login')}>
-        Đăng nhập
-      </button>
+        ) : (
+          <button className="btn-login" onClick={() => navigate('/login')}>
+            Đăng nhập
+          </button>
         )}
-    </div>
+      </div>
     </nav >
   )
 }
