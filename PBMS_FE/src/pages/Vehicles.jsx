@@ -74,20 +74,22 @@ export default function Vehicles() {
   const [vehicleTypes, setVehicleTypes] = useState([]);
   const [selectedVehicle, setSelectedVehicle] = useState(null);
   const [vehicles, setVehicles] = useState([])
+  //Helper
+  const formatVehicles = (data) => data.map(item => ({
+    id: item.id,
+    status: item.hasActiveBooking ? 'active' : 'none',
+    vehicleType: getVehicleIconKey(item.vehicleTypeName),
+    vehicleLabel: item.vehicleTypeName,
+    vehicleTypeId: item.vehicleTypeId,
+    licensePlate: item.licensePlate,
+    vehicleImgUrl: item.vehicleImgUrl
+  }));
   const refreshVehicleList = async () => {
     try {
       const data = await getMyVehicles();
 
       // Crucial: Re-apply the transformation here so the UI state remains consistent
-      const formattedData = data.map(item => ({
-        id: item.id,
-        status: item.hasActiveBooking ? 'active' : 'none',
-        vehicleType: getVehicleIconKey(item.vehicleTypeName), // Keeps icon logic
-        vehicleLabel: item.vehicleTypeName,
-        vehicleTypeId: item.vehicleTypeId,
-        licensePlate: item.licensePlate,
-        vehicleImgUrl: item.vehicleImgUrl
-      }));
+      const formattedData = formatVehicles(data)
 
       setVehicles(formattedData);
     } catch (err) {
@@ -103,15 +105,7 @@ export default function Vehicles() {
         ]);
         setVehicleTypes(vehicleTypesData);
         // TRANSFORM the API data to match your component
-        const formattedData = vehiclesData.map(item => ({
-          id: item.id,
-          status: item.hasActiveBooking ? 'active' : 'none',
-          vehicleType: getVehicleIconKey(item.vehicleTypeName),
-          vehicleLabel: item.vehicleTypeName,
-          vehicleTypeId: item.vehicleTypeId,
-          licensePlate: item.licensePlate,
-          vehicleImgUrl: item.vehicleImgUrl
-        }));
+        const formattedData = formatVehicles(vehiclesData)
 
         setVehicles(formattedData);
         setLoading(false);
