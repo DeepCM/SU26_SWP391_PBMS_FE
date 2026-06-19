@@ -168,7 +168,7 @@ export const postQrResult = async ({ sessionId, token, qrContent }) => {
     {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ qrContent }),
+      body: JSON.stringify({ qrText: qrContent }),
     }
   )
   let data = null

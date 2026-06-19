@@ -1,10 +1,13 @@
 import { useState, useEffect } from 'react'
+import { useNavigate } from 'react-router-dom'
 import '../styles/CheckIn.css'
 import '../styles/CheckOut.css'
 import Navbar from '../components/common/Navbar'
 import QRSessionModal from '../components/common/QRSessionModal'
 import { useCheckoutCameraSession, SESSION_PHASES } from '../hooks/useCheckoutCameraSession'
-import { confirmGuestCheckOut } from '../services/checkOutService'
+import { verifyGuestCheckOut, verifyBookingCheckOut, confirmGuestCheckOut, confirmBookingCheckOut } from '../services/checkOutService'
+import { parseCheckoutQrContent } from '../utils/checkoutQr'
+import { redirectToLoginIfUnauthorized } from '../utils/authRedirect'
 
 function formatCurrency(value) {
   if (value === null || value === undefined) return '—'
@@ -27,7 +30,7 @@ function formatDuration(minutes) {
   return `${h}h${String(m).padStart(2, '0')}m`
 }
 
-const CHECKOUT_SCAN_URL = `${window.location.origin}/staff/checkout/scan`
+const CHECKOUT_SCAN_URL = 'https://parking-car-frontend.vercel.app/staff/checkout/scan'
 const CHECKOUT_SCAN_QR_IMAGE = `https://api.qrserver.com/v1/create-qr-code/?size=220x220&data=${encodeURIComponent(CHECKOUT_SCAN_URL)}`
 
 function ScanTicketModal({ onClose }) {
@@ -39,8 +42,12 @@ function ScanTicketModal({ onClose }) {
           <button className="sci-qr-modal-close" onClick={onClose}>×</button>
         </div>
         <div className="sci-qr-modal-body">
-          <img className="sci-qr-image" src={CHECKOUT_SCAN_QR_IMAGE} alt="QR check-out" />
+          <img className="sci-qr-image" src={CHECKOUT_SCAN_QR_IMAGE} alt="QR mở trang quét trên điện thoại" />
           <p className="sci-qr-link">{CHECKOUT_SCAN_URL}</p>
+          <p className="sci-form-hint">
+            Mở link này trên điện thoại để quét mã vé/booking của khách, sau đó chụp ảnh checkout.
+            Khi xong, nhập lại mã vé/booking ở ô bên dưới để tiếp tục.
+          </p>
         </div>
         <div className="sci-qr-modal-footer co-scan-modal-footer">
           <button className="sci-confirm-btn" onClick={onClose}>Đóng</button>
@@ -51,12 +58,16 @@ function ScanTicketModal({ onClose }) {
 }
 
 function CheckOut() {
+  const navigate = useNavigate()
   const [isLoggedIn] = useState(!!localStorage.getItem('token'))
   const [now, setNow] = useState(new Date())
 
-  // Quét mã QR check-out
+  // Quét/nhập mã vé hoặc booking
   const [showScanModal, setShowScanModal] = useState(false)
-  const [sessionInfo, setSessionInfo] = useState(null)
+  const [ticketInput, setTicketInput] = useState('')
+  const [verifyLoading, setVerifyLoading] = useState(false)
+  const [verifyError, setVerifyError] = useState(null)
+  const [sessionInfo, setSessionInfo] = useState(null) // { flowType: 'guest' | 'booking', ...verifyResponse }
 
   // Ghi chú & xác nhận
   const [note, setNote] = useState('')
@@ -72,6 +83,8 @@ function CheckOut() {
     sessionData: checkoutSessionData,
     mobileUrl,
     error: checkoutError,
+    startSession,
+    reset: resetCheckoutSession,
   } = useCheckoutCameraSession()
 
   useEffect(() => {
@@ -97,24 +110,68 @@ function CheckOut() {
     setShowScanModal(true)
   }
 
+  async function handleLookup() {
+    const parsed = parseCheckoutQrContent(ticketInput)
+    if (!parsed) return
+
+    setVerifyError(null)
+    setVerifyLoading(true)
+    try {
+      let info
+      if (parsed.flowType === 'booking') {
+        const { data } = await verifyBookingCheckOut(
+          parsed.bookingId ? { bookingId: parsed.bookingId } : { bookingQrCode: ticketInput.trim() }
+        )
+        info = { flowType: 'booking', ...data }
+      } else {
+        const { data } = await verifyGuestCheckOut(
+          parsed.sessionCode ? { sessionCode: parsed.sessionCode } : { ticketQrCode: ticketInput.trim() }
+        )
+        info = { flowType: 'guest', ...data }
+      }
+      setSessionInfo(info)
+      setResult(null)
+      setConfirmError(null)
+      setConfirmSuccess(null)
+      startSession(info.parkingSessionId, parsed.flowType === 'booking' ? 'BOOKING' : 'GUEST')
+    } catch (err) {
+      if (redirectToLoginIfUnauthorized(err, navigate)) return
+      setVerifyError(err.message || 'Không tìm thấy thông tin. Vui lòng kiểm tra lại mã.')
+    } finally {
+      setVerifyLoading(false)
+    }
+  }
+
   async function handleConfirm() {
     if (!sessionInfo) return
     setConfirmError(null)
     setConfirmSuccess(null)
     setIsConfirming(true)
     try {
-      const { data } = await confirmGuestCheckOut({
-        parkingSessionId: sessionInfo.parkingSessionId,
-        sessionCode: sessionInfo.sessionCode,
-        paymentMethod: 'Cash',
-        paidAmount: sessionInfo.estimatedFee,
-        note: note.trim() || undefined,
-        checkoutCameraSessionId: checkoutSessionData?.sessionId,
-        staffConfirmedImageMatch: true,
-      })
+      const { data } =
+        sessionInfo.flowType === 'booking'
+          ? await confirmBookingCheckOut({
+              bookingId: sessionInfo.bookingId,
+              parkingSessionId: sessionInfo.parkingSessionId,
+              paymentMethod: 'Cash',
+              paidAmount: sessionInfo.estimatedCheckoutAmountDue,
+              note: note.trim() || undefined,
+              checkoutCameraSessionId: checkoutSessionData?.sessionId,
+              staffConfirmedImageMatch: true,
+            })
+          : await confirmGuestCheckOut({
+              parkingSessionId: sessionInfo.parkingSessionId,
+              sessionCode: sessionInfo.sessionCode,
+              paymentMethod: 'Cash',
+              paidAmount: sessionInfo.estimatedFee,
+              note: note.trim() || undefined,
+              checkoutCameraSessionId: checkoutSessionData?.sessionId,
+              staffConfirmedImageMatch: true,
+            })
       setResult(data)
       setConfirmSuccess('Check-out thành công! Barrier đã mở.')
     } catch (err) {
+      if (redirectToLoginIfUnauthorized(err, navigate)) return
       setConfirmError(err.message || 'Lỗi kết nối server. Vui lòng thử lại.')
     } finally {
       setIsConfirming(false)
@@ -125,12 +182,15 @@ function CheckOut() {
     setSessionInfo(null)
     setResult(null)
     setNote('')
+    setTicketInput('')
+    setVerifyError(null)
     setConfirmError(null)
     setConfirmSuccess(null)
+    resetCheckoutSession()
   }
 
-  const vehicleImg = checkoutSessionData?.vehicleImageUrl
-  const faceImg = checkoutSessionData?.faceImageUrl
+  const vehicleImg = checkoutSessionData?.checkinVehicleImg
+  const faceImg = checkoutSessionData?.checkinFaceImg
   const detectedPlate = checkoutSessionData?.detectedLicensePlate
 
   const entryTime = sessionInfo?.entryTime
@@ -140,7 +200,11 @@ function CheckOut() {
     : entryTime
       ? Math.max(0, Math.floor((now - new Date(entryTime)) / 60000))
       : null
-  const totalFee = result ? result.checkoutAmountDue : sessionInfo?.estimatedFee ?? null
+  const totalFee = result
+    ? result.checkoutAmountDue
+    : sessionInfo?.flowType === 'booking'
+      ? sessionInfo?.estimatedCheckoutAmountDue ?? null
+      : sessionInfo?.estimatedFee ?? null
 
   return (
     <div className="sci-page co-page">
@@ -263,11 +327,37 @@ function CheckOut() {
             <div className="sci-form-panel co-info-panel">
               <h3 className="sci-panel-heading">Thông tin xe ra</h3>
 
-              <button className="sci-qr-btn" onClick={openScanModal}>
+              <button className="sci-qr-btn" onClick={openScanModal} type="button">
                 Quét mã QR
               </button>
 
               <div className="co-info-grid">
+                <div className="co-info-cell" style={{ gridColumn: '1 / -1' }}>
+                  <label className="co-info-label" htmlFor="co-ticket-input">MÃ VÉ / BOOKING</label>
+                  <div style={{ display: 'flex', gap: 8 }}>
+                    <input
+                      id="co-ticket-input"
+                      className="co-note-input"
+                      placeholder="VD: PS-000001 hoặc 9"
+                      value={ticketInput}
+                      onChange={(e) => setTicketInput(e.target.value)}
+                      onKeyDown={(e) => e.key === 'Enter' && handleLookup()}
+                      disabled={!!sessionInfo}
+                    />
+                    {!sessionInfo && (
+                      <button
+                        type="button"
+                        className="co-confirm-btn"
+                        style={{ width: 'auto', padding: '6px 14px', marginTop: 0 }}
+                        onClick={handleLookup}
+                        disabled={!ticketInput.trim() || verifyLoading}
+                      >
+                        {verifyLoading ? '...' : 'Tra cứu'}
+                      </button>
+                    )}
+                  </div>
+                  {verifyError && <p className="sci-confirm-error">{verifyError}</p>}
+                </div>
                 <div className="co-info-cell">
                   <p className="co-info-label">BIỂN SỐ</p>
                   <p className="co-info-value">{sessionInfo?.licensePlate ?? '—'}</p>
@@ -291,6 +381,19 @@ function CheckOut() {
                   />
                 </div>
               </div>
+
+              {sessionInfo?.flowType === 'booking' && (
+                <div className="co-time-rows">
+                  <div className="co-time-row">
+                    <span className="co-time-label">Phí gửi xe</span>
+                    <span className="co-time-value">{formatCurrency(sessionInfo.grossParkingFee)}</span>
+                  </div>
+                  <div className="co-time-row">
+                    <span className="co-time-label">Đã đặt cọc</span>
+                    <span className="co-time-value">{formatCurrency(sessionInfo.depositPaid)}</span>
+                  </div>
+                </div>
+              )}
 
               <div className="co-fee-box">
                 <span className="co-fee-label">Tổng phí</span>
@@ -338,7 +441,7 @@ function CheckOut() {
               )}
 
               <p className="sci-form-hint">
-                Quét mã QR để tự động điền thông tin
+                Nhập mã vé/booking hoặc quét mã QR để tự động điền thông tin
               </p>
             </div>
           </div>

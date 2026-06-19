@@ -1,21 +1,18 @@
 import { useState, useEffect } from 'react'
+import { useNavigate } from 'react-router-dom'
 import '../styles/CheckIn.css'
 import { useCameraSession, SESSION_PHASES } from '../hooks/useCameraSession'
 import QRSessionModal from '../components/common/QRSessionModal'
 import Navbar from '../components/common/Navbar'
-import { getVehicleTypes } from '../services/vehicleTypeService'
+import { getVehicleTypes, getAvailableSlots } from '../services/vehicleTypeService'
 import { confirmGuestCheckIn, confirmBookingCheckIn } from '../services/checkInService'
+import { redirectToLoginIfUnauthorized } from '../utils/authRedirect'
 
 // TODO: lấy gateId thực từ context/profile/config
 const GATE_ID = 1
 
-const FLOOR_BY_VEHICLE_TYPE = [
-  { id: 1, name: 'Tầng B1', vehicleType: 'Xe máy' },
-  { id: 2, name: 'Tầng B2', vehicleType: 'Xe máy điện' },
-  { id: 3, name: 'Tầng B3', vehicleType: 'Ô tô' },
-]
-
 function CheckIn() {
+  const navigate = useNavigate()
   const [activeTab, setActiveTab] = useState('guest')
   const [plateNumber, setPlateNumber] = useState('')
   const [plateSource, setPlateSource] = useState('manual')
@@ -24,6 +21,8 @@ function CheckIn() {
   const [floorId, setFloorId] = useState('')
   const [note, setNote] = useState('')
   const [vehicleTypes, setVehicleTypes] = useState([])
+  const [floors, setFloors] = useState([])
+  const [floorsLoading, setFloorsLoading] = useState(false)
   const [isConfirming, setIsConfirming] = useState(false)
   const [confirmError, setConfirmError] = useState(null)
   const [confirmSuccess, setConfirmSuccess] = useState(null)
@@ -68,6 +67,35 @@ function CheckIn() {
     }
     loadVehicleTypes()
   }, [])
+
+  // Tải danh sách tầng theo loại phương tiện đã chọn — mỗi loại xe chỉ đỗ
+  // được ở một số tầng nhất định, nên tầng phải phụ thuộc vehicleTypeId.
+  useEffect(() => {
+    setFloorId('')
+
+    if (!vehicleTypeId) {
+      setFloors([])
+      return
+    }
+
+    let cancelled = false
+    async function loadFloors() {
+      setFloorsLoading(true)
+      try {
+        const data = await getAvailableSlots(vehicleTypeId)
+        if (!cancelled) setFloors(data.floors ?? [])
+      } catch {
+        if (!cancelled) setFloors([])
+      } finally {
+        if (!cancelled) setFloorsLoading(false)
+      }
+    }
+    loadFloors()
+
+    return () => {
+      cancelled = true
+    }
+  }, [vehicleTypeId])
 
   // Auto-fill biển số từ OCR khi polling trả về kết quả
   useEffect(() => {
@@ -157,6 +185,7 @@ function CheckIn() {
       setFloorId('')
       setNote('')
     } catch (err) {
+      if (redirectToLoginIfUnauthorized(err, navigate)) return
       setConfirmError(err.message || 'Lỗi kết nối server. Vui lòng thử lại.')
     } finally {
       setIsConfirming(false)
@@ -375,20 +404,6 @@ function CheckIn() {
               </div>
 
               <div className="sci-field-group">
-                <label className="sci-field-label">TẦNG</label>
-                <select
-                  className="sci-field-input sci-field-select"
-                  value={floorId}
-                  onChange={(e) => setFloorId(e.target.value)}
-                >
-                  <option value="">-- Chọn tầng --</option>
-                  {FLOOR_BY_VEHICLE_TYPE.map((f) => (
-                    <option key={f.id} value={String(f.id)}>{f.name}</option>
-                  ))}
-                </select>
-              </div>
-
-              <div className="sci-field-group">
                 <label className="sci-field-label">LOẠI PHƯƠNG TIỆN</label>
                 <select
                   className="sci-field-input sci-field-select"
@@ -401,6 +416,29 @@ function CheckIn() {
                   <option value="">-- Chọn loại xe --</option>
                   {vehicleTypes.map((t) => (
                     <option key={t.id} value={String(t.id)}>{t.name}</option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="sci-field-group">
+                <label className="sci-field-label">TẦNG</label>
+                <select
+                  className="sci-field-input sci-field-select"
+                  value={floorId}
+                  onChange={(e) => setFloorId(e.target.value)}
+                  disabled={!vehicleTypeId || floorsLoading}
+                >
+                  <option value="">
+                    {!vehicleTypeId
+                      ? '-- Chọn loại xe trước --'
+                      : floorsLoading
+                        ? 'Đang tải tầng...'
+                        : floors.length === 0
+                          ? 'Không có tầng phù hợp'
+                          : '-- Chọn tầng --'}
+                  </option>
+                  {floors.map((f) => (
+                    <option key={f.floorId} value={String(f.floorId)}>{f.floorName}</option>
                   ))}
                 </select>
               </div>
