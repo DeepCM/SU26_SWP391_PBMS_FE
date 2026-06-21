@@ -1,9 +1,10 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useMemo } from 'react'
 import { useForm } from 'react-hook-form'
 import { getUser } from "../services/authService"
 import Navbar from '../components/common/Navbar'
 import '../styles/Home.css'
 import '../styles/UserProfile.css'
+import userAvatarPlaceholder from '../assets/userAvatar.png'
 import { IconProfile, IconHistory, IconEdit, IconGuide, IconContact, IconCar, IconMotorbike } from '../components/svg/Icons'
 
 // ─── Toggle Switch ────────────────────────────────────────────
@@ -72,7 +73,8 @@ function HistoryVehicleIcon({ type }) {
 // ─── Main Page ────────────────────────────────────────────────
 export default function UserProfile({ onLogout, userAvatar, stats, recentHistory, notificationSettings, onSaveProfile, onNotifChange, onChangePassword, onActivate2FA, onManageDevices, onDeleteAccount }) {
   const [activeNav, setActiveNav] = useState('profile')
-  const userData = getUser()
+  const userData = useMemo(() => getUser(), []);
+  const [loading, setLoading] = useState(true);
   const [notifState, setNotifState] = useState(
     notificationSettings ?? {
       reminderBooking: false,
@@ -84,21 +86,24 @@ export default function UserProfile({ onLogout, userAvatar, stats, recentHistory
 
   const { register, handleSubmit, reset, formState: { errors, isDirty } } = useForm({
     defaultValues: {
+      avatar: '',
       fullName: '',
       email: '',
       phone: '',
     },
   })
-  
+
   useEffect(() => {
+    setLoading(false);
     if (userData) {
       reset({
+        avatar: '',
         fullName: userData.fullName ?? '',
         email: userData.email ?? '',
         phone: userData.phone ?? '',
-      })
+      });
     }
-  }, [userData, reset])
+  }, [userData, reset]); // This will now only run once when the component mounts
 
 
   const historyList = recentHistory ?? []
@@ -163,12 +168,14 @@ export default function UserProfile({ onLogout, userAvatar, stats, recentHistory
 
           {/* Personal info card */}
           <div className="profile-card">
-            <h2 className="card-section-title">
-              <img
-                src="./src/assets/userAvatar.png"
+            <img
+                // Use the avatar from userData, or fallback to the imported placeholder
+                src={userData?.avatarUrl || userAvatarPlaceholder}
                 alt="avatar"
                 className="navbar-avatar"
+                onError={(e) => { e.target.src = userAvatarPlaceholder }} // Safety check if URL is broken
               />
+            <h2 className="card-section-title">
               Thông tin cá nhân
             </h2>
             {/*

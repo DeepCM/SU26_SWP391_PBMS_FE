@@ -1,6 +1,7 @@
 import getAuthHeader from '../components/auth/authHeader'
 
 const CHECKOUT_API = `${import.meta.env.VITE_API_URL}/api/check-out`
+const SCAN_SESSIONS_API = `${CHECKOUT_API}/scan-sessions`
 
 async function post(url, body) {
   const response = await fetch(url, {
@@ -15,7 +16,9 @@ async function post(url, body) {
       data?.message ||
       (data?.errors && Object.values(data.errors).flat()[0]) ||
       `Lỗi ${response.status}`
-    throw new Error(message)
+    const error = new Error(message)
+    error.status = response.status
+    throw error
   }
 
   return { status: response.status, data }
@@ -53,3 +56,42 @@ export const verifyBookingCheckOut = ({ bookingQrCode, bookingId }) =>
  */
 export const confirmBookingCheckOut = (body) =>
   post(`${CHECKOUT_API}/booking/confirm`, body)
+
+/**
+ * Tạo phiên quét QR check-out (staff) — trả về scannerUrl chứa token để hiện QR cho khách.
+ */
+export const createCheckoutScanSession = () => post(SCAN_SESSIONS_API)
+
+/**
+ * Lấy trạng thái phiên quét — dùng để polling từ trang CheckOut.
+ * @param {string} scanSessionId
+ */
+export const getCheckoutScanSession = async (scanSessionId) => {
+  const response = await fetch(`${SCAN_SESSIONS_API}/${scanSessionId}`, {
+    headers: { ...getAuthHeader() },
+  })
+  const data = await response.json().catch(() => null)
+  return { status: response.status, data }
+}
+
+/**
+ * Huỷ phiên quét đang chờ.
+ * @param {string} scanSessionId
+ */
+export const cancelCheckoutScanSession = (scanSessionId) =>
+  post(`${SCAN_SESSIONS_API}/${scanSessionId}/cancel`)
+
+/**
+ * Gửi nội dung QR đọc được từ điện thoại khách — endpoint anonymous,
+ * xác thực qua token gắn trong scannerUrl (không dùng Authorization header của staff).
+ * @param {{ scanSessionId: string, token: string, qrValue: string }} params
+ */
+export const submitCheckoutScanResult = async ({ scanSessionId, token, qrValue }) => {
+  const response = await fetch(`${SCAN_SESSIONS_API}/${scanSessionId}/result`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'X-Checkout-Scan-Token': token },
+    body: JSON.stringify({ qrValue }),
+  })
+  const data = await response.json().catch(() => null)
+  return { status: response.status, data }
+}

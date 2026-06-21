@@ -266,11 +266,18 @@
   overflow: hidden;
 }
 
-/* Tab Booking: 2 ảnh xếp dọc, chiều cao cố định thay vì 4:3 */
+/* Tab Booking: 2 ảnh xếp dọc, chia đều chiều cao panel (giống cách bố trí
+   2 khung ảnh check-in/check-out ở trang CheckOut — xem .co-camera-col) */
+.sci-camera-row--col {
+  flex: 1;
+  min-height: 0;
+}
+
 .sci-camera-row--col .sci-camera-box {
-  flex: none;
+  flex: 1;
+  width: 100%;
   aspect-ratio: unset;
-  height: 160px;
+  min-height: 280px;
 }
 
 .sci-camera-label {
@@ -470,6 +477,135 @@
   word-break: break-all;
 }
 
+.sci-qr-modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding-right: 20px;
+  margin-bottom: 4px;
+}
+
+.sci-qr-modal-header .sci-panel-heading {
+  margin: 0;
+}
+
+.sci-qr-modal-body {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+}
+
+.sci-qr-modal-footer {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 18px;
+}
+
+.sci-qr-loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  padding: 40px 0;
+  color: #6b7280;
+  font-size: 13px;
+}
+
+.sci-qr-spinner {
+  width: 28px;
+  height: 28px;
+  border: 3px solid #e5e7eb;
+  border-top-color: #1a56db;
+  border-radius: 50%;
+  animation: sci-spin 0.8s linear infinite;
+}
+
+@keyframes sci-spin {
+  to { transform: rotate(360deg); }
+}
+
+.sci-qr-image--expired {
+  opacity: 0.35;
+  filter: grayscale(1);
+}
+
+.sci-qr-timer {
+  font-size: 13px;
+  color: #374151;
+  font-variant-numeric: tabular-nums;
+  margin: 0;
+}
+
+.sci-qr-timer--warning {
+  color: #dc2626;
+  font-weight: 600;
+}
+
+.sci-qr-status-badge {
+  display: inline-flex;
+  align-items: center;
+  font-size: 12px;
+  font-weight: 600;
+  border-radius: 12px;
+  padding: 4px 12px;
+}
+
+.sci-qr-status-badge--pending {
+  background: #eff6ff;
+  color: #1a56db;
+}
+
+.sci-qr-status-badge--faceuploaded,
+.sci-qr-status-badge--vehicleuploaded {
+  background: #fef3c7;
+  color: #92400e;
+}
+
+.sci-qr-status-badge--completed {
+  background: #f0fdf4;
+  color: #16a34a;
+}
+
+.sci-qr-status-badge--expired {
+  background: #fef2f2;
+  color: #dc2626;
+}
+
+.sci-qr-status-badge--cancelled {
+  background: #f3f4f6;
+  color: #6b7280;
+}
+
+.sci-qr-error {
+  font-size: 13px;
+  color: #dc2626;
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  border-radius: 8px;
+  padding: 8px 12px;
+  margin: 0;
+}
+
+.sci-qr-cancel-btn {
+  width: 100%;
+  padding: 11px;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  background: #fff;
+  color: #374151;
+  font-size: 14px;
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+}
+
+.sci-qr-cancel-btn:hover {
+  border-color: #dc2626;
+  color: #dc2626;
+  background: #fef2f2;
+}
 
 /* ── Responsive ──────────────────────────────────────── */
 @media (max-width: 1200px) {

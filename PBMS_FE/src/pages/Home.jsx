@@ -112,9 +112,9 @@ function Home({ }) {
     badge: floor.hasAvailability ? "Còn chỗ" : "Hết chỗ",
     badgeType: floor.hasAvailability ? "green" : "red",
     tags: [`Tầng ${floor.floorNumber}`],
-    available: floor.availableSlots,
-    inUse: Math.round(((floor.occupiedSlots) + (floor.reservedSlots))),
     total: floor.totalSlots,
+    inUse: Math.round(((floor.occupiedSlots) + (floor.reservedSlots))),
+    available: Math.round((floor.totalSlots)-((floor.occupiedSlots) + (floor.reservedSlots))),
     deposit: selectedSlotStatus?.deposit,
     pricePerHour: selectedSlotStatus?.pricePerHour,
     fillPercent: floor.totalSlots > 0
@@ -168,7 +168,7 @@ function Home({ }) {
     });
     
     if (!hasMatchingVehicle) {
-      alert("Bạn chưa có phương tiện nào thuộc loại này hoặc phương tiện đã có lịch đặt.");
+      alert("Bạn chưa đăng kí phương tiện nào thuộc loại này hoặc phương tiện đã có lịch đặt.");
       return;
     }
 
