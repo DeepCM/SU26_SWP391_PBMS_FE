@@ -7,6 +7,7 @@ import QRSessionModal from '../components/common/QRSessionModal'
 import { useCheckoutCameraSession, SESSION_PHASES } from '../hooks/useCheckoutCameraSession'
 import { useCheckoutScanSession, SCAN_SESSION_PHASES } from '../hooks/useCheckoutScanSession'
 import { verifyGuestCheckOut, verifyBookingCheckOut, confirmGuestCheckOut, confirmBookingCheckOut } from '../services/checkOutService'
+import { syncCheckoutPaymentStatus } from '../services/paymentService'
 import { parseCheckoutQrContent } from '../utils/checkoutQr'
 import { redirectToLoginIfUnauthorized } from '../utils/authRedirect'
 
@@ -282,22 +283,16 @@ function CheckOut() {
 
   const pollParkingSessionStatus = useCallback(async () => {
     if (!sessionInfo) return
-    try {
-      const { data } =
-        sessionInfo.flowType === 'booking'
-          ? await verifyBookingCheckOut({ bookingId: sessionInfo.bookingId })
-          : await verifyGuestCheckOut({ sessionCode: sessionInfo.sessionCode })
-      // Chỉ cập nhật trạng thái — /verify tính phí real-time theo thời gian hiện
-      // tại nên sẽ tăng dần, còn số tiền/qrCode đã chốt lúc /confirm thì không
-      // được đụng tới, nếu không "Tổng phí" hiển thị sẽ trôi khỏi số tiền QR.
-      setResult((prev) => ({ ...prev, parkingSessionStatus: data.parkingSessionStatus }))
-      if (data.parkingSessionStatus === 'completed') {
-        stopStatusPolling()
-        setShowPaymentQrModal(false)
-        setConfirmSuccess('Thanh toán thành công! Có thể mở cổng.')
-      }
-    } catch {
-      // Lỗi tạm thời — vòng poll tiếp theo sẽ tự thử lại
+    // Đồng bộ trạng thái thanh toán trực tiếp từ PayOS (fallback khi webhook
+    // không tới) — không đụng tới số tiền/qrCode đã chốt lúc /confirm, nếu
+    // không "Tổng phí" hiển thị sẽ trôi khỏi số tiền QR.
+    const data = await syncCheckoutPaymentStatus(sessionInfo.parkingSessionId)
+    if (!data) return // lỗi tạm thời — vòng poll tiếp theo sẽ tự thử lại
+    setResult((prev) => ({ ...prev, parkingSessionStatus: data.parkingSessionStatus }))
+    if (data.parkingSessionStatus === 'completed') {
+      stopStatusPolling()
+      setShowPaymentQrModal(false)
+      setConfirmSuccess('Thanh toán thành công! Có thể mở cổng.')
     }
   }, [sessionInfo, stopStatusPolling])
 
