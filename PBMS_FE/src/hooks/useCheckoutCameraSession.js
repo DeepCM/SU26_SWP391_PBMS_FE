@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
-import { getCameraSession, TERMINAL_STATUSES } from '../services/cameraSessionService'
+import { getCameraSession, cancelCameraSession, TERMINAL_STATUSES } from '../services/cameraSessionService'
 import { createCheckoutPhotoSession } from '../services/checkOutService'
 
 const POLL_INTERVAL_MS = 3000
@@ -25,6 +25,7 @@ export function useCheckoutCameraSession() {
   const [error, setError] = useState(null)
 
   const intervalRef = useRef(null)
+  const sessionIdRef = useRef(null)
 
   const stopPolling = useCallback(() => {
     if (intervalRef.current !== null) {
@@ -78,6 +79,7 @@ export function useCheckoutCameraSession() {
       setSessionData(null)
       setMobileUrl(null)
       setError(null)
+      sessionIdRef.current = null
       setPhase(SESSION_PHASES.CREATING)
 
       try {
@@ -92,6 +94,7 @@ export function useCheckoutCameraSession() {
           return
         }
 
+        sessionIdRef.current = data.cameraSessionId
         setMobileUrl(data.mobileUrl)
         setPhase(SESSION_PHASES.ACTIVE)
         startPolling(data.cameraSessionId)
@@ -105,6 +108,30 @@ export function useCheckoutCameraSession() {
 
   const reset = useCallback(() => {
     stopPolling()
+    sessionIdRef.current = null
+    setSessionData(null)
+    setMobileUrl(null)
+    setError(null)
+    setPhase(SESSION_PHASES.IDLE)
+  }, [stopPolling])
+
+  /**
+   * Huỷ session hiện tại — gọi POST /camera-sessions/{id}/cancel để backend
+   * chuyển trạng thái CameraSession sang Cancelled, rồi dọn sạch state local.
+   */
+  const cancelSession = useCallback(async () => {
+    const sessionId = sessionIdRef.current
+    stopPolling()
+
+    if (sessionId) {
+      try {
+        await cancelCameraSession(sessionId)
+      } catch {
+        // Bỏ qua lỗi gọi cancel — staff vẫn muốn đóng/huỷ phiên trên UI.
+      }
+    }
+
+    sessionIdRef.current = null
     setSessionData(null)
     setMobileUrl(null)
     setError(null)
@@ -118,5 +145,6 @@ export function useCheckoutCameraSession() {
     error,
     startSession,
     reset,
+    cancelSession,
   }
 }

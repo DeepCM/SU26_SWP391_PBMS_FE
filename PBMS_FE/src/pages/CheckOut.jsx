@@ -1,10 +1,11 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import '../styles/CheckIn.css'
 import '../styles/CheckOut.css'
 import Navbar from '../components/common/Navbar'
 import QRSessionModal from '../components/common/QRSessionModal'
 import { useCheckoutCameraSession, SESSION_PHASES } from '../hooks/useCheckoutCameraSession'
+import { useCheckoutScanSession, SCAN_SESSION_PHASES } from '../hooks/useCheckoutScanSession'
 import { verifyGuestCheckOut, verifyBookingCheckOut, confirmGuestCheckOut, confirmBookingCheckOut } from '../services/checkOutService'
 import { parseCheckoutQrContent } from '../utils/checkoutQr'
 import { redirectToLoginIfUnauthorized } from '../utils/authRedirect'
@@ -30,10 +31,28 @@ function formatDuration(minutes) {
   return `${h}h${String(m).padStart(2, '0')}m`
 }
 
-const CHECKOUT_SCAN_URL = 'https://parking-car-frontend.vercel.app/staff/checkout/scan'
-const CHECKOUT_SCAN_QR_IMAGE = `https://api.qrserver.com/v1/create-qr-code/?size=220x220&data=${encodeURIComponent(CHECKOUT_SCAN_URL)}`
+function ScanTicketModal({ phase, scanData, mobileUrl, error, onClose }) {
+  const [secondsLeft, setSecondsLeft] = useState(null)
 
-function ScanTicketModal({ onClose }) {
+  useEffect(() => {
+    if (!scanData?.expiresAt) return
+
+    const tick = () => {
+      const diff = Math.max(0, Math.floor((new Date(scanData.expiresAt) - Date.now()) / 1000))
+      setSecondsLeft(diff)
+    }
+
+    tick()
+    const timer = setInterval(tick, 1000)
+    return () => clearInterval(timer)
+  }, [scanData?.expiresAt])
+
+  const isCreating = phase === SCAN_SESSION_PHASES.CREATING
+  const status = scanData?.status
+  const qrImage = mobileUrl
+    ? `https://api.qrserver.com/v1/create-qr-code/?size=220x220&data=${encodeURIComponent(mobileUrl)}`
+    : null
+
   return (
     <div className="sci-qr-modal-overlay" onClick={onClose}>
       <div className="sci-qr-modal" onClick={(e) => e.stopPropagation()}>
@@ -42,11 +61,64 @@ function ScanTicketModal({ onClose }) {
           <button className="sci-qr-modal-close" onClick={onClose}>×</button>
         </div>
         <div className="sci-qr-modal-body">
-          <img className="sci-qr-image" src={CHECKOUT_SCAN_QR_IMAGE} alt="QR mở trang quét trên điện thoại" />
-          <p className="sci-qr-link">{CHECKOUT_SCAN_URL}</p>
+          {isCreating && (
+            <div className="sci-qr-loading">
+              <span className="sci-qr-spinner" />
+              <p>Đang tạo phiên quét...</p>
+            </div>
+          )}
+          {!isCreating && qrImage && (
+            <>
+              <img className="sci-qr-image" src={qrImage} alt="QR mở trang quét trên điện thoại" />
+              <p className="sci-qr-link">{mobileUrl}</p>
+              <p className="sci-form-hint">
+                Mở link này trên điện thoại để quét mã vé/booking của khách. Thông tin sẽ tự
+                động điền vào ô bên dưới khi quét xong.
+              </p>
+            </>
+          )}
+          {!isCreating && status === 'Pending' && secondsLeft !== null && (
+            <p className={`sci-qr-timer ${secondsLeft < 60 ? 'sci-qr-timer--warning' : ''}`}>
+              Hết hạn sau: {Math.floor(secondsLeft / 60)}:{String(secondsLeft % 60).padStart(2, '0')}
+            </p>
+          )}
+          {status === 'Expired' && <p className="sci-confirm-error">Phiên quét đã hết hạn.</p>}
+          {status === 'Cancelled' && <p className="sci-confirm-error">Phiên quét đã bị huỷ.</p>}
+          {error && <p className="sci-confirm-error">{error}</p>}
+        </div>
+        <div className="sci-qr-modal-footer co-scan-modal-footer">
+          <button className="sci-confirm-btn" onClick={onClose}>Đóng</button>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+function PaymentQrModal({ payment, onClose }) {
+  const qrImage = payment?.qrCode
+    ? `https://api.qrserver.com/v1/create-qr-code/?size=240x240&data=${encodeURIComponent(payment.qrCode)}`
+    : null
+
+  return (
+    <div className="sci-qr-modal-overlay" onClick={onClose}>
+      <div className="sci-qr-modal" onClick={(e) => e.stopPropagation()}>
+        <div className="sci-qr-modal-header">
+          <h3 className="sci-panel-heading">Quét mã thanh toán</h3>
+          <button className="sci-qr-modal-close" onClick={onClose}>×</button>
+        </div>
+        <div className="sci-qr-modal-body">
+          {qrImage ? (
+            <img className="sci-qr-image" src={qrImage} alt="Mã QR thanh toán PayOS" />
+          ) : (
+            <p className="sci-form-hint">Chưa có mã QR thanh toán.</p>
+          )}
+          <div className="co-fee-box">
+            <span className="co-fee-label">Số tiền cần thanh toán</span>
+            <span className="co-fee-value">{formatCurrency(payment?.additionalAmountDue)}</span>
+          </div>
           <p className="sci-form-hint">
-            Mở link này trên điện thoại để quét mã vé/booking của khách, sau đó chụp ảnh checkout.
-            Khi xong, nhập lại mã vé/booking ở ô bên dưới để tiếp tục.
+            Khách quét mã hoặc mở link thanh toán qua PayOS. Hệ thống sẽ tự kiểm tra và bật
+            nút &quot;Mở cổng&quot; khi thanh toán hoàn tất.
           </p>
         </div>
         <div className="sci-qr-modal-footer co-scan-modal-footer">
@@ -69,12 +141,15 @@ function CheckOut() {
   const [verifyError, setVerifyError] = useState(null)
   const [sessionInfo, setSessionInfo] = useState(null) // { flowType: 'guest' | 'booking', ...verifyResponse }
 
-  // Ghi chú & xác nhận
+  // Ghi chú & thanh toán
   const [note, setNote] = useState('')
-  const [isConfirming, setIsConfirming] = useState(false)
+  const [isPaying, setIsPaying] = useState(false)
   const [confirmError, setConfirmError] = useState(null)
   const [confirmSuccess, setConfirmSuccess] = useState(null)
   const [result, setResult] = useState(null)
+  const [exitTimeAt, setExitTimeAt] = useState(null)
+  const [showPaymentQrModal, setShowPaymentQrModal] = useState(false)
+  const statusPollRef = useRef(null)
 
   // Camera session chụp ảnh check-out
   const [showQrModal, setShowQrModal] = useState(false)
@@ -84,8 +159,19 @@ function CheckOut() {
     mobileUrl,
     error: checkoutError,
     startSession,
-    reset: resetCheckoutSession,
+    cancelSession: cancelCheckoutCameraSession,
   } = useCheckoutCameraSession()
+
+  // Phiên quét QR vé/booking từ điện thoại khách (api/check-out/scan-sessions)
+  const {
+    phase: scanPhase,
+    scanData,
+    mobileUrl: scanMobileUrl,
+    error: scanError,
+    startSession: startScanSession,
+    cancelSession: cancelScanSession,
+    reset: resetScanSession,
+  } = useCheckoutScanSession()
 
   useEffect(() => {
     const id = setInterval(() => setNow(new Date()), 1000)
@@ -106,55 +192,133 @@ function CheckOut() {
     setShowQrModal(false)
   }
 
-  function openScanModal() {
-    setShowScanModal(true)
+  // Huỷ phiên camera check-out hiện tại — gọi API cancel rồi đóng modal
+  // (cancelSession chỉ dọn state về IDLE, không tự đóng modal như khi DONE).
+  async function handleCancelQrModal() {
+    await cancelCheckoutCameraSession()
+    setShowQrModal(false)
   }
+
+  const runVerify = useCallback(
+    async (parsed) => {
+      setVerifyError(null)
+      setVerifyLoading(true)
+      try {
+        let info
+        if (parsed.flowType === 'booking') {
+          const { data } = await verifyBookingCheckOut(
+            parsed.bookingId ? { bookingId: parsed.bookingId } : { bookingQrCode: parsed.raw }
+          )
+          info = { flowType: 'booking', ...data }
+        } else {
+          const { data } = await verifyGuestCheckOut(
+            parsed.sessionCode ? { sessionCode: parsed.sessionCode } : { ticketQrCode: parsed.raw }
+          )
+          info = { flowType: 'guest', ...data }
+        }
+        setSessionInfo(info)
+        setResult(null)
+        setConfirmError(null)
+        setConfirmSuccess(null)
+        startSession(info.parkingSessionId, parsed.flowType === 'booking' ? 'BOOKING' : 'GUEST')
+      } catch (err) {
+        if (redirectToLoginIfUnauthorized(err, navigate)) return
+        setVerifyError(err.message || 'Không tìm thấy thông tin. Vui lòng kiểm tra lại mã.')
+      } finally {
+        setVerifyLoading(false)
+      }
+    },
+    [navigate, startSession]
+  )
+
+  function openScanModal() {
+    setTicketInput('')
+    startScanSession()
+  }
+
+  function handleCloseScanModal() {
+    cancelScanSession()
+    resetScanSession()
+    setShowScanModal(false)
+  }
+
+  // Hiện modal QR trong suốt thời gian phiên quét đang được tạo/chờ khách quét
+  useEffect(() => {
+    if (scanPhase === SCAN_SESSION_PHASES.IDLE) {
+      setShowScanModal(false)
+    } else {
+      setShowScanModal(true)
+    }
+  }, [scanPhase])
+
+  // Khi khách quét xong (status Completed), lấy sessionCode/bookingId để tra cứu tự động
+  useEffect(() => {
+    if (scanPhase !== SCAN_SESSION_PHASES.DONE || scanData?.status !== 'Completed') return
+
+    const parsed =
+      scanData.qrType === 'booking'
+        ? { flowType: 'booking', bookingId: scanData.bookingId }
+        : { flowType: 'guest', sessionCode: scanData.sessionCode }
+
+    setShowScanModal(false)
+    resetScanSession()
+    runVerify(parsed)
+  }, [scanPhase, scanData, resetScanSession, runVerify])
 
   async function handleLookup() {
     const parsed = parseCheckoutQrContent(ticketInput)
     if (!parsed) return
-
-    setVerifyError(null)
-    setVerifyLoading(true)
-    try {
-      let info
-      if (parsed.flowType === 'booking') {
-        const { data } = await verifyBookingCheckOut(
-          parsed.bookingId ? { bookingId: parsed.bookingId } : { bookingQrCode: ticketInput.trim() }
-        )
-        info = { flowType: 'booking', ...data }
-      } else {
-        const { data } = await verifyGuestCheckOut(
-          parsed.sessionCode ? { sessionCode: parsed.sessionCode } : { ticketQrCode: ticketInput.trim() }
-        )
-        info = { flowType: 'guest', ...data }
-      }
-      setSessionInfo(info)
-      setResult(null)
-      setConfirmError(null)
-      setConfirmSuccess(null)
-      startSession(info.parkingSessionId, parsed.flowType === 'booking' ? 'BOOKING' : 'GUEST')
-    } catch (err) {
-      if (redirectToLoginIfUnauthorized(err, navigate)) return
-      setVerifyError(err.message || 'Không tìm thấy thông tin. Vui lòng kiểm tra lại mã.')
-    } finally {
-      setVerifyLoading(false)
-    }
+    await runVerify({ ...parsed, raw: ticketInput.trim() })
   }
 
-  async function handleConfirm() {
+  const stopStatusPolling = useCallback(() => {
+    if (statusPollRef.current !== null) {
+      clearInterval(statusPollRef.current)
+      statusPollRef.current = null
+    }
+  }, [])
+
+  useEffect(() => stopStatusPolling, [stopStatusPolling])
+
+  const pollParkingSessionStatus = useCallback(async () => {
+    if (!sessionInfo) return
+    try {
+      const { data } =
+        sessionInfo.flowType === 'booking'
+          ? await verifyBookingCheckOut({ bookingId: sessionInfo.bookingId })
+          : await verifyGuestCheckOut({ sessionCode: sessionInfo.sessionCode })
+      // Chỉ cập nhật trạng thái — /verify tính phí real-time theo thời gian hiện
+      // tại nên sẽ tăng dần, còn số tiền/qrCode đã chốt lúc /confirm thì không
+      // được đụng tới, nếu không "Tổng phí" hiển thị sẽ trôi khỏi số tiền QR.
+      setResult((prev) => ({ ...prev, parkingSessionStatus: data.parkingSessionStatus }))
+      if (data.parkingSessionStatus === 'completed') {
+        stopStatusPolling()
+        setShowPaymentQrModal(false)
+        setConfirmSuccess('Thanh toán thành công! Có thể mở cổng.')
+      }
+    } catch {
+      // Lỗi tạm thời — vòng poll tiếp theo sẽ tự thử lại
+    }
+  }, [sessionInfo, stopStatusPolling])
+
+  const startStatusPolling = useCallback(() => {
+    stopStatusPolling()
+    statusPollRef.current = setInterval(pollParkingSessionStatus, 3000)
+  }, [stopStatusPolling, pollParkingSessionStatus])
+
+  async function handlePayment() {
     if (!sessionInfo) return
     setConfirmError(null)
     setConfirmSuccess(null)
-    setIsConfirming(true)
+    setIsPaying(true)
     try {
+      // Checkout chỉ dùng PayOS — Backend tự tính số tiền, Frontend không gửi paidAmount.
       const { data } =
         sessionInfo.flowType === 'booking'
           ? await confirmBookingCheckOut({
               bookingId: sessionInfo.bookingId,
               parkingSessionId: sessionInfo.parkingSessionId,
-              paymentMethod: 'Cash',
-              paidAmount: sessionInfo.estimatedCheckoutAmountDue,
+              paymentMethod: 'payos',
               note: note.trim() || undefined,
               checkoutCameraSessionId: checkoutSessionData?.sessionId,
               staffConfirmedImageMatch: true,
@@ -162,31 +326,32 @@ function CheckOut() {
           : await confirmGuestCheckOut({
               parkingSessionId: sessionInfo.parkingSessionId,
               sessionCode: sessionInfo.sessionCode,
-              paymentMethod: 'Cash',
-              paidAmount: sessionInfo.estimatedFee,
+              paymentMethod: 'payos',
               note: note.trim() || undefined,
               checkoutCameraSessionId: checkoutSessionData?.sessionId,
               staffConfirmedImageMatch: true,
             })
       setResult(data)
-      setConfirmSuccess('Check-out thành công! Barrier đã mở.')
+      setExitTimeAt(new Date())
+
+      if (data.parkingSessionStatus === 'completed') {
+        setConfirmSuccess('Thanh toán thành công! Có thể mở cổng.')
+      } else if (data.qrCode) {
+        setShowPaymentQrModal(true)
+        startStatusPolling()
+      } else {
+        setConfirmError('Không nhận được mã QR thanh toán. Vui lòng thử lại.')
+      }
     } catch (err) {
       if (redirectToLoginIfUnauthorized(err, navigate)) return
       setConfirmError(err.message || 'Lỗi kết nối server. Vui lòng thử lại.')
     } finally {
-      setIsConfirming(false)
+      setIsPaying(false)
     }
   }
 
-  function handleReset() {
-    setSessionInfo(null)
-    setResult(null)
-    setNote('')
-    setTicketInput('')
-    setVerifyError(null)
-    setConfirmError(null)
-    setConfirmSuccess(null)
-    resetCheckoutSession()
+  function handleOpenBarrier() {
+    window.location.reload()
   }
 
   const vehicleImg = checkoutSessionData?.checkinVehicleImg
@@ -194,17 +359,26 @@ function CheckOut() {
   const detectedPlate = checkoutSessionData?.detectedLicensePlate
 
   const entryTime = sessionInfo?.entryTime
-  const exitTime = result?.exitTime ?? now
-  const durationMinutes = result
-    ? result.durationMinutes
-    : entryTime
-      ? Math.max(0, Math.floor((now - new Date(entryTime)) / 60000))
-      : null
-  const totalFee = result
-    ? result.checkoutAmountDue
-    : sessionInfo?.flowType === 'booking'
+  const exitTime = exitTimeAt ?? now
+  const durationMinutes = entryTime
+    ? Math.max(0, Math.floor((exitTime - new Date(entryTime)) / 60000))
+    : null
+
+  // Backend tự tính tiền — đọc từ verify response, và sau khi confirm thì
+  // CheckoutPaymentResponseDto trả về các field tương đương để cập nhật lại.
+  const feeSource = result ?? sessionInfo
+  const actualUsageFee = feeSource?.actualUsageFee ?? null
+  const prepaidAmount = feeSource?.prepaidAmount ?? sessionInfo?.depositPaid ?? null
+  const additionalAmountDue = feeSource?.additionalAmountDue ?? null
+  const isPrepaidNonRefundable = feeSource?.isPrepaidNonRefundable ?? false
+  const totalFee =
+    feeSource?.finalParkingFee ??
+    (sessionInfo?.flowType === 'booking'
       ? sessionInfo?.estimatedCheckoutAmountDue ?? null
-      : sessionInfo?.estimatedFee ?? null
+      : sessionInfo?.estimatedFee ?? null)
+
+  const barrierReady = result?.parkingSessionStatus === 'completed'
+  const hasPendingPaymentQr = !!result?.qrCode && !barrierReady
 
   return (
     <div className="sci-page co-page">
@@ -383,16 +557,27 @@ function CheckOut() {
               </div>
 
               {sessionInfo?.flowType === 'booking' && (
-                <div className="co-time-rows">
-                  <div className="co-time-row">
-                    <span className="co-time-label">Phí gửi xe</span>
-                    <span className="co-time-value">{formatCurrency(sessionInfo.grossParkingFee)}</span>
+                <>
+                  <div className="co-time-rows">
+                    <div className="co-time-row">
+                      <span className="co-time-label">Phí sử dụng thực tế</span>
+                      <span className="co-time-value">{formatCurrency(actualUsageFee)}</span>
+                    </div>
+                    <div className="co-time-row">
+                      <span className="co-time-label">Đã đặt cọc</span>
+                      <span className="co-time-value">{formatCurrency(prepaidAmount)}</span>
+                    </div>
+                    <div className="co-time-row">
+                      <span className="co-time-label">Phải trả thêm</span>
+                      <span className="co-time-value">{formatCurrency(additionalAmountDue)}</span>
+                    </div>
                   </div>
-                  <div className="co-time-row">
-                    <span className="co-time-label">Đã đặt cọc</span>
-                    <span className="co-time-value">{formatCurrency(sessionInfo.depositPaid)}</span>
-                  </div>
-                </div>
+                  {isPrepaidNonRefundable && (
+                    <p className="sci-form-hint">
+                      Khoản trả trước theo thời lượng đặt chỗ không được hoàn lại nếu khách rời sớm.
+                    </p>
+                  )}
+                </>
               )}
 
               <div className="co-fee-box">
@@ -426,19 +611,33 @@ function CheckOut() {
               {confirmError && <p className="sci-confirm-error">{confirmError}</p>}
               {confirmSuccess && <p className="sci-confirm-success">{confirmSuccess}</p>}
 
-              {result ? (
-                <button className="co-confirm-btn" onClick={handleReset}>
-                  Xử lý xe khác
-                </button>
-              ) : (
+              <button
+                className="co-confirm-btn"
+                onClick={handlePayment}
+                disabled={!sessionInfo || isPaying || barrierReady}
+              >
+                {isPaying ? 'Đang xử lý...' : 'Thanh toán'}
+              </button>
+
+              {hasPendingPaymentQr && !showPaymentQrModal && (
                 <button
+                  type="button"
                   className="co-confirm-btn"
-                  onClick={handleConfirm}
-                  disabled={!sessionInfo || isConfirming}
+                  style={{ marginTop: 8, background: 'transparent', border: '1px solid #d1d5db', color: '#374151' }}
+                  onClick={() => setShowPaymentQrModal(true)}
                 >
-                  {isConfirming ? 'Đang xử lý...' : '✓ Xác nhận & mở cổng'}
+                  Xem lại mã QR thanh toán
                 </button>
               )}
+
+              <button
+                className="co-confirm-btn"
+                style={{ marginTop: 8 }}
+                onClick={handleOpenBarrier}
+                disabled={!barrierReady}
+              >
+                ✓ Mở cổng
+              </button>
 
               <p className="sci-form-hint">
                 Nhập mã vé/booking hoặc quét mã QR để tự động điền thông tin
@@ -449,7 +648,17 @@ function CheckOut() {
       </div>
 
       {showScanModal && (
-        <ScanTicketModal onClose={() => setShowScanModal(false)} />
+        <ScanTicketModal
+          phase={scanPhase}
+          scanData={scanData}
+          mobileUrl={scanMobileUrl}
+          error={scanError}
+          onClose={handleCloseScanModal}
+        />
+      )}
+
+      {showPaymentQrModal && (
+        <PaymentQrModal payment={result} onClose={() => setShowPaymentQrModal(false)} />
       )}
 
       {showQrModal && (
@@ -459,6 +668,7 @@ function CheckOut() {
           sessionData={checkoutSessionData}
           error={checkoutError}
           onClose={handleCloseQrModal}
+          onCancel={handleCancelQrModal}
         />
       )}
     </div>

@@ -79,7 +79,7 @@ function App() {
         />
 
         <Route
-          path="/staff/checkout/scan"
+          path="/mobile-checkout-scan"
           element={<MobileCheckoutScan />}
         />
       </Routes>

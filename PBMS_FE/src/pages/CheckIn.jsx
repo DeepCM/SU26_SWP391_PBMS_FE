@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import '../styles/CheckIn.css'
 import { useCameraSession, SESSION_PHASES } from '../hooks/useCameraSession'
@@ -8,8 +8,54 @@ import { getVehicleTypes, getAvailableSlots } from '../services/vehicleTypeServi
 import { confirmGuestCheckIn, confirmBookingCheckIn } from '../services/checkInService'
 import { redirectToLoginIfUnauthorized } from '../utils/authRedirect'
 
-// TODO: lấy gateId thực từ context/profile/config
-const GATE_ID = 1
+// Backend trả message là chính error code (xem CheckInController.cs) — map sang
+// tiếng Việt dễ hiểu cho staff thay vì hiện thẳng code thô.
+const CHECKIN_ERROR_MESSAGES = {
+  CHECKIN_FACE_PHOTO_REQUIRED: 'Chưa có ảnh khuôn mặt tài xế. Vui lòng chụp ảnh trước khi xác nhận.',
+  CHECKIN_VEHICLE_PHOTO_REQUIRED: 'Chưa có ảnh biển số xe. Vui lòng chụp ảnh trước khi xác nhận.',
+  VEHICLE_NOT_MATCH: 'Biển số xe không khớp với thông tin đặt chỗ.',
+  BOOKING_QR_INVALID: 'Mã QR không khớp với đặt chỗ này. Vui lòng quét lại.',
+  BOOKING_ALREADY_CHECKED_IN: 'Đặt chỗ này đã được check-in trước đó.',
+  BOOKING_EXPIRED: 'Đặt chỗ đã hết hạn hoặc chưa được xác nhận.',
+  ACTIVE_SESSION_ALREADY_EXISTS: 'Xe này đang có một phiên đỗ xe khác chưa kết thúc.',
+  FLOOR_UNAVAILABLE: 'Tầng đã chọn không còn chỗ trống cho loại xe này.',
+}
+
+function resolveCheckInErrorMessage(err) {
+  return CHECKIN_ERROR_MESSAGES[err?.message] || err?.message || 'Lỗi kết nối server. Vui lòng thử lại.'
+}
+
+function GuestTicketQrModal({ ticket, onClose }) {
+  const qrImage = ticket?.qrCodeImage
+    ? `data:image/png;base64,${ticket.qrCodeImage}`
+    : null
+
+  return (
+    <div className="sci-qr-modal-overlay" onClick={onClose}>
+      <div className="sci-qr-modal" onClick={(e) => e.stopPropagation()}>
+        <div className="sci-qr-modal-header">
+          <h3 className="sci-panel-heading">Vé xe khách vãng lai</h3>
+          <button className="sci-qr-modal-close" onClick={onClose}>×</button>
+        </div>
+        <div className="sci-qr-modal-body">
+          {qrImage ? (
+            <img className="sci-qr-image" src={qrImage} alt="Mã QR vé xe" />
+          ) : (
+            <p className="sci-form-hint">Không có mã QR.</p>
+          )}
+          {ticket?.sessionCode && <p className="sci-qr-link">{ticket.sessionCode}</p>}
+          <p className="sci-form-hint">
+            Đưa mã này cho khách — dùng để check-out xe khi ra. Biển số:{' '}
+            {ticket?.licensePlate ?? '—'}, tầng {ticket?.floorName ?? '—'}.
+          </p>
+        </div>
+        <div className="sci-qr-modal-footer co-scan-modal-footer">
+          <button className="sci-confirm-btn" onClick={onClose}>Đóng</button>
+        </div>
+      </div>
+    </div>
+  )
+}
 
 function CheckIn() {
   const navigate = useNavigate()
@@ -18,6 +64,12 @@ function CheckIn() {
   const [plateSource, setPlateSource] = useState('manual')
   const [vehicleTypeId, setVehicleTypeId] = useState('')
   const [vehicleTypeSource, setVehicleTypeSource] = useState('staff')
+  // Đánh dấu staff đã tự tay sửa trường này — khác với plateSource/vehicleTypeSource
+  // (giá trị gửi lên backend), vì giá trị mặc định của 2 source đó cũng là
+  // 'manual'/'staff' nên không dùng được để phân biệt "chưa đụng tới" và
+  // "staff vừa sửa tay, đừng để OCR ghi đè".
+  const plateTouchedRef = useRef(false)
+  const vehicleTypeTouchedRef = useRef(false)
   const [floorId, setFloorId] = useState('')
   const [note, setNote] = useState('')
   const [vehicleTypes, setVehicleTypes] = useState([])
@@ -33,12 +85,30 @@ function CheckIn() {
   // URL hiển thị trong popup QR — mặc định bám theo mobileUrl của session,
   // nhưng có thể bị ghi đè thủ công (xem handleCapturePhoto, tab Booking).
   const [qrPopupUrl, setQrPopupUrl] = useState(null)
+  const [guestTicket, setGuestTicket] = useState(null)
+  const [showGuestTicketModal, setShowGuestTicketModal] = useState(false)
 
-  const { phase, sessionData, mobileUrl, error, startSession } =
-    useCameraSession()
+  const {
+    phase,
+    sessionData,
+    mobileUrl,
+    error,
+    unauthorized,
+    startSession,
+    reset,
+    cancelSession,
+  } = useCameraSession()
 
   const purpose =
     activeTab === 'guest' ? 'CHECK_IN_GUEST' : 'CHECK_IN_BOOKING'
+
+  // Token hết hạn/không hợp lệ phát hiện trong lúc polling — chuyển về login
+  // (cùng helper dùng cho lỗi 401 khi bấm xác nhận check-in).
+  useEffect(() => {
+    if (unauthorized) {
+      redirectToLoginIfUnauthorized({ status: 401 }, navigate)
+    }
+  }, [unauthorized, navigate])
 
   // Tự mở modal khi session bắt đầu, tự đóng khi session kết thúc (terminal)
   useEffect(() => {
@@ -68,10 +138,16 @@ function CheckIn() {
     loadVehicleTypes()
   }, [])
 
+  // Tầng cần điền lại theo booking sau khi danh sách tầng load lại do
+  // vehicleTypeId đổi (xem effect auto-fill từ booking bên dưới).
+  const pendingBookingFloorIdRef = useRef(null)
+
   // Tải danh sách tầng theo loại phương tiện đã chọn — mỗi loại xe chỉ đỗ
   // được ở một số tầng nhất định, nên tầng phải phụ thuộc vehicleTypeId.
   useEffect(() => {
-    setFloorId('')
+    if (!pendingBookingFloorIdRef.current) {
+      setFloorId('')
+    }
 
     if (!vehicleTypeId) {
       setFloors([])
@@ -83,7 +159,12 @@ function CheckIn() {
       setFloorsLoading(true)
       try {
         const data = await getAvailableSlots(vehicleTypeId)
-        if (!cancelled) setFloors(data.floors ?? [])
+        if (cancelled) return
+        setFloors(data.floors ?? [])
+        if (pendingBookingFloorIdRef.current) {
+          setFloorId(pendingBookingFloorIdRef.current)
+          pendingBookingFloorIdRef.current = null
+        }
       } catch {
         if (!cancelled) setFloors([])
       } finally {
@@ -97,21 +178,57 @@ function CheckIn() {
     }
   }, [vehicleTypeId])
 
-  // Auto-fill biển số từ OCR khi polling trả về kết quả
+  // Auto-fill biển số từ OCR khi polling trả về kết quả — không ghi đè nếu
+  // biển số đang được điền từ thông tin booking hoặc đã được staff sửa tay.
   useEffect(() => {
-    if (sessionData?.detectedLicensePlate) {
+    if (
+      sessionData?.detectedLicensePlate &&
+      plateSource !== 'booking' &&
+      !plateTouchedRef.current
+    ) {
       setPlateNumber(sessionData.detectedLicensePlate)
       setPlateSource('ocr')
     }
-  }, [sessionData?.detectedLicensePlate])
+  }, [sessionData?.detectedLicensePlate, plateSource])
 
-  // Auto-fill loại xe từ OCR
+  // Auto-fill loại xe từ OCR — không ghi đè nếu đã được điền từ booking hoặc
+  // đã được staff sửa tay.
   useEffect(() => {
-    if (sessionData?.suggestedVehicleTypeId) {
+    if (
+      sessionData?.suggestedVehicleTypeId &&
+      vehicleTypeSource !== 'booking' &&
+      !vehicleTypeTouchedRef.current
+    ) {
       setVehicleTypeId(String(sessionData.suggestedVehicleTypeId))
       setVehicleTypeSource('ocr')
     }
-  }, [sessionData?.suggestedVehicleTypeId])
+  }, [sessionData?.suggestedVehicleTypeId, vehicleTypeSource])
+
+  // Auto-fill biển số/loại xe/tầng từ booking khi quét QR xong — chỉ điền một
+  // lần cho mỗi session (tránh polling lặp lại ghi đè chỉnh sửa thủ công sau đó).
+  const bookingInfoFilledSessionRef = useRef(null)
+  useEffect(() => {
+    const info = sessionData?.bookingInfo
+    const sessionId = sessionData?.sessionId
+    if (activeTab !== 'booking' || !info || !sessionId) return
+    if (bookingInfoFilledSessionRef.current === sessionId) return
+
+    bookingInfoFilledSessionRef.current = sessionId
+    if (info.licensePlate) {
+      setPlateNumber(info.licensePlate)
+      setPlateSource('booking')
+    }
+    if (info.floorId) {
+      // Đánh dấu trước — effect load danh sách tầng (chạy do vehicleTypeId đổi)
+      // sẽ tự áp lại giá trị này thay vì reset về rỗng.
+      pendingBookingFloorIdRef.current = String(info.floorId)
+      setFloorId(String(info.floorId))
+    }
+    if (info.vehicleTypeId) {
+      setVehicleTypeId(String(info.vehicleTypeId))
+      setVehicleTypeSource('booking')
+    }
+  }, [activeTab, sessionData?.bookingInfo, sessionData?.sessionId])
 
   // Live clock — cập nhật mỗi giây
   useEffect(() => {
@@ -126,6 +243,32 @@ function CheckIn() {
     setShowQrModal(false)
   }
 
+  // Huỷ phiên camera hiện tại — gọi API cancel rồi đóng modal (cancelSession
+  // chỉ dọn state về IDLE, không tự đóng modal như khi session vào trạng thái DONE).
+  async function handleCancelSession() {
+    await cancelSession()
+    setShowQrModal(false)
+  }
+
+  // Đổi tab guest/booking — dọn sạch session camera cũ (mobileUrl/sessionId/
+  // ảnh OCR) và toàn bộ form, tránh hiển thị nhầm dữ liệu của session/tab trước.
+  function handleSwitchTab(tab) {
+    if (tab === activeTab) return
+    reset()
+    bookingInfoFilledSessionRef.current = null
+    setPlateNumber('')
+    setPlateSource('manual')
+    plateTouchedRef.current = false
+    setVehicleTypeId('')
+    setVehicleTypeSource('staff')
+    vehicleTypeTouchedRef.current = false
+    setFloorId('')
+    setNote('')
+    setConfirmError(null)
+    setConfirmSuccess(null)
+    setActiveTab(tab)
+  }
+
   async function handleConfirm() {
     setConfirmError(null)
     setConfirmSuccess(null)
@@ -133,6 +276,16 @@ function CheckIn() {
     const sessionId = sessionData?.sessionId
     if (!sessionId) {
       setConfirmError('Chưa có phiên camera. Vui lòng chụp ảnh trước.')
+      return
+    }
+    const expectedPurposeForConfirm =
+      activeTab === 'guest' ? 'CHECK_IN_GUEST' : 'CHECK_IN_BOOKING'
+    if (
+      sessionData?.purpose !== expectedPurposeForConfirm ||
+      !sessionData?.checkinFaceImg ||
+      !sessionData?.checkinVehicleImg
+    ) {
+      setConfirmError('Vui lòng chụp đủ ảnh khuôn mặt và biển số xe trước khi xác nhận.')
       return
     }
     if (!plateNumber.trim()) {
@@ -148,20 +301,19 @@ function CheckIn() {
       return
     }
 
-    const entryGate = `Cổng ${GATE_ID}`
-
     setIsConfirming(true)
     try {
       if (activeTab === 'guest') {
-        await confirmGuestCheckIn({
+        const { data } = await confirmGuestCheckIn({
           floorId: Number(floorId),
           vehicleTypeId: Number(vehicleTypeId),
           licensePlate: plateNumber.trim(),
           cameraSessionId: sessionId,
           plateInputSource: plateSource,
           vehicleTypeInputSource: vehicleTypeSource,
-          entryGate,
         })
+        setGuestTicket(data)
+        setShowGuestTicketModal(true)
       } else {
         const bookingId = sessionData?.bookingId
         if (!bookingId) {
@@ -172,7 +324,6 @@ function CheckIn() {
           bookingId,
           actualLicensePlate: plateNumber.trim(),
           cameraSessionId: sessionId,
-          entryGate,
         })
       }
 
@@ -180,13 +331,15 @@ function CheckIn() {
       // Reset form cho xe tiếp theo
       setPlateNumber('')
       setPlateSource('manual')
+      plateTouchedRef.current = false
       setVehicleTypeId('')
       setVehicleTypeSource('staff')
+      vehicleTypeTouchedRef.current = false
       setFloorId('')
       setNote('')
     } catch (err) {
       if (redirectToLoginIfUnauthorized(err, navigate)) return
-      setConfirmError(err.message || 'Lỗi kết nối server. Vui lòng thử lại.')
+      setConfirmError(resolveCheckInErrorMessage(err))
     } finally {
       setIsConfirming(false)
     }
@@ -209,7 +362,7 @@ function CheckIn() {
       return
     }
 
-    startSession(purpose, GATE_ID)
+    startSession(purpose)
   }
 
   // Chỉ hiện ảnh / OCR khi purpose của session khớp với tab đang xem
@@ -218,6 +371,7 @@ function CheckIn() {
   const faceImg = purposeMatches ? sessionData?.checkinFaceImg : null
   const vehicleImg = purposeMatches ? sessionData?.checkinVehicleImg : null
   const detectedPlate = purposeMatches ? sessionData?.detectedLicensePlate : null
+  const hasRequiredCheckInPhotos = !!faceImg && !!vehicleImg
 
   return (
     <div className="sci-page">
@@ -254,13 +408,13 @@ function CheckIn() {
           <div className="sci-tabs">
             <button
               className={`sci-tab-btn ${activeTab === 'guest' ? 'sci-tab-btn--active' : ''}`}
-              onClick={() => setActiveTab('guest')}
+              onClick={() => handleSwitchTab('guest')}
             >
               Guest
             </button>
             <button
               className={`sci-tab-btn ${activeTab === 'booking' ? 'sci-tab-btn--active' : ''}`}
-              onClick={() => setActiveTab('booking')}
+              onClick={() => handleSwitchTab('booking')}
             >
               Booking
             </button>
@@ -319,43 +473,51 @@ function CheckIn() {
               </div>
             </div>
 
-            {/* Booking info panel — chỉ hiện khi tab Booking */}
+            {/* Ảnh tham chiếu từ booking — chỉ hiện khi tab Booking */}
             {activeTab === 'booking' && (
               <div className="sci-detection-panel">
                 <h3 className="sci-panel-heading">
-                  Thông tin đặt chỗ
+                  Ảnh tham chiếu từ đặt chỗ
                   {isSessionActive && (
                     <span className="sci-session-badge">● Đang chờ QR...</span>
                   )}
                 </h3>
-                {sessionData?.bookingInfo ? (
-                  <div className="sci-booking-info">
-                    <div className="sci-booking-row">
-                      <span className="sci-booking-label">Họ tên</span>
-                      <span className="sci-booking-value">{sessionData.bookingInfo.customerName ?? '—'}</span>
-                    </div>
-                    <div className="sci-booking-row">
-                      <span className="sci-booking-label">Biển số</span>
-                      <span className="sci-booking-value">{sessionData.bookingInfo.licensePlate ?? '—'}</span>
-                    </div>
-                    <div className="sci-booking-row">
-                      <span className="sci-booking-label">Loại xe</span>
-                      <span className="sci-booking-value">{sessionData.bookingInfo.vehicleType ?? '—'}</span>
-                    </div>
-                    <div className="sci-booking-row">
-                      <span className="sci-booking-label">Tầng</span>
-                      <span className="sci-booking-value">{sessionData.bookingInfo.floorName ?? '—'}</span>
-                    </div>
-                    <div className="sci-booking-row">
-                      <span className="sci-booking-label">Giờ vào dự kiến</span>
-                      <span className="sci-booking-value">{sessionData.bookingInfo.scheduledCheckin ?? '—'}</span>
-                    </div>
+
+                <div className="sci-camera-row sci-camera-row--col">
+                  <div className="sci-camera-box">
+                    <p className="sci-camera-label">Ảnh xe đã đăng ký</p>
+                    {sessionData?.bookingInfo?.vehicleImgUrl ? (
+                      <div className="sci-camera-img-wrap">
+                        <img
+                          className="sci-camera-photo"
+                          src={sessionData.bookingInfo.vehicleImgUrl}
+                          alt="Ảnh xe đăng ký booking"
+                        />
+                      </div>
+                    ) : (
+                      <span className="sci-camera-status">
+                        {isSessionActive ? 'Chờ khách quét mã QR...' : 'Chưa có ảnh'}
+                      </span>
+                    )}
                   </div>
-                ) : (
-                  <span className="sci-camera-status">
-                    {isSessionActive ? 'Chờ khách quét mã QR...' : 'Chưa có thông tin'}
-                  </span>
-                )}
+
+                  <div className="sci-camera-box">
+                    <p className="sci-camera-label">Avatar tài khoản</p>
+                    {sessionData?.bookingInfo?.avatarUrl ? (
+                      <div className="sci-camera-img-wrap">
+                        <img
+                          className="sci-camera-photo"
+                          src={sessionData.bookingInfo.avatarUrl}
+                          alt="Avatar khách hàng"
+                        />
+                      </div>
+                    ) : (
+                      <span className="sci-camera-status">
+                        {isSessionActive ? 'Chờ khách quét mã QR...' : 'Chưa có ảnh'}
+                      </span>
+                    )}
+                  </div>
+                </div>
               </div>
             )}
 
@@ -373,7 +535,7 @@ function CheckIn() {
                     onClick={() => {
                       setConfirmError(null)
                       setConfirmSuccess(null)
-                      startSession('CHECK_IN_BOOKING', GATE_ID)
+                      startSession('CHECK_IN_BOOKING')
                     }}
                     disabled={phase === SESSION_PHASES.CREATING}
                   >
@@ -399,6 +561,7 @@ function CheckIn() {
                   onChange={(e) => {
                     setPlateNumber(e.target.value)
                     setPlateSource('manual')
+                    plateTouchedRef.current = true
                   }}
                 />
               </div>
@@ -411,6 +574,7 @@ function CheckIn() {
                   onChange={(e) => {
                     setVehicleTypeId(e.target.value)
                     setVehicleTypeSource('staff')
+                    vehicleTypeTouchedRef.current = true
                   }}
                 >
                   <option value="">-- Chọn loại xe --</option>
@@ -475,18 +639,27 @@ function CheckIn() {
               <button
                 className="sci-confirm-btn"
                 onClick={handleConfirm}
-                disabled={isConfirming}
+                disabled={isConfirming || !hasRequiredCheckInPhotos}
               >
                 {isConfirming ? 'Đang xử lý...' : 'Xác nhận vào – Mở barrier'}
               </button>
 
               <p className="sci-form-hint">
-                Quét mã QR để tự động điền thông tin đặt chỗ
+                {hasRequiredCheckInPhotos
+                  ? 'Quét mã QR để tự động điền thông tin đặt chỗ'
+                  : 'Cần chụp đủ ảnh khuôn mặt và biển số xe trước khi xác nhận'}
               </p>
             </div>
           </div>
         </main>
       </div>
+
+      {showGuestTicketModal && (
+        <GuestTicketQrModal
+          ticket={guestTicket}
+          onClose={() => setShowGuestTicketModal(false)}
+        />
+      )}
 
       {/* QR Modal — ẩn/hiện độc lập với polling */}
       {showQrModal && (
@@ -496,6 +669,7 @@ function CheckIn() {
           sessionData={sessionData}
           error={error}
           onClose={handleCloseModal}
+          onCancel={handleCancelSession}
         />
       )}
     </div>

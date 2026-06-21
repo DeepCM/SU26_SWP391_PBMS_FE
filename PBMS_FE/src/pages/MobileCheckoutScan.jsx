@@ -1,19 +1,28 @@
 import { useState, useRef, useEffect, useCallback } from 'react'
+import { useSearchParams } from 'react-router-dom'
 import jsQR from 'jsqr'
-import { verifyGuestCheckOut, verifyBookingCheckOut, createCheckoutPhotoSession } from '../services/checkOutService'
-import { parseCheckoutQrContent } from '../utils/checkoutQr'
+import { submitCheckoutScanResult } from '../services/checkOutService'
 import '../styles/MobileBookingScanner.css'
 
 const SCAN_INTERVAL_MS = 250
 
 const STAGE = {
   SCAN: 'scan',
-  VERIFYING: 'verifying',
+  SUBMITTING: 'submitting',
   DONE: 'done',
   ERROR: 'error',
 }
 
+function readTokenFromHash() {
+  const match = window.location.hash.match(/token=([^&]+)/)
+  return match ? decodeURIComponent(match[1]) : null
+}
+
 function MobileCheckoutScan() {
+  const [searchParams] = useSearchParams()
+  const scanSessionId = searchParams.get('scanSessionId')
+  const token = readTokenFromHash()
+
   const videoRef = useRef(null)
   const canvasRef = useRef(null)
   const streamRef = useRef(null)
@@ -27,57 +36,46 @@ function MobileCheckoutScan() {
   const [errorMsg, setErrorMsg] = useState(null)
   const [manualMode, setManualMode] = useState(false)
   const [manualValue, setManualValue] = useState('')
-  const [photoSession, setPhotoSession] = useState(null) // { cameraSessionId, mobileUrl }
+
+  const missingParams = !scanSessionId || !token
 
   const stopCamera = useCallback(() => {
     cancelAnimationFrame(rafRef.current)
     streamRef.current?.getTracks().forEach((t) => t.stop())
   }, [])
 
-  const runVerifyAndCreateSession = useCallback(async (parsed) => {
-    setStage(STAGE.VERIFYING)
-    setErrorMsg(null)
-    try {
-      let info
-      if (parsed.flowType === 'booking') {
-        const { data } = await verifyBookingCheckOut(
-          parsed.bookingId ? { bookingId: parsed.bookingId } : { bookingQrCode: parsed.raw }
-        )
-        info = { flowType: 'BOOKING', ...data }
-      } else {
-        const { data } = await verifyGuestCheckOut(
-          parsed.sessionCode ? { sessionCode: parsed.sessionCode } : { ticketQrCode: parsed.raw }
-        )
-        info = { flowType: 'GUEST', ...data }
+  const submitQrValue = useCallback(
+    async (qrValue) => {
+      setStage(STAGE.SUBMITTING)
+      setErrorMsg(null)
+      try {
+        const { status, data } = await submitCheckoutScanResult({
+          scanSessionId,
+          token,
+          qrValue,
+        })
+        if (status >= 200 && status < 300) {
+          setStage(STAGE.DONE)
+        } else {
+          setErrorMsg(data?.message || `Lỗi ${status}: Không thể gửi kết quả.`)
+          setStage(STAGE.ERROR)
+        }
+      } catch {
+        setErrorMsg('Mất kết nối. Vui lòng thử lại.')
+        setStage(STAGE.ERROR)
       }
-
-      const { data: sessionData } = await createCheckoutPhotoSession({
-        parkingSessionId: info.parkingSessionId,
-        flowType: info.flowType,
-      })
-
-      setPhotoSession({ cameraSessionId: sessionData.cameraSessionId, mobileUrl: sessionData.mobileUrl })
-      setStage(STAGE.DONE)
-    } catch (err) {
-      setErrorMsg(err.message || 'Không thể xác minh. Vui lòng thử lại.')
-      setStage(STAGE.ERROR)
-    }
-  }, [])
+    },
+    [scanSessionId, token]
+  )
 
   const handleQrFound = useCallback(
     (qrContent) => {
       if (foundRef.current) return
       foundRef.current = true
       stopCamera()
-      const parsed = parseCheckoutQrContent(qrContent)
-      if (!parsed) {
-        setErrorMsg('Không đọc được nội dung mã QR.')
-        setStage(STAGE.ERROR)
-        return
-      }
-      runVerifyAndCreateSession({ ...parsed, raw: qrContent })
+      submitQrValue(qrContent)
     },
-    [stopCamera, runVerifyAndCreateSession]
+    [stopCamera, submitQrValue]
   )
 
   const scanLoop = useCallback(
@@ -158,36 +156,47 @@ function MobileCheckoutScan() {
   }, [scanLoop])
 
   useEffect(() => {
-    if (stage !== STAGE.SCAN || manualMode) return
+    if (missingParams || stage !== STAGE.SCAN || manualMode) return
     startCamera()
     return stopCamera
-  }, [stage, manualMode, startCamera, stopCamera])
+  }, [missingParams, stage, manualMode, startCamera, stopCamera])
 
   useEffect(() => stopCamera, [stopCamera])
 
   function handleManualSubmit(e) {
     e.preventDefault()
-    const parsed = parseCheckoutQrContent(manualValue)
-    if (!parsed) return
+    if (!manualValue.trim()) return
     foundRef.current = true
-    runVerifyAndCreateSession({ ...parsed, raw: manualValue.trim() })
+    submitQrValue(manualValue.trim())
   }
 
   function handleRetry() {
     foundRef.current = false
     setErrorMsg(null)
-    setPhotoSession(null)
     setManualValue('')
     setStage(STAGE.SCAN)
   }
 
-  // ── Verifying ─────────────────────────────────────────
-  if (stage === STAGE.VERIFYING) {
+  // ── Link không hợp lệ ──────────────────────────────────
+  if (missingParams) {
+    return (
+      <div className="mbs-page mbs-page--center">
+        <div className="mbs-card">
+          <div className="mbs-icon mbs-icon--warn">⚠</div>
+          <h2 className="mbs-title">Link không hợp lệ</h2>
+          <p className="mbs-desc">Vui lòng thử lại từ màn hình nhân viên.</p>
+        </div>
+      </div>
+    )
+  }
+
+  // ── Submitting ────────────────────────────────────────
+  if (stage === STAGE.SUBMITTING) {
     return (
       <div className="mbs-page mbs-page--center">
         <div className="mbs-card">
           <span className="mbs-spinner" />
-          <p className="mbs-desc">Đang xác minh thông tin…</p>
+          <p className="mbs-desc">Đang gửi kết quả…</p>
         </div>
       </div>
     )
@@ -209,17 +218,14 @@ function MobileCheckoutScan() {
     )
   }
 
-  // ── Done — chuyển sang trang chụp ảnh ──────────────────
+  // ── Done ──────────────────────────────────────────────
   if (stage === STAGE.DONE) {
     return (
       <div className="mbs-page mbs-page--center">
         <div className="mbs-card">
           <div className="mbs-icon mbs-icon--success">✓</div>
-          <h2 className="mbs-title">Đã xác minh thành công!</h2>
-          <p className="mbs-desc">Tiếp tục chụp ảnh biển số và khuôn mặt để hoàn tất check-out.</p>
-          <a className="mbs-retry-btn" href={photoSession?.mobileUrl} style={{ display: 'inline-block', textDecoration: 'none' }}>
-            Chụp ảnh check-out
-          </a>
+          <h2 className="mbs-title">Đã quét thành công!</h2>
+          <p className="mbs-desc">Thông tin vé/booking đã được gửi về quầy. Bạn có thể đóng trang này.</p>
         </div>
       </div>
     )
