@@ -42,3 +42,21 @@ export async function syncPaymentStatus(bookingId) {
     return null
   }
 }
+
+// Đồng bộ trạng thái thanh toán phí checkout từ PayOS (fallback khi webhook
+// không tới). Trả về CheckoutPaymentResponseDto đã cập nhật, hoặc null nếu lỗi.
+export async function syncCheckoutPaymentStatus(parkingSessionId) {
+  try {
+    const response = await fetch(
+      `${API_URL}/checkout/${parkingSessionId}/sync`,
+      {
+        method: "POST",
+        headers: getAuthHeader()
+      }
+    )
+    if (!response.ok) return null
+    return await response.json()
+  } catch {
+    return null
+  }
+}
