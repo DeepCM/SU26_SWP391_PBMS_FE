@@ -274,7 +274,7 @@ function CheckOut() {
 
   const stopStatusPolling = useCallback(() => {
     if (statusPollRef.current !== null) {
-      clearInterval(statusPollRef.current)
+      clearTimeout(statusPollRef.current)
       statusPollRef.current = null
     }
   }, [])
@@ -287,18 +287,28 @@ function CheckOut() {
     // không tới) — không đụng tới số tiền/qrCode đã chốt lúc /confirm, nếu
     // không "Tổng phí" hiển thị sẽ trôi khỏi số tiền QR.
     const data = await syncCheckoutPaymentStatus(sessionInfo.parkingSessionId)
-    if (!data) return // lỗi tạm thời — vòng poll tiếp theo sẽ tự thử lại
+    // statusPollRef đã bị clear (stopStatusPolling chạy trong lúc đang chờ
+    // response) — bỏ qua, không ghi đè state bằng response đến muộn.
+    if (statusPollRef.current === null) return
+    if (!data) {
+      // lỗi tạm thời — chỉ lên lịch poll tiếp theo SAU khi request này đã xong,
+      // tránh bắn chồng request (setInterval cũ) gây lệch thứ tự response.
+      statusPollRef.current = setTimeout(pollParkingSessionStatus, 3000)
+      return
+    }
     setResult((prev) => ({ ...prev, parkingSessionStatus: data.parkingSessionStatus }))
     if (data.parkingSessionStatus === 'completed') {
       stopStatusPolling()
       setShowPaymentQrModal(false)
       setConfirmSuccess('Thanh toán thành công! Có thể mở cổng.')
+    } else {
+      statusPollRef.current = setTimeout(pollParkingSessionStatus, 3000)
     }
   }, [sessionInfo, stopStatusPolling])
 
   const startStatusPolling = useCallback(() => {
     stopStatusPolling()
-    statusPollRef.current = setInterval(pollParkingSessionStatus, 3000)
+    statusPollRef.current = setTimeout(pollParkingSessionStatus, 3000)
   }, [stopStatusPolling, pollParkingSessionStatus])
 
   async function handlePayment() {
