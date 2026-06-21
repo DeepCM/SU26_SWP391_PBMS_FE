@@ -36,6 +36,10 @@ export async function cancelVehicle(id) {
     headers: getAuthHeader()
   })
 
+  if (response.ok) {
+    return true
+  }
+
   let message = "Không thể xóa phương tiện";
 
   try {
@@ -44,8 +48,6 @@ export async function cancelVehicle(id) {
   } catch { }
 
   throw new Error(message);
-
-  return true
 }
 
 export async function updateVehicle(id, formData) {
