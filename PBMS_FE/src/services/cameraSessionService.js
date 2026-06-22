@@ -7,7 +7,7 @@ const getAuthHeader = () => {
 
 /**
  * Tạo camera session mới.
- * @param {{ purpose: string, gateId?: number }} params
+ * @param {{ purpose: string }} params
  * @returns {{ status: number, data: CreateCameraSessionResponseDto }}
  *
  * Response shape:
@@ -20,17 +20,14 @@ const getAuthHeader = () => {
  *   mobileUrl: string
  * }
  */
-export const createCameraSession = async ({ purpose, gateId }) => {
+export const createCameraSession = async ({ purpose }) => {
   const response = await fetch(API_URL, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
       ...getAuthHeader(),
     },
-    body: JSON.stringify({
-      purpose,
-      gateId: gateId !== undefined ? String(gateId) : undefined,
-    }),
+    body: JSON.stringify({ purpose }),
   })
   const data = await response.json()
   return { status: response.status, data }
@@ -168,7 +165,7 @@ export const postQrResult = async ({ sessionId, token, qrContent }) => {
     {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ qrContent }),
+      body: JSON.stringify({ qrText: qrContent }),
     }
   )
   let data = null

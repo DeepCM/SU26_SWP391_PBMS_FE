@@ -1,8 +1,9 @@
 import { useEffect, useState } from 'react'
 import { SESSION_PHASES } from '../../hooks/useCameraSession'
 
-function QRSessionModal({ phase, mobileUrl, sessionData, error, onClose }) {
+function QRSessionModal({ phase, mobileUrl, sessionData, error, onClose, onCancel }) {
   const [secondsLeft, setSecondsLeft] = useState(null)
+  const [isCancelling, setIsCancelling] = useState(false)
 
   useEffect(() => {
     if (!sessionData?.expiresAt) return
@@ -28,6 +29,16 @@ function QRSessionModal({ phase, mobileUrl, sessionData, error, onClose }) {
 
   const isDone = phase === SESSION_PHASES.DONE
   const isCreating = phase === SESSION_PHASES.CREATING
+
+  async function handleCancel() {
+    if (!onCancel || isCancelling) return
+    setIsCancelling(true)
+    try {
+      await onCancel()
+    } finally {
+      setIsCancelling(false)
+    }
+  }
 
   return (
     <div className="sci-qr-modal-overlay" onClick={onClose}>
@@ -90,8 +101,12 @@ function QRSessionModal({ phase, mobileUrl, sessionData, error, onClose }) {
               Đóng
             </button>
           ) : (
-            <button className="sci-qr-cancel-btn" onClick={onClose}>
-              Huỷ phiên
+            <button
+              className="sci-qr-cancel-btn"
+              onClick={handleCancel}
+              disabled={isCancelling}
+            >
+              {isCancelling ? 'Đang huỷ...' : 'Huỷ phiên'}
             </button>
           )}
         </div>

@@ -9,6 +9,7 @@ import CheckIn from './pages/CheckIn.jsx'
 import CheckOut from './pages/CheckOut.jsx'
 import MobileCamera from './pages/MobileCamera.jsx'
 import MobileBookingScanner from './pages/MobileBookingScanner.jsx'
+import MobileCheckoutScan from './pages/MobileCheckoutScan.jsx'
 
 function App() {
   return (
@@ -73,6 +74,11 @@ function App() {
         <Route
           path="/mobile-booking-scanner"
           element={<MobileBookingScanner />}
+        />
+
+        <Route
+          path="/mobile-checkout-scan"
+          element={<MobileCheckoutScan />}
         />
       </Routes>
     </BrowserRouter>

@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useMemo } from 'react'
 import { useForm } from 'react-hook-form'
 import { getProfile, updateProfile } from "../services/profileService"
 import { mergeUser } from "../services/authService"
@@ -6,6 +6,7 @@ import defaultAvatar from '../assets/userAvatar.png'
 import Navbar from '../components/common/Navbar'
 import '../styles/Home.css'
 import '../styles/UserProfile.css'
+import userAvatarPlaceholder from '../assets/userAvatar.png'
 import { IconProfile, IconHistory, IconEdit, IconGuide, IconContact, IconCar, IconMotorbike } from '../components/svg/Icons'
 
 // ─── Toggle Switch ────────────────────────────────────────────
@@ -92,6 +93,7 @@ export default function UserProfile({ onLogout, stats, recentHistory, notificati
 
   const { register, handleSubmit, reset, formState: { errors, isDirty } } = useForm({
     defaultValues: {
+      avatar: '',
       fullName: '',
       email: '',
       phone: '',

@@ -2,10 +2,13 @@ import { useState, useEffect, useRef, useCallback } from 'react'
 import {
   createCameraSession,
   getCameraSession,
+  cancelCameraSession,
   TERMINAL_STATUSES,
 } from '../services/cameraSessionService'
 
 const POLL_INTERVAL_MS = 3000
+// Số lần lỗi mạng liên tiếp tối đa trước khi coi là mất kết nối thật và dừng polling.
+const MAX_CONSECUTIVE_ERRORS = 3
 
 /**
  * Các trạng thái nội bộ của hook (khác với status từ backend).
@@ -37,10 +40,16 @@ export function useCameraSession() {
   const [sessionData, setSessionData] = useState(null)
   const [mobileUrl, setMobileUrl] = useState(null)
   const [error, setError] = useState(null)
+  // true khi server trả 401 (token hết hạn/không hợp lệ) trong lúc polling —
+  // caller (component) theo dõi cờ này để redirect về trang login.
+  const [unauthorized, setUnauthorized] = useState(false)
 
   // Lưu sessionId và intervalId vào ref để tránh stale closure trong interval
   const sessionIdRef = useRef(null)
   const intervalRef = useRef(null)
+  // Đếm số lần lỗi mạng liên tiếp — cho phép vài lần rớt mạng thoáng qua mà
+  // không phải dừng hẳn polling và bắt scan lại từ đầu.
+  const consecutiveErrorsRef = useRef(0)
 
   // Dừng polling — gọi bất cứ khi nào cần
   const stopPolling = useCallback(() => {
@@ -65,6 +74,14 @@ export function useCameraSession() {
         try {
           const { status, data } = await getCameraSession(sessionId)
 
+          if (status === 401) {
+            // Token hết hạn/không hợp lệ — dừng polling, để caller redirect login
+            stopPolling()
+            setUnauthorized(true)
+            setPhase(SESSION_PHASES.DONE)
+            return
+          }
+
           if (status !== 200) {
             // Lỗi từ server — dừng polling, báo lỗi
             stopPolling()
@@ -73,6 +90,7 @@ export function useCameraSession() {
             return
           }
 
+          consecutiveErrorsRef.current = 0
           setSessionData(data)
 
           // Dừng polling nếu session đã kết thúc
@@ -81,10 +99,14 @@ export function useCameraSession() {
             setPhase(SESSION_PHASES.DONE)
           }
         } catch (err) {
-          // Lỗi network — dừng polling
-          stopPolling()
-          setError('Mất kết nối. Vui lòng thử lại.')
-          setPhase(SESSION_PHASES.DONE)
+          // Lỗi network — cho phép vài lần liên tiếp trước khi dừng hẳn polling,
+          // tránh việc rớt mạng thoáng qua làm hỏng cả phiên đang quét.
+          consecutiveErrorsRef.current += 1
+          if (consecutiveErrorsRef.current >= MAX_CONSECUTIVE_ERRORS) {
+            stopPolling()
+            setError('Mất kết nối. Vui lòng thử lại.')
+            setPhase(SESSION_PHASES.DONE)
+          }
         }
       }, POLL_INTERVAL_MS)
     },
@@ -94,23 +116,20 @@ export function useCameraSession() {
   /**
    * Tạo session với purpose chỉ định và bắt đầu polling.
    * @param {string} purpose
-   * @param {number} gateId
    */
   const startSession = useCallback(
-    async (purpose, gateId) => {
+    async (purpose) => {
       // Reset state cũ trước khi tạo session mới — tránh hiển thị ảnh/OCR của session cũ
       setSessionData(null)
       setMobileUrl(null)
       setError(null)
+      setUnauthorized(false)
+      consecutiveErrorsRef.current = 0
       sessionIdRef.current = null
       setPhase(SESSION_PHASES.CREATING)
 
       try {
-        const { status, data } = await createCameraSession({
-          purpose,
-          // TODO: lấy gateId thực từ context/profile/config
-          gateId,
-        })
+        const { status, data } = await createCameraSession({ purpose })
 
         if (status !== 201) {
           setError(data?.message || 'Không thể tạo session. Vui lòng thử lại.')
@@ -134,9 +153,37 @@ export function useCameraSession() {
   const reset = useCallback(() => {
     stopPolling()
     sessionIdRef.current = null
+    consecutiveErrorsRef.current = 0
     setSessionData(null)
     setMobileUrl(null)
     setError(null)
+    setUnauthorized(false)
+    setPhase(SESSION_PHASES.IDLE)
+  }, [stopPolling])
+
+  /**
+   * Huỷ session hiện tại — gọi POST /camera-sessions/{id}/cancel để backend
+   * chuyển trạng thái CameraSession sang Cancelled, rồi dọn sạch state local.
+   */
+  const cancelSession = useCallback(async () => {
+    const sessionId = sessionIdRef.current
+    stopPolling()
+
+    if (sessionId) {
+      try {
+        await cancelCameraSession(sessionId)
+      } catch {
+        // Bỏ qua lỗi gọi cancel — phía staff vẫn muốn đóng/huỷ phiên trên UI,
+        // session sẽ tự hết hạn theo expiresAt nếu request này thất bại.
+      }
+    }
+
+    sessionIdRef.current = null
+    consecutiveErrorsRef.current = 0
+    setSessionData(null)
+    setMobileUrl(null)
+    setError(null)
+    setUnauthorized(false)
     setPhase(SESSION_PHASES.IDLE)
   }, [stopPolling])
 
@@ -145,7 +192,9 @@ export function useCameraSession() {
     sessionData,
     mobileUrl,
     error,
+    unauthorized,
     startSession,
     reset,
+    cancelSession,
   }
 }

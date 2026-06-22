@@ -177,8 +177,9 @@
   /* Muted gray text */
 }
 
-/* Hide the actual file input */
-input[type="file"] {
+/* Hide the actual file input (scoped: the unscoped form leaked app-wide and
+   hid file inputs on other pages, e.g. the Signup avatar picker) */
+.file-upload-container input[type="file"] {
   display: none;
 }
 

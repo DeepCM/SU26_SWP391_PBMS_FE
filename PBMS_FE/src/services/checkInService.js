@@ -16,7 +16,9 @@ async function post(url, body) {
       data?.message ||
       (data?.errors && Object.values(data.errors).flat()[0]) ||
       `Lỗi ${response.status}`
-    throw new Error(message)
+    const error = new Error(message)
+    error.status = response.status
+    throw error
   }
 
   return { status: response.status, data }
