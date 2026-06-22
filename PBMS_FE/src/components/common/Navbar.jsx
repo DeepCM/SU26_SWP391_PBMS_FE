@@ -1,4 +1,3 @@
-import { useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { getUser } from "../../services/authService"
 import '../../styles/Home.css'
@@ -6,7 +5,9 @@ import defaultAvatar from '../../assets/userAvatar.png'
 
 export default function Navbar({ isLoggedIn, userAvatar }) {
   const navigate = useNavigate()
-  const avatarSrc = userAvatar || getUser()?.avatarUrl || defaultAvatar
+  const user = getUser()
+  const avatarSrc = userAvatar || user?.avatarUrl || defaultAvatar
+  const isStaff = user?.role?.toLowerCase() === 'staff'
   return (
     <nav className="navbar">
       <div className="navbar-inner">
@@ -40,7 +41,7 @@ export default function Navbar({ isLoggedIn, userAvatar }) {
                 src={avatarSrc}
                 alt="avatar"
                 className="navbar-avatar"
-                onError={(e) => { e.target.src = userAvatarPlaceholder }} // Safety check if URL is broken
+                onError={(e) => { e.target.src = defaultAvatar }} // Safety check if URL is broken
               />
             </button>
 
