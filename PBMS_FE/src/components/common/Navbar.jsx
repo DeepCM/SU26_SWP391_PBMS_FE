@@ -1,8 +1,11 @@
 import { useNavigate } from 'react-router-dom'
 import '../../styles/Home.css'
+import { getUser } from '../../services/authService'
+import defaultAvatar from '../../assets/userAvatar.png'
 
-export default function Navbar({ isLoggedIn }) {
+export default function Navbar({ isLoggedIn, userAvatar }) {
   const navigate = useNavigate()
+  const avatarSrc = userAvatar || getUser()?.avatarUrl || defaultAvatar
   return (
     <nav className="navbar">
       <div className="navbar-inner">
@@ -26,7 +29,7 @@ export default function Navbar({ isLoggedIn }) {
               onClick={() => navigate('/profile')}
             >
               <img
-                src="./src/assets/userAvatar.png"
+                src={avatarSrc}
                 alt="avatar"
                 className="navbar-avatar"
               />
