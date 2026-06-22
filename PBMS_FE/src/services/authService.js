@@ -56,3 +56,16 @@ export const getUser = () => {
 export const getToken = () => {
   return localStorage.getItem("token")
 }
+
+// Ghi đè thông tin user trong localStorage (vd: sau khi cập nhật hồ sơ)
+export const setUser = (user) => {
+  localStorage.setItem("user", JSON.stringify(user))
+}
+
+// Trộn các field mới vào user hiện có rồi lưu lại; trả về user sau khi gộp
+export const mergeUser = (partial) => {
+  const current = getUser() ?? {}
+  const merged = { ...current, ...partial }
+  localStorage.setItem("user", JSON.stringify(merged))
+  return merged
+}

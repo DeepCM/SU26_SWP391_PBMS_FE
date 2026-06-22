@@ -2,15 +2,12 @@ import { useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { getUser } from "../../services/authService"
 import '../../styles/Home.css'
-import userAvatarPlaceholder from '../../assets/userAvatar.png'
+import { getUser } from '../../services/authService'
+import defaultAvatar from '../../assets/userAvatar.png'
 
-export default function Navbar({ isLoggedIn }) {
+export default function Navbar({ isLoggedIn, userAvatar }) {
   const navigate = useNavigate()
-  const userData = useMemo(() => getUser(), [])
-
-  const user = JSON.parse(localStorage.getItem('user') || 'null')
-  const isStaff = isLoggedIn && user?.role?.toLowerCase() === 'staff'
-
+  const avatarSrc = userAvatar || getUser()?.avatarUrl || defaultAvatar
   return (
     <nav className="navbar">
       <div className="navbar-inner">
@@ -41,8 +38,7 @@ export default function Navbar({ isLoggedIn }) {
               onClick={() => navigate('/profile')}
             >
               <img
-                // Use the avatar from userData, or fallback to the imported placeholder
-                src={userData?.avatarUrl || userAvatarPlaceholder}
+                src={avatarSrc}
                 alt="avatar"
                 className="navbar-avatar"
                 onError={(e) => { e.target.src = userAvatarPlaceholder }} // Safety check if URL is broken

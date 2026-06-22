@@ -1,6 +1,8 @@
 import { useEffect, useState, useMemo } from 'react'
 import { useForm } from 'react-hook-form'
-import { getUser } from "../services/authService"
+import { getProfile, updateProfile } from "../services/profileService"
+import { mergeUser } from "../services/authService"
+import defaultAvatar from '../assets/userAvatar.png'
 import Navbar from '../components/common/Navbar'
 import '../styles/Home.css'
 import '../styles/UserProfile.css'
@@ -71,10 +73,15 @@ function HistoryVehicleIcon({ type }) {
 }
 
 // ─── Main Page ────────────────────────────────────────────────
-export default function UserProfile({ onLogout, userAvatar, stats, recentHistory, notificationSettings, onSaveProfile, onNotifChange, onChangePassword, onActivate2FA, onManageDevices, onDeleteAccount }) {
+export default function UserProfile({ onLogout, stats, recentHistory, notificationSettings, onSaveProfile, onNotifChange, onChangePassword, onActivate2FA, onManageDevices, onDeleteAccount }) {
   const [activeNav, setActiveNav] = useState('profile')
-  const userData = useMemo(() => getUser(), []);
-  const [loading, setLoading] = useState(true);
+  const [profile, setProfile] = useState(null)
+  const [avatarUrl, setAvatarUrl] = useState(null)       // avatar đã lưu trên server
+  const [avatarFile, setAvatarFile] = useState(null)     // file mới chọn (chưa upload)
+  const [avatarPreview, setAvatarPreview] = useState(null) // preview cục bộ của file mới
+  const [loading, setLoading] = useState(true)
+  const [saving, setSaving] = useState(false)
+  const [feedback, setFeedback] = useState(null)         // { type: 'success' | 'error', message }
   const [notifState, setNotifState] = useState(
     notificationSettings ?? {
       reminderBooking: false,
@@ -94,16 +101,23 @@ export default function UserProfile({ onLogout, userAvatar, stats, recentHistory
   })
 
   useEffect(() => {
-    setLoading(false);
-    if (userData) {
-      reset({
-        avatar: '',
-        fullName: userData.fullName ?? '',
-        email: userData.email ?? '',
-        phone: userData.phone ?? '',
-      });
-    }
-  }, [userData, reset]); // This will now only run once when the component mounts
+    let mounted = true
+    getProfile()
+      .then(data => {
+        if (!mounted) return
+        setProfile(data)
+        setAvatarUrl(data.avatarUrl || null)
+        reset({
+          fullName: data.fullName ?? '',
+          email: data.email ?? '',
+          phone: data.phone ?? '',
+        })
+        mergeUser({ fullName: data.fullName, avatarUrl: data.avatarUrl ?? null })
+      })
+      .catch(err => { if (mounted) setFeedback({ type: 'error', message: err.message }) })
+      .finally(() => { if (mounted) setLoading(false) })
+    return () => { mounted = false }
+  }, [reset])
 
 
   const historyList = recentHistory ?? []
@@ -114,17 +128,59 @@ export default function UserProfile({ onLogout, userAvatar, stats, recentHistory
     onNotifChange?.(updated)
   }
 
-  const onSubmit = (data) => {
-    onSaveProfile?.(data)
+  const handleAvatarChange = (e) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+    setAvatarFile(file)
+    setAvatarPreview(URL.createObjectURL(file))
+  }
+
+  const onSubmit = async (data) => {
+    setSaving(true)
+    setFeedback(null)
+    try {
+      const formData = new FormData()
+      formData.append('FullName', data.fullName)
+      if (data.phone) formData.append('Phone', data.phone)
+      if (avatarFile) formData.append('AvatarFile', avatarFile)
+
+      const updated = await updateProfile(formData)
+
+      setProfile(updated)
+      setAvatarUrl(updated.avatarUrl || null)
+      setAvatarFile(null)
+      setAvatarPreview(null)
+      reset({
+        fullName: updated.fullName ?? '',
+        email: updated.email ?? '',
+        phone: updated.phone ?? '',
+      })
+      mergeUser({ fullName: updated.fullName, avatarUrl: updated.avatarUrl ?? null })
+      setFeedback({ type: 'success', message: 'Cập nhật hồ sơ thành công.' })
+      onSaveProfile?.(updated)
+    } catch (err) {
+      setFeedback({ type: 'error', message: err.message })
+    } finally {
+      setSaving(false)
+    }
   }
 
   const handleCancel = () => {
-    reset()
+    reset({
+      fullName: profile?.fullName ?? '',
+      email: profile?.email ?? '',
+      phone: profile?.phone ?? '',
+    })
+    setAvatarFile(null)
+    setAvatarPreview(null)
+    setFeedback(null)
   }
+
+  const displayedAvatar = avatarPreview || avatarUrl || defaultAvatar
 
   return (
     <div className="profile-page">
-      <Navbar isLoggedIn userAvatar={userAvatar} onLogout={onLogout} />
+      <Navbar isLoggedIn userAvatar={displayedAvatar} onLogout={onLogout} />
 
       <div className="profile-layout">
         <ProfileSidebar activeKey={activeNav} onSelect={setActiveNav} />
@@ -168,25 +224,36 @@ export default function UserProfile({ onLogout, userAvatar, stats, recentHistory
 
           {/* Personal info card */}
           <div className="profile-card">
-            <img
-                // Use the avatar from userData, or fallback to the imported placeholder
-                src={userData?.avatarUrl || userAvatarPlaceholder}
-                alt="avatar"
-                className="navbar-avatar"
-                onError={(e) => { e.target.src = userAvatarPlaceholder }} // Safety check if URL is broken
-              />
             <h2 className="card-section-title">
+              <IconProfile />
               Thông tin cá nhân
             </h2>
-            {/*
-            <div className="profile-hero">
 
-              <div>
-                <p className="profile-display-name">{user?.fullName || ''}</p>
-                <p className="profile-display-email">{user?.email || ''}</p>
+            <div className="profile-avatar-edit">
+              <img src={displayedAvatar} alt="avatar" className="profile-avatar-lg" />
+              <div className="profile-avatar-meta">
+                <p className="profile-display-name">{profile?.fullName || ''}</p>
+                <p className="profile-display-email">{profile?.email || ''}</p>
+                <label htmlFor="avatar-upload" className="btn-outline-primary profile-avatar-btn">
+                  Đổi ảnh đại diện
+                </label>
+                <input
+                  id="avatar-upload"
+                  type="file"
+                  accept="image/png,image/jpeg"
+                  style={{ display: 'none' }}
+                  onChange={handleAvatarChange}
+                />
+                <p className="profile-avatar-hint">JPG hoặc PNG, tối đa 5MB</p>
               </div>
             </div>
-            */}
+
+            {feedback && (
+              <p className={feedback.type === 'success' ? 'form-success-msg' : 'form-error-msg'}>
+                {feedback.message}
+              </p>
+            )}
+
             <form onSubmit={handleSubmit(onSubmit)}>
               <div className="profile-form-row">
                 <div className="form-group">
@@ -198,7 +265,7 @@ export default function UserProfile({ onLogout, userAvatar, stats, recentHistory
                   <input
                     className={`form-input${errors.fullName ? ' input-error' : ''}`}
                     type="text"
-                    placeholder={userData?.fullName || ''}
+                    placeholder={profile?.fullName || ''}
                     {...register('fullName', { required: 'Vui lòng nhập họ và tên' })}
                   />
                   {errors.fullName && <span className="form-error-msg">{errors.fullName.message}</span>}
@@ -209,15 +276,11 @@ export default function UserProfile({ onLogout, userAvatar, stats, recentHistory
                     <span className="form-label-required">(*)</span>
                   </label>
                   <input
-                    placeholder={userData?.email || ''}
+                    placeholder={profile?.email || ''}
                     className={`form-input${errors.email ? ' input-error' : ''}`}
-                    {...register('email', {
-                      required: 'Vui lòng nhập email',
-                      pattern: {
-                        value: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
-                        message: 'Email không hợp lệ'
-                      }
-                    })}
+                    readOnly
+                    title="Email không thể thay đổi"
+                    {...register('email')}
                   />
                   {errors.email && <span className="form-error-msg">{errors.email.message}</span>}
                 </div>
@@ -240,7 +303,7 @@ export default function UserProfile({ onLogout, userAvatar, stats, recentHistory
                     Số điện thoại
                   </label>
                   <input
-                    placeholder={userData?.phone || ''}
+                    placeholder={profile?.phone || ''}
                     className={`form-input${errors.phone ? ' input-error' : ''}`}
                     type="tel"
                     {...register('phone', {
@@ -255,8 +318,21 @@ export default function UserProfile({ onLogout, userAvatar, stats, recentHistory
               </div>
 
               <div className="form-actions">
-                <button type="submit" className="btn-save">Lưu thay đổi</button>
-                <button type="button" className="btn-cancel" onClick={handleCancel} disabled={!isDirty}>Hủy</button>
+                <button
+                  type="submit"
+                  className="btn-save"
+                  disabled={saving || loading || (!isDirty && !avatarFile)}
+                >
+                  {saving ? 'Đang lưu...' : 'Lưu thay đổi'}
+                </button>
+                <button
+                  type="button"
+                  className="btn-cancel"
+                  onClick={handleCancel}
+                  disabled={saving || (!isDirty && !avatarFile)}
+                >
+                  Hủy
+                </button>
                 <span className="form-required-note">(*): Trường thông tin bắt buộc điền</span>
               </div>
             </form>

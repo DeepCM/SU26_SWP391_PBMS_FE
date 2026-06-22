@@ -44,11 +44,9 @@ function App() {
           path="/profile"
           element={
             <UserProfile
-              userAvatar={null}
               stats={null}
               recentHistory={[]}
               notificationSettings={null}
-              onSaveProfile={(data) => console.log('Save profile:', data)}
               onNotifChange={(settings) => console.log('Notif settings:', settings)}
               onChangePassword={() => console.log('Change password')}
               onActivate2FA={() => console.log('Activate 2FA')}

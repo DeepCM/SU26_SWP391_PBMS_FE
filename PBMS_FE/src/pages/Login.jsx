@@ -33,7 +33,8 @@ function Login() {
         const user = {
           email: result.data.email,
           fullName: result.data.fullName,
-          role: result.data.role
+          role: result.data.role,
+          avatarUrl: result.data.avatarUrl ?? null
         }
         localStorage.setItem("token", result.data.accessToken)
         localStorage.setItem("user", JSON.stringify(user))
