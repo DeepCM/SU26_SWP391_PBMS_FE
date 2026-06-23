@@ -25,9 +25,11 @@ function mapBookingStatus(status) {
   switch (status) {
     case 'pending_payment': return 'upcoming'
     case 'pending':
-    case 'confirmed': return 'active'
+    case 'confirmed':
+    case 'checked_in': return 'active'
     case 'cancelled':
-    case 'expired': return 'done'
+    case 'expired':
+    case 'completed': return 'done'
     default: return 'upcoming'
   }
 }
