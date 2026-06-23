@@ -587,7 +587,7 @@ function CheckOut() {
 
               <div className="co-fee-box">
                 <span className="co-fee-label">Tổng phí</span>
-                <span className="co-fee-value">{formatCurrency(totalFee)}</span>
+                <span className="co-fee-value">{formatCurrency(additionalAmountDue)}</span>
               </div>
 
               <div className="co-time-rows">
