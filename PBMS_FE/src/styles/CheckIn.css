@@ -276,7 +276,7 @@
 .sci-camera-row--col .sci-camera-box {
   flex: 1;
   width: 100%;
-  aspect-ratio: unset;
+  aspect-ratio: 4/3;
   min-height: 280px;
 }
 
