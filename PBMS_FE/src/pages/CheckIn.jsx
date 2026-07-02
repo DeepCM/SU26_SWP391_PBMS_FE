@@ -378,7 +378,7 @@ function CheckIn() {
       <Navbar isLoggedIn={isLoggedIn} />
 
       <div className="sci-body">
-        {/* Sidebar */}
+        {/* Sidebar 
         <aside className="sci-sidebar">
           <p className="sci-section-label">CHỨC NĂNG</p>
           <ul className="sci-sidebar-list">
@@ -397,7 +397,7 @@ function CheckIn() {
             <li className="sci-sidebar-item">Liên hệ quản lý</li>
           </ul>
         </aside>
-
+          */}
         {/* Main */}
         <main className="sci-main">
           <div className="sci-page-header">
