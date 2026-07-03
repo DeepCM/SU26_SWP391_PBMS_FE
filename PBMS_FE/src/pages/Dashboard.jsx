@@ -8,7 +8,7 @@ import { , } from '../services/'
 */}
 export default function Dashboard() {
   // ── STATE MANAGEMENT ──────────────────────────────────────────────────────
-  const [timePeriod, setTimePeriod] = useState('day') // 'day' | 'week' | 'month'
+  const [timePeriod, setTimePeriod] = useState('ngày') // 'day' | 'week' | 'month'
   const [analyticsData, setAnalyticsData] = useState(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
@@ -52,15 +52,15 @@ export default function Dashboard() {
           ]
 
           const mockRevenue = {
-            day: { totalAmount: 4250000, transactionCount: 142 },
-            week: { totalAmount: 31200000, transactionCount: 980 },
-            month: { totalAmount: 124800000, transactionCount: 3890 },
+            ngày: { totalAmount: 4250000, transactionCount: 142 },
+            tuần: { totalAmount: 31200000, transactionCount: 980 },
+            tháng: { totalAmount: 124800000, transactionCount: 3890 },
           }
 
           const mockPolicies = [
-            { type: 'Xe máy', rate: '5,000đ / giờ' },
-            { type: 'Xe máy điện', rate: '6,000đ / giờ' },
-            { type: 'Ô tô', rate: '25,000đ / giờ' },
+            { type: 'Xe máy', hourlyRate: '5,000đ', depositRate: '5,000đ' },
+            { type: 'Xe máy điện', hourlyRate: '6,000đ', depositRate: '6,000đ' },
+            { type: 'Ô tô', hourlyRate: '25,000đ', depositRate: '25,000đ' },
           ]
 
           setAnalyticsData({
@@ -81,120 +81,98 @@ export default function Dashboard() {
 
   if (loading) {
     return (
-      <div className="sci-page" style={{ justifyContent: 'center', alignItems: 'center' }}>
-        <p style={{ color: '#6b7280', fontSize: '15px' }}>Đang tải dữ liệu phân tích...</p>
+      <div className="sci-page sci-loading-state">
+        <p>Đang tải dữ liệu phân tích...</p>
       </div>
     )
   }
 
-  // ── VIEW RENDERING LAYER ──────────────────────────────────────────────────
   return (
     <div className="sci-page">
-      {/* Dynamic top bar layout */}
       <Navbar isLoggedIn={true} />
 
-      <main className="sci-main" style={{ padding: '24px', maxWidth: '1400px', margin: '0 auto', width: '100%', boxSizing: 'border-box' }}>
-        
-        {/* Header section with analytical scope switcher */}
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
+      <main className="sci-main sci-dashboard-container">
+
+        <div className="sci-header-container">
           <div>
-            <h1 style={{ fontSize: '22px', fontWeight: '600', color: '#111827', margin: '0 0 4px 0' }}>
-              Tổng Quan Hệ Thống PBMS
-            </h1>
-            <p style={{ fontSize: '13px', color: '#6b7280', margin: 0 }}>
-              Giám sát mật độ bãi đỗ, bảng giá chính sách và báo cáo doanh thu tài chính.
-            </p>
+            <h1 className="sci-header-title">Tổng Quan Hệ Thống PBMS</h1>
+            <p className="sci-header-subtitle">Giám sát mật độ bãi đỗ, bảng giá chính sách và báo cáo doanh thu tài chính.</p>
           </div>
-          
-          {/* Timeframe Scope Filters */}
-          <div style={{ display: 'flex', gap: '8px' }}>
-            <button 
-              className={`sci-period-pill ${timePeriod === 'day' ? 'sci-period-pill--active' : ''}`}
-              onClick={() => setTimePeriod('day')}
-            >
-              Hôm nay
-            </button>
-            <button 
-              className={`sci-period-pill ${timePeriod === 'week' ? 'sci-period-pill--active' : ''}`}
-              onClick={() => setTimePeriod('week')}
-            >
-              Tuần này
-            </button>
-            <button 
-              className={`sci-period-pill ${timePeriod === 'month' ? 'sci-period-pill--active' : ''}`}
-              onClick={() => setTimePeriod('month')}
-            >
-              Tháng này
-            </button>
+
+          <div className="sci-period-filters">
+            <button className={`sci-period-pill ${timePeriod === 'ngày' ? 'sci-period-pill--active' : ''}`} onClick={() => setTimePeriod('ngày')}>Hôm nay</button>
+            <button className={`sci-period-pill ${timePeriod === 'tuần' ? 'sci-period-pill--active' : ''}`} onClick={() => setTimePeriod('tuần')}>Tuần này</button>
+            <button className={`sci-period-pill ${timePeriod === 'tháng' ? 'sci-period-pill--active' : ''}`} onClick={() => setTimePeriod('tháng')}>Tháng này</button>
           </div>
         </div>
 
-        {error && <div className="sci-confirm-error" style={{ marginBottom: '20px' }}>{error}</div>}
+        {error && <div className="sci-confirm-error">{error}</div>}
 
         {/* Analytics Dashboard Grid Framework */}
         <div className="sci-dashboard-grid">
-          
-          {/* Card 1: Revenue Metrics */}
+
+          {/* Card 1 */}
           <div className="sci-stat-card">
             <div className="sci-stat-header">
-              <span className="sci-stat-title">Doanh Thu Thu Về ({timePeriod === 'day' ? 'Ngày' : timePeriod === 'week' ? 'Tuần' : 'Tháng'})</span>
-              <span style={{ fontSize: '11px', fontWeight: '600', padding: '2px 8px', background: '#e1effe', color: '#1a56db', borderRadius: '4px', textTransform: 'uppercase' }}>
-                Tài chính
-              </span>
+              <span className="sci-stat-title">Doanh Thu Thu Về ({timePeriod})</span>
+              <span className="sci-badge-finance">Tài chính</span>
             </div>
-            <div className="sci-stat-value">
-              {analyticsData?.revenue?.totalAmount?.toLocaleString('vi-VN')} VNĐ
-            </div>
-            <div style={{ fontSize: '13px', color: '#4b5563', borderTop: '1px solid #f3f4f6', paddingTop: '10px', marginTop: 'auto' }}>
-              Tổng số lượt giao dịch: <strong>{analyticsData?.revenue?.transactionCount}</strong>
-            </div>
+            <div className="sci-stat-value">{analyticsData?.revenue?.totalAmount?.toLocaleString('vi-VN')} VNĐ</div>
+            <div className="sci-stat-footer">Tổng số lượt giao dịch: <strong>{analyticsData?.revenue?.transactionCount}</strong></div>
           </div>
 
-          {/* Card 2: Parking Slots Occupancy Status */}
-          <div className="sci-stat-card" style={{ gridColumn: 'span 2' }}>
+          {/* Card 2: Occupancy (Now uses helper class for span) */}
+          <div className="sci-stat-card sci-span-2">
             <div className="sci-stat-header">
-              <span className="sci-stat-title">Trạng Thái Mật Độ Các Tầng Đỗ</span>
-              <div style={{ display: 'flex', gap: '12px', fontSize: '12px' }}>
-                <span><span className="sci-indicator-dot sci-dot--available"></span>Trống</span>
-                <span><span className="sci-indicator-dot sci-dot--occupied"></span>Đầy</span>
+              <span className="sci-stat-title">Mật Độ Các Tầng</span>
+              <span className="sci-badge-status">Trạng Thái</span>
+              {/*
+                <div className="sci-legend">
+                  <span><span className="sci-indicator-dot sci-dot--available"></span>Trống</span>
+                  <span><span className="sci-indicator-dot sci-dot--occupied"></span>Đầy</span>
+                  <span><span className="sci-indicator-dot sci-dot--total"></span>Tổng</span>
+                </div>
+                */}
+            </div>
+            {analyticsData?.occupancy?.map((floor, idx) => (
+              <div key={idx} className="sci-floor-detail-row">
+                <div className="sci-floor-info">
+                  {floor.type === 'Xe máy' && <IconMotorbike />}
+                  {floor.type === 'Xe máy điện' && <IconEbike />}
+                  {floor.type === 'Ô tô' && <IconCar />}
+                  {floor.floorName} ({floor.type})
+                </div>
+                <div className="sci-floor-counts">
+                  <span className="sci-period-pill text-green">{floor.available} trống</span>
+                  <span className="sci-period-pill text-red">{floor.occupied} đỗ</span>
+                  <span className="sci-period-pill text-blue">{floor.total} tổng</span>
+                </div>
               </div>
-            </div>
-            
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-              {analyticsData?.occupancy?.map((floor, idx) => (
-                <div key={idx} className="sci-floor-detail-row">
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontWeight: '500' }}>
-                    {floor.type === 'Xe máy' && <IconMotorbike style={{ width: '16px', height: '16px', fill: '#4b5563' }} />}
-                    {floor.type === 'Xe máy điện' && <IconEbike style={{ width: '16px', height: '16px', fill: '#4b5563' }} />}
-                    {floor.type === 'Ô tô' && <IconCar style={{ width: '16px', height: '16px', fill: '#4b5563' }} />}
-                    {floor.floorName} ({floor.type})
-                  </div>
-                  <div style={{ fontSize: '13px' }}>
-                    <span style={{ color: '#16a34a', fontWeight: '600' }}>{floor.available}</span> trống / <span style={{ color: '#dc2626', fontWeight: '600' }}>{floor.occupied}</span> đỗ (Tổng: {floor.total})
-                  </div>
-                </div>
-              ))}
-            </div>
+            ))}
           </div>
 
-          {/* Card 3: Active Rates Configuration Summary */}
+          {/* Card 3 */}
           <div className="sci-stat-card">
             <div className="sci-stat-header">
-              <span className="sci-stat-title">Cấu Hình Giá Hiện Tại</span>
-              <span style={{ fontSize: '11px', fontWeight: '600', padding: '2px 8px', background: '#fef08a', color: '#854d0e', borderRadius: '4px', textTransform: 'uppercase' }}>
-                Policy
-              </span>
+              <span className="sci-stat-title">Phân Giá Phương Tiện</span>
+              <span className="sci-badge-policy">Cấu Hình</span>
             </div>
-            
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginTop: '4px' }}>
-              {analyticsData?.policies?.map((policy, idx) => (
-                <div key={idx} style={{ display: 'flex', justifyContent: 'space-between', fontSize: '13px', paddingBottom: '6px', borderBottom: '1px solid #f3f4f6' }}>
-                  <span style={{ color: '#4b5563' }}>{policy.type}</span>
-                  <span style={{ fontWeight: '600', color: '#111827' }}>{policy.rate}</span>
+
+            {analyticsData?.policies?.map((item, idx) => (
+              <div key={idx} className="sci-price-row">
+                <span className="sci-vehicle-label">{item.type}:</span>
+                <div className="sci-price-group">
+                  <span className="sci-price-pill sci-pill--hourly">
+                    {item.hourlyRate} / giờ
+                  </span>
+                  <span className="sci-price-pill sci-pill--deposit">
+                    {item.depositRate} / đặt chỗ
+                  </span>
                 </div>
-              ))}
-            </div>
+              </div>
+            ))}
           </div>
+
 
         </div>
 

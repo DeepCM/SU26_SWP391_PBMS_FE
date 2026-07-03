@@ -1,16 +1,51 @@
 /* ========================================================================= */
-/* ADMIN/MANAGER ANALYTICAL DASHBOARD LAYOUT STYLES                          */
+/* 1. CORE CONTAINER & GRID LAYOUT                                           */
 /* ========================================================================= */
 
-/* Grid layout for analytics cards */
-.sci-dashboard-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-  gap: 20px;
+.sci-dashboard-container {
+  padding: 24px;
+  max-width: 1400px;
+  margin: 0 auto;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.sci-header-container {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
   margin-bottom: 24px;
 }
 
-/* Base card layout for stats */
+.sci-header-title {
+  font-size: 22px;
+  font-weight: 600;
+  color: #111827;
+  margin: 0 0 4px 0;
+}
+
+.sci-header-subtitle {
+  font-size: 13px;
+  color: #6b7280;
+  margin: 0;
+}
+
+.sci-dashboard-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 20px;
+}
+
+/* Layout Modifier Utilities */
+.sci-span-2 {
+  grid-column: span 1;
+}
+
+
+/* ========================================================================= */
+/* 2. STATISTICAL CARDS & PRICE CONFIGURATION                                */
+/* ========================================================================= */
+
 .sci-stat-card {
   background: #ffffff;
   border: 1px solid #e5e7eb;
@@ -24,57 +59,164 @@
 
 .sci-stat-header {
   display: flex;
-  align-items: center;
   justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
 }
 
 .sci-stat-title {
   font-size: 14px;
-  font-weight: 500;
-  color: #6b7280;
-}
-
-.sci-stat-value {
-  font-size: 24px;
   font-weight: 600;
   color: #111827;
 }
 
-/* Floor metrics details */
+.sci-stat-value {
+  font-size: 24px;
+  font-weight: 700;
+  color: #111827;
+  margin: 12px 0;
+}
+
+/* Container for the price tags */
+.sci-price-group {
+  display: flex;
+  gap: 8px;
+  /* Space between hourly price and deposit price */
+}
+
+/* Individual pricing pill styles */
+.sci-price-pill {
+  font-size: 13px;
+  font-weight: 500;
+  padding: 4px 12px;
+  border-radius: 20px;
+  border: 1px solid #e5e7eb;
+}
+
+/* Color thematic styles for the prices */
+.sci-pill--hourly {
+  background-color: #fff;
+  color: #111827;
+  border-color: #e5e7eb;
+}
+
+.sci-pill--deposit {
+  background-color: #f3f4f6;
+  /* Light gray background to distinguish deposit */
+  color: #4b5563;
+  border-color: #e5e7eb;
+}
+
+/* Base structural alignment (remains identical to the left row height) */
+.sci-price-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 0;
+  margin: 0;
+  height: 38px;
+  /* Bumped slightly to comfortably host the pills */
+  box-sizing: border-box;
+  border-bottom: 1px solid transparent;
+}
+
+.sci-vehicle-label {
+  font-size: 14px;
+  color: #111827;
+}
+
+/* !! IMPORTANT: Make sure your left side height matches the new pill height !! */
+.sci-floor-detail-row {
+  height: 38px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 0;
+  border-bottom: 1px solid #f3f4f6;
+  box-sizing: border-box;
+}
+
+
+/* ========================================================================= */
+/* 3. FLOOR METRICS & LIST ROWS                                              */
+/* ========================================================================= */
+
 .sci-floor-detail-row {
   display: flex;
   justify-content: space-between;
   align-items: center;
+  padding: 8px 0;
   font-size: 13px;
-  color: #4b5563;
-  padding: 4px 0;
-  border-bottom: 1px dashed #f3f4f6;
+  color: black;
 }
 
 .sci-floor-detail-row:last-child {
   border-bottom: none;
 }
 
-/* Time-period filter active pill */
+.sci-floor-info {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 500;
+}
+
+.sci-floor-counts {
+  font-size: 13px;
+
+}
+
+
+/* ========================================================================= */
+/* 4. CONTROLS, BADGES & MICRO-INDICATORS                                    */
+/* ========================================================================= */
+
+/* Timeframe Filter Pills */
 .sci-period-pill {
   padding: 6px 12px;
   font-size: 12px;
   font-weight: 500;
   border-radius: 20px;
   border: 1px solid #e5e7eb;
-  background: #fff;
+  background: #ffffff;
   color: #374151;
   cursor: pointer;
-  transition: all 0.2s;
+  transition: all 0.2s ease;
 }
 
 .sci-period-pill--active {
   background: #1a56db;
-  color: #fff;
+  color: #ffffff;
   border-color: #1a56db;
 }
 
-/* Status indicator micro-badges */
+/* Category Badges */
+.sci-badge-finance,
+.sci-badge-status,
+.sci-badge-policy {
+  font-size: 11px;
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: 4px;
+  text-transform: uppercase;
+}
+
+.sci-badge-finance {
+  background: #e1effe;
+  color: #1a56db;
+}
+
+.sci-badge-status {
+  background: #81decf56;
+  color: #16adad;
+}
+
+.sci-badge-policy {
+  background: #fef08a;
+  color: #854d0e;
+}
+
+/* Status Micro Dots */
 .sci-indicator-dot {
   display: inline-block;
   width: 8px;
@@ -82,7 +224,69 @@
   border-radius: 50%;
   margin-right: 6px;
 }
-.sci-dot--available { background-color: #16a34a; }
-.sci-dot--occupied { background-color: #dc2626; }
-.sci-dot--total { background-color: #2563eb; }
+
+.sci-dot--available {
+  background-color: #16a34a;
+}
+
+.sci-dot--occupied {
+  background-color: #dc2626;
+  margin-left: 20px;
+}
+
+.sci-dot--total {
+  background-color: #2563eb;
+  margin-left: 20px;
+}
+
+/* Color Semantic Utilities */
+.text-green {
+  color: #16a34a;
+  font-weight: 600;
+}
+
+.text-red {
+  color: #dc2626;
+  font-weight: 600;
+}
+
+.text-blue {
+  color: #2563eb;
+  font-weight: 600;
+}
+
+
+/* ========================================================================= */
+/* 5. RESPONSIVE BREAKPOINTS (MOBILE FIRST DEGRADATION)                      */
+/* ========================================================================= */
+
+@media (max-width: 950px) {
+  .sci-dashboard-grid {
+    grid-template-columns: 1fr;
+    /* Force 1 column on smaller displays */
+  }
+
+  .sci-span-2 {
+    grid-column: span 1;
+    /* Drop spans to fit single-column layout */
+  }
+
+  .sci-header-container {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 16px;
+  }
+
+  .sci-stat-card {
+    padding: 16px;
+  }
+}
+
+@media (max-width: 1400px) {
+  .sci-span-2 {
+    grid-column: span 2;
+    /* Drop spans to fit single-column layout */
+  }
+}
+
 /* ========================================================================= */
