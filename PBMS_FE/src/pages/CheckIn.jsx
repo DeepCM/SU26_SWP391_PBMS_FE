@@ -601,9 +601,21 @@ function CheckIn() {
                           ? 'Không có tầng phù hợp'
                           : '-- Chọn tầng --'}
                   </option>
-                  {floors.map((f) => (
-                    <option key={f.floorId} value={String(f.floorId)}>{f.floorName}</option>
-                  ))}
+                  {floors.map((f) => {
+                    const percentRemaining = f.totalSlots > 0
+                      ? (f.availableSlots / f.totalSlots) * 100
+                      : 0
+                    const color = percentRemaining <= 10
+                      ? '#EF4444'
+                      : percentRemaining <= 30
+                        ? '#F59E0B'
+                        : '#22C55E'
+                    return (
+                      <option key={f.floorId} value={String(f.floorId)} style={{ color }}>
+                        {f.floorName} ({f.availableSlots} chỗ trống)
+                      </option>
+                    )
+                  })}
                 </select>
               </div>
 

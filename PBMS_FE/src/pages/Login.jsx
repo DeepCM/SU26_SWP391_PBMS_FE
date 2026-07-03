@@ -6,7 +6,6 @@ import Footer from '../components/common/Footer'
 import Header from '../components/common/Header'
 import {
   IconAccountCard,
-  IconGoogle,
   IconEnvelope,
   IconLock,
   IconEye,
@@ -71,88 +70,77 @@ function Login() {
               }}>
               Đăng ký ngay
             </a></p>
+          </div>
 
-            <button type="button" className="login-google-btn">
-              <IconGoogle />
-              Tiếp tục với Google
-            </button>
+          <form onSubmit={handleSubmit(onSubmit)} className="login-form">
+            <div className="login-field-group">
+              <label className="login-field-label">Địa chỉ Email</label>
+              <div className="login-input-wrap">
+                <IconEnvelope className="login-input-icon" />
+                <input
+                  type="email"
+                  className="login-input"
+                  placeholder=""
+                  {...register('email', {
+                    required: 'Vui lòng nhập email',
+                    pattern: {
+                      value: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
+                      message: 'Email không hợp lệ'
+                    }
+                  })}
+                />
 
-            <div className="login-divider">
-              <span className="login-divider-line" />
-              <span className="login-divider-text">hoặc đăng nhập bằng email</span>
-              <span className="login-divider-line" />
+              </div>
+              {errors.email && <span className="error">{errors.email.message}</span>}
             </div>
 
-            <form onSubmit={handleSubmit(onSubmit)} className="login-form">
-              <div className="login-field-group">
-                <label className="login-field-label">Địa chỉ Email</label>
-                <div className="login-input-wrap">
-                  <IconEnvelope className="login-input-icon" />
-                  <input
-                    type="email"
-                    className="login-input"
-                    placeholder=""
-                    {...register('email', {
-                      required: 'Vui lòng nhập email',
-                      pattern: {
-                        value: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
-                        message: 'Email không hợp lệ'
-                      }
-                    })}
-                  />
-
-                </div>
-                {errors.email && <span className="error">{errors.email.message}</span>}
+            <div className="login-field-group">
+              <div className="login-password-label-row">
+                <label className="login-field-label">Mật khẩu</label>
+                <a href="#" className="login-link login-forgot-link">Quên mật khẩu?</a>
               </div>
-
-              <div className="login-field-group">
-                <div className="login-password-label-row">
-                  <label className="login-field-label">Mật khẩu</label>
-                  <a href="#" className="login-link login-forgot-link">Quên mật khẩu?</a>
-                </div>
-                <div className="login-input-wrap">
-                  <IconLock className="login-input-icon" />
-                  <input
-                    type={showPassword ? 'text' : 'password'}
-                    className="login-input login-input--password"
-                    placeholder=""
-                    {...register('password', { required: 'Password is required' })}
-                  />
-                  <button
-                    type="button"
-                    className="login-eye-btn"
-                    onClick={() => setShowPassword(v => !v)}
-                    aria-label="Toggle password visibility"
-                  >
-                    <IconEye />
-                  </button>
-                </div>
-                {errors.password && <span className="error">{errors.password.message}</span>}
-              </div>
-
-              <label className="login-remember-row">
+              <div className="login-input-wrap">
+                <IconLock className="login-input-icon" />
                 <input
-                  type="checkbox"
-                  className="login-checkbox"
-                  {...register('remember')}
+                  type={showPassword ? 'text' : 'password'}
+                  className="login-input login-input--password"
+                  placeholder=""
+                  {...register('password', { required: 'Password is required' })}
                 />
-                <span className="login-remember-text">Ghi nhớ đăng nhập</span>
-              </label>
+                <button
+                  type="button"
+                  className="login-eye-btn"
+                  onClick={() => setShowPassword(v => !v)}
+                  aria-label="Toggle password visibility"
+                >
+                  <IconEye />
+                </button>
+              </div>
+              {errors.password && <span className="error">{errors.password.message}</span>}
+            </div>
 
-              <button type="submit" className="login-submit-btn">
-                <IconSubmit />
-                Đăng nhập
-              </button>
-            </form>
+            <label className="login-remember-row">
+              <input
+                type="checkbox"
+                className="login-checkbox"
+                {...register('remember')}
+              />
+              <span className="login-remember-text">Ghi nhớ đăng nhập</span>
+            </label>
 
-            <p className="login-terms">
-              Bằng cách đăng nhập, bạn đồng ý với{' '}
-              <a href="#" className="login-link">Điều khoản dịch vụ</a>
-              {' '}và{' '}
-              <a href="#" className="login-link">Chính sách bảo mật</a>
-              {' '}của chúng tôi.
-            </p>
-          </div>
+            <button type="submit" className="login-submit-btn">
+              <IconSubmit />
+              Đăng nhập
+            </button>
+          </form>
+
+          <p className="login-terms">
+            Bằng cách đăng nhập, bạn đồng ý với{' '}
+            <a href="#" className="login-link">Điều khoản dịch vụ</a>
+            {' '}và{' '}
+            <a href="#" className="login-link">Chính sách bảo mật</a>
+            {' '}của chúng tôi.
+          </p>
         </div>
       </main>
 

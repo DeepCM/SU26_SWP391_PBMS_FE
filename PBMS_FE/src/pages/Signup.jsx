@@ -8,7 +8,6 @@ import Footer from '../components/common/Footer'
 import Header from '../components/common/Header'
 import {
   IconAccountCard,
-  IconGoogle,
   IconProfile,
   IconEnvelope,
   IconLock,
@@ -87,17 +86,6 @@ function Signup() {
                 Đăng nhập ngay
               </a>
             </p>
-          </div>
-
-          <button type="button" className="login-google-btn">
-            <IconGoogle />
-            Tiếp tục với Google
-          </button>
-
-          <div className="login-divider">
-            <span className="login-divider-line" />
-            <span className="login-divider-text">hoặc đăng ký bằng địa chỉ email</span>
-            <span className="login-divider-line" />
           </div>
 
           {!isRegistered ? (
