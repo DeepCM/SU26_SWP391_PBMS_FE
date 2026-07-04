@@ -3,6 +3,7 @@ import Navbar from '../components/common/Navbar'
 import { IconCar, IconMotorbike, IconEbike } from '../components/svg/Icons'
 import '../styles/CheckIn.css'
 import '../styles/Dashboard.css'
+import TableFloor from '../components/common/TableFloor.jsx'
 {/*service import
 import { , } from '../services/'
 */}
@@ -98,14 +99,7 @@ export default function Dashboard() {
             <h1 className="sci-header-title">Tổng Quan Hệ Thống PBMS</h1>
             <p className="sci-header-subtitle">Giám sát mật độ bãi đỗ, bảng giá chính sách và báo cáo doanh thu tài chính.</p>
           </div>
-
-          <div className="sci-period-filters">
-            <button className={`sci-period-pill ${timePeriod === 'ngày' ? 'sci-period-pill--active' : ''}`} onClick={() => setTimePeriod('ngày')}>Hôm nay</button>
-            <button className={`sci-period-pill ${timePeriod === 'tuần' ? 'sci-period-pill--active' : ''}`} onClick={() => setTimePeriod('tuần')}>Tuần này</button>
-            <button className={`sci-period-pill ${timePeriod === 'tháng' ? 'sci-period-pill--active' : ''}`} onClick={() => setTimePeriod('tháng')}>Tháng này</button>
-          </div>
         </div>
-
         {error && <div className="sci-confirm-error">{error}</div>}
 
         {/* Analytics Dashboard Grid Framework */}
@@ -114,8 +108,13 @@ export default function Dashboard() {
           {/* Card 1 */}
           <div className="sci-stat-card">
             <div className="sci-stat-header">
-              <span className="sci-stat-title">Doanh Thu Thu Về ({timePeriod})</span>
+              <span className="sci-stat-title">Doanh Thu Thu Về</span>
               <span className="sci-badge-finance">Tài chính</span>
+            </div>
+            <div className="sci-period-filters">
+              <button className={`sci-period-pill ${timePeriod === 'ngày' ? 'sci-period-pill--active' : ''}`} onClick={() => setTimePeriod('ngày')}>Hôm nay</button>
+              <button className={`sci-period-pill ${timePeriod === 'tuần' ? 'sci-period-pill--active' : ''}`} onClick={() => setTimePeriod('tuần')}>Tuần này</button>
+              <button className={`sci-period-pill ${timePeriod === 'tháng' ? 'sci-period-pill--active' : ''}`} onClick={() => setTimePeriod('tháng')}>Tháng này</button>
             </div>
             <div className="sci-stat-value">{analyticsData?.revenue?.totalAmount?.toLocaleString('vi-VN')} VNĐ</div>
             <div className="sci-stat-footer">Tổng số lượt giao dịch: <strong>{analyticsData?.revenue?.transactionCount}</strong></div>
@@ -137,12 +136,9 @@ export default function Dashboard() {
             {analyticsData?.occupancy?.map((floor, idx) => (
               <div key={idx} className="sci-floor-detail-row">
                 <div className="sci-floor-info">
-                  {floor.type === 'Xe máy' && <IconMotorbike />}
-                  {floor.type === 'Xe máy điện' && <IconEbike />}
-                  {floor.type === 'Ô tô' && <IconCar />}
                   {floor.floorName} ({floor.type})
                 </div>
-                <div className="sci-floor-counts">
+                <div className="sci-price-group">
                   <span className="sci-period-pill text-green">{floor.available} trống</span>
                   <span className="sci-period-pill text-red">{floor.occupied} đỗ</span>
                   <span className="sci-period-pill text-blue">{floor.total} tổng</span>
@@ -160,7 +156,11 @@ export default function Dashboard() {
 
             {analyticsData?.policies?.map((item, idx) => (
               <div key={idx} className="sci-price-row">
-                <span className="sci-vehicle-label">{item.type}:</span>
+                <span className="sci-vehicle-label">
+                  {item.type === 'Xe máy' && <IconMotorbike />}
+                  {item.type === 'Xe máy điện' && <IconEbike />}
+                  {item.type === 'Ô tô' && <IconCar />}
+                  {item.type}:</span>
                 <div className="sci-price-group">
                   <span className="sci-price-pill sci-pill--hourly">
                     {item.hourlyRate} / giờ
@@ -172,10 +172,12 @@ export default function Dashboard() {
               </div>
             ))}
           </div>
-
-
         </div>
 
+        {/* Table Framework */}
+        <div className="">
+          <TableFloor />
+        </div>
       </main>
     </div>
   )
