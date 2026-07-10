@@ -145,3 +145,45 @@
     color: #b91c1c;
     text-decoration: underline;
 }
+
+/* Base class for columns that support sorting */
+.sci-sortable {
+    cursor: pointer;
+    position: relative;
+    user-select: none;
+    transition: background-color 0.2s;
+}
+
+/* Subtle background shift on hover to show it's clickable */
+.sci-sortable:hover {
+    background-color: #f1f5f9 !important; 
+}
+
+/* Default "unsorted" icon state (faint double caret) */
+.sci-sortable::after {
+    content: ' ⇅';
+    font-size: 12px;
+    color: #9ca3af;
+    opacity: 0.5;
+    margin-left: 6px;
+    transition: opacity 0.2s;
+}
+
+.sci-sortable:hover::after {
+    opacity: 1;
+    color: #111827;
+}
+
+/* Active Ascending State */
+.sci-sortable-asc::after {
+    content: ' ▲' !important;
+    color: #111827;
+    opacity: 1;
+}
+
+/* Active Descending State */
+.sci-sortable-desc::after {
+    content: ' ▼' !important;
+    color: #111827;
+    opacity: 1;
+}

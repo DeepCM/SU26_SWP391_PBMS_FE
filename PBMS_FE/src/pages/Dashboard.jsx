@@ -9,7 +9,7 @@ import { , } from '../services/'
 */}
 export default function Dashboard() {
   // ── STATE MANAGEMENT ──────────────────────────────────────────────────────
-  const [timePeriod, setTimePeriod] = useState('ngày') // 'day' | 'week' | 'month'
+  // const [timePeriod, setTimePeriod] = useState('ngày') // 'day' | 'week' | 'month'
   const [analyticsData, setAnalyticsData] = useState(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
@@ -45,7 +45,7 @@ export default function Dashboard() {
       setLoading(true)
       try {
         // Mock data matching backend entity schemas exactly
-        setTimeout(() => {
+        /*setTimeout(() => {
           const mockOccupancy = [
             { floorName: 'Tầng B1', type: 'Xe máy', available: 45, occupied: 105, total: 150 },
             { floorName: 'Tầng B2', type: 'Xe máy điện', available: 20, occupied: 60, total: 80 },
@@ -69,16 +69,18 @@ export default function Dashboard() {
             revenue: mockRevenue[timePeriod],
             policies: mockPolicies
           })
-          setLoading(false)
+          
         }, 400)
+        */
+        setLoading(false)
       } catch (err) {
         setError(err.message || 'Không thể tải thông tin tổng quan.')
         setLoading(false)
       }
     }
 
-    loadDashboardData()
-  }, [timePeriod])
+    loadDashboardData() //}, [timePeriod])
+  }, []);
 
   if (loading) {
     return (
@@ -102,10 +104,10 @@ export default function Dashboard() {
         </div>
         {error && <div className="sci-confirm-error">{error}</div>}
 
-        {/* Analytics Dashboard Grid Framework */}
+        {/* Analytics Dashboard Grid Framework 
         <div className="sci-dashboard-grid">
 
-          {/* Card 1 */}
+          // Card 1
           <div className="sci-stat-card">
             <div className="sci-stat-header">
               <span className="sci-stat-title">Doanh Thu Thu Về</span>
@@ -120,7 +122,7 @@ export default function Dashboard() {
             <div className="sci-stat-footer">Tổng số lượt giao dịch: <strong>{analyticsData?.revenue?.transactionCount}</strong></div>
           </div>
 
-          {/* Card 2: Occupancy (Now uses helper class for span) */}
+          // Card 2: Occupancy (Now uses helper class for span)
           <div className="sci-stat-card sci-span-2">
             <div className="sci-stat-header">
               <span className="sci-stat-title">Mật Độ Các Tầng</span>
@@ -131,7 +133,7 @@ export default function Dashboard() {
                   <span><span className="sci-indicator-dot sci-dot--occupied"></span>Đầy</span>
                   <span><span className="sci-indicator-dot sci-dot--total"></span>Tổng</span>
                 </div>
-                */}
+                
             </div>
             {analyticsData?.occupancy?.map((floor, idx) => (
               <div key={idx} className="sci-floor-detail-row">
@@ -147,7 +149,7 @@ export default function Dashboard() {
             ))}
           </div>
 
-          {/* Card 3 */}
+          // Card 3
           <div className="sci-stat-card">
             <div className="sci-stat-header">
               <span className="sci-stat-title">Phân Giá Phương Tiện</span>
@@ -173,7 +175,7 @@ export default function Dashboard() {
             ))}
           </div>
         </div>
-
+            */}
         {/* Table Framework */}
         <div className="">
           <TableFloor />

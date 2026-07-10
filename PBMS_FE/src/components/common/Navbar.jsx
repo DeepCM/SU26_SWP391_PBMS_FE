@@ -18,7 +18,6 @@ export default function Navbar({ isLoggedIn, userAvatar }) {
           {isAdmin ? (
             <>
               {/* TODO: Admin specific navigation links will go here */}
-              <a href="#" onClick={() => navigate('/dashboard')}>Tổng quan</a>
               <a href="#" onClick={() => navigate('/dashboard')}>Quản lý</a>
             </>
           ) : isManager ? (

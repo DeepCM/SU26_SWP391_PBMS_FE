@@ -1,8 +1,8 @@
 import { useState, useEffect } from 'react'
 import '../../styles/Table.css';
-import { getVehicleTypes, getAvailableSlots, getPricingPreview } from '../../services/vehicleTypeService'
+import { createPricing, getAllPricing, getOnePricing, updatePricing } from '../../services/pricingService'
 
-const TableFloor = () => {
+const PricingFloor = () => {
     const [analyticsData, setAnalyticsData] = useState(null)
     const [loading, setLoading] = useState(true)
     const [error, setError] = useState(null)
@@ -10,7 +10,6 @@ const TableFloor = () => {
     const [selectedFloor, setSelectedFloor] = useState(null);
     const [vehicleTypes, setVehicleTypes] = useState([])
     const [sortConfig, setSortConfig] = useState({ key: null, direction: 'asc' });
-    const [searchTerm, setSearchTerm] = useState('');
     const handleCreate = () => {
         setSelectedFloor(null);
         setShowFloorPopup(true);
@@ -44,36 +43,26 @@ const TableFloor = () => {
         setSortConfig({ key, direction });
     };
 
-    const getFilteredAndSortedData = () => {
+    const sortedTableData = () => {
         if (!analyticsData?.tableData) return [];
 
-        const searchLower = searchTerm.toLowerCase().trim();
+        // Create a shallow copy to avoid mutating state directly
+        const sortableItems = [...analyticsData.tableData];
 
-        // Stage 1: Filter entries
-        let processedItems = analyticsData.tableData.filter((row) => {
-            if (!searchLower) return true; // Show everything if search bar is empty
-
-            return (
-                row.name?.toLowerCase().includes(searchLower) ||
-                row.type?.toLowerCase().includes(searchLower) ||
-                row.id?.toString().includes(searchLower)
-            );
-        });
-
-        // Stage 2: Sort the remaining entries
         if (sortConfig.key !== null) {
-            processedItems.sort((a, b) => {
+            sortableItems.sort((a, b) => {
                 const valA = a[sortConfig.key];
                 const valB = b[sortConfig.key];
 
+                // Handle numeric or string comparisons cleanly
                 if (valA < valB) return sortConfig.direction === 'asc' ? -1 : 1;
                 if (valA > valB) return sortConfig.direction === 'asc' ? 1 : -1;
                 return 0;
             });
         }
-
-        return processedItems;
+        return sortableItems;
     };
+
     useEffect(() => {
         async function loadTableData() {
             setLoading(true);
@@ -138,27 +127,10 @@ const TableFloor = () => {
             {/* HEADER: Title and Add Button */}
             <div className="sci-table-header">
                 <h2 className="sci-table-title">Quản Lý Tầng Đỗ Xe</h2>
+                <button className="sci-btn sci-btn-primary" onClick={handleCreate}>
+                    + Thêm Mới
+                </button>
 
-                {/* NEW SEARCH CONTAINER */}
-                <div className="sci-search-wrapper" style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
-                    <input
-                        type="text"
-                        className="sci-search-input"
-                        placeholder="Tìm kiếm tầng, loại xe..."
-                        value={searchTerm}
-                        onChange={(e) => setSearchTerm(e.target.value)}
-                        style={{
-                            padding: '6px 12px',
-                            borderRadius: '6px',
-                            border: '1px solid #cbd5e1',
-                            fontSize: '14px',
-                            outline: 'none'
-                        }}
-                    />
-                    <button className="sci-btn sci-btn-primary" onClick={handleCreate}>
-                        + Thêm Mới
-                    </button>
-                </div>
             </div>
 
             {/* TABLE DATA */}
@@ -204,7 +176,7 @@ const TableFloor = () => {
                         </tr>
                     </thead>
                     <tbody>
-                        {getFilteredAndSortedData().map((row) => (
+                        {sortedTableData().map((row) => (
                             <tr key={row.id}>
                                 <td className="sci-text-muted">B{row.id}</td>
                                 <td className="sci-font-medium">{row.type}</td>
@@ -246,4 +218,4 @@ const TableFloor = () => {
     );
 };
 
-export default TableFloor;
+export default PricingFloor;
