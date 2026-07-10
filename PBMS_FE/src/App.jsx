@@ -10,6 +10,7 @@ import CheckOut from './pages/CheckOut.jsx'
 import MobileCamera from './pages/MobileCamera.jsx'
 import MobileBookingScanner from './pages/MobileBookingScanner.jsx'
 import MobileCheckoutScan from './pages/MobileCheckoutScan.jsx'
+import Dashboard from './pages/Dashboard.jsx'
 
 function App() {
   return (
@@ -80,6 +81,12 @@ function App() {
           path="/mobile-checkout-scan"
           element={<MobileCheckoutScan />}
         />
+
+        <Route
+          path="/dashboard"
+          element={<Dashboard />}
+        />
+
       </Routes>
     </BrowserRouter>
   )

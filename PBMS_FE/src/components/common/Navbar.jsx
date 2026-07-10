@@ -8,15 +8,30 @@ export default function Navbar({ isLoggedIn, userAvatar }) {
   const user = getUser()
   const avatarSrc = userAvatar || user?.avatarUrl || defaultAvatar
   const isStaff = user?.role?.toLowerCase() === 'staff'
+  const isAdmin = user?.role?.toLowerCase() === 'admin'
+  const isManager = user?.role?.toLowerCase() === 'manager'
   return (
     <nav className="navbar">
       <div className="navbar-inner">
         <span className="nav-logo">PBMS</span>
         <ul className="nav-links">
-          {isStaff ? (
+          {isAdmin ? (
+            <>
+              {/* TODO: Admin specific navigation links will go here */}
+              <a href="#" onClick={() => navigate('/dashboard')}>Quản lý</a>
+            </>
+          ) : isManager ? (
+            <>
+              {/* TODO: Manager specific navigation links will go here */}
+              <a href="#" onClick={() => navigate('/dashboard')}>Tổng quan</a>
+            </>
+          ) : isStaff ? (
             <>
               <li><a href="#" onClick={() => navigate('/checkin')}>Check-in</a></li>
               <li><a href="#" onClick={() => navigate('/checkout')}>Check-out</a></li>
+              <li><a href="#" onClick={() => navigate('/checkout')}>Xử lý sự cố</a></li>
+              <li><a href="#" onClick={() => navigate('/checkout')}>Hướng dẫn</a></li>
+              <li><a href="#" onClick={() => navigate('/checkout')}>Liên hệ quản lý</a></li>
             </>
           ) : (
             <>

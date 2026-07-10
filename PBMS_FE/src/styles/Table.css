@@ -1,0 +1,189 @@
+/* --- TABLE CARD WRAPPER --- */
+.sci-table-card {
+    background: #ffffff;
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+    padding: 24px;
+    width: 100%;
+    box-sizing: border-box;
+    margin-top: 25px
+}
+
+/* --- HEADER --- */
+.sci-table-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+.sci-table-title {
+    font-size: 18px;
+    font-weight: 600;
+    color: #111827;
+    margin: 0;
+}
+
+/* --- BUTTONS --- */
+.sci-btn {
+    padding: 8px 16px;
+    font-size: 14px;
+    font-weight: 500;
+    border-radius: 6px;
+    cursor: pointer;
+    border: none;
+    transition: background-color 0.2s;
+}
+
+.sci-btn-primary {
+    background-color: #111827;
+    color: #ffffff;
+}
+
+.sci-btn-primary:hover {
+    background-color: #374151;
+}
+
+/* --- TABLE STRUCTURE --- */
+.sci-table-responsive {
+    overflow-x: auto; /* Allows horizontal scroll on small screens */
+}
+
+.sci-data-table {
+    width: 100%;
+    border-collapse: collapse;
+    text-align: left;
+}
+
+/* Table Headers */
+.sci-data-table th {
+    font-size: 13px;
+    font-weight: 600;
+    color: #4b5563;
+    text-transform: uppercase;
+    padding: 12px 16px;
+    border-bottom: 1px solid #e5e7eb;
+    background-color: #f9fafb; /* Slight gray background to distinguish header */
+}
+
+/* Table Cells */
+.sci-data-table td {
+    font-size: 14px;
+    color: #111827;
+    padding: 16px;
+    border-bottom: 1px solid #f3f4f6;
+    vertical-align: middle;
+}
+
+/* Row Hover Effect */
+.sci-data-table tbody tr:hover {
+    background-color: #f9fafb;
+}
+
+/* --- UTILITIES & BADGES --- */
+.sci-font-medium {
+    font-weight: 500;
+}
+
+.sci-text-muted {
+    color: #6b7280;
+}
+
+.sci-text-right {
+    text-align: right !important;
+}
+
+/* Status Pills */
+.sci-status-pill {
+    font-size: 12px;
+    font-weight: 500;
+    padding: 4px 10px;
+    border-radius: 12px;
+}
+
+.sci-status-active {
+    background-color: #ecfdf5;
+    color: #059669; /* Green theme */
+}
+
+.sci-status-disabled {
+    background-color: #fef2f2;
+    color: #dc2626; /* Red theme */
+}
+
+/* --- ACTION MENU --- */
+.sci-action-group {
+    display: flex;
+    justify-content: flex-end;
+    gap: 12px;
+}
+
+/* Text-only buttons for cleaner rows */
+.sci-btn-text {
+    background: transparent;
+    border: none;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    padding: 0;
+}
+
+.sci-edit-btn {
+    color: #3b82f6; /* Blue */
+}
+
+.sci-edit-btn:hover {
+    color: #2563eb;
+    text-decoration: underline;
+}
+
+.sci-disable-btn {
+    color: #dc2626; /* Red */
+}
+
+.sci-disable-btn:hover {
+    color: #b91c1c;
+    text-decoration: underline;
+}
+
+/* Base class for columns that support sorting */
+.sci-sortable {
+    cursor: pointer;
+    position: relative;
+    user-select: none;
+    transition: background-color 0.2s;
+}
+
+/* Subtle background shift on hover to show it's clickable */
+.sci-sortable:hover {
+    background-color: #f1f5f9 !important; 
+}
+
+/* Default "unsorted" icon state (faint double caret) */
+.sci-sortable::after {
+    content: ' ⇅';
+    font-size: 12px;
+    color: #9ca3af;
+    opacity: 0.5;
+    margin-left: 6px;
+    transition: opacity 0.2s;
+}
+
+.sci-sortable:hover::after {
+    opacity: 1;
+    color: #111827;
+}
+
+/* Active Ascending State */
+.sci-sortable-asc::after {
+    content: ' ▲' !important;
+    color: #111827;
+    opacity: 1;
+}
+
+/* Active Descending State */
+.sci-sortable-desc::after {
+    content: ' ▼' !important;
+    color: #111827;
+    opacity: 1;
+}
