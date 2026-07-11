@@ -4,6 +4,7 @@ import { IconCar, IconMotorbike, IconEbike } from '../components/svg/Icons'
 import '../styles/CheckIn.css'
 import '../styles/Dashboard.css'
 import TableFloor from '../components/common/TableFloor.jsx'
+import TableIncident from '../components/common/TableIncident.jsx'
 {/*service import
 import { , } from '../services/'
 */}
@@ -179,6 +180,9 @@ export default function Dashboard() {
         {/* Table Framework */}
         <div className="">
           <TableFloor />
+        </div>
+        <div className="">
+          <TableIncident />
         </div>
       </main>
     </div>

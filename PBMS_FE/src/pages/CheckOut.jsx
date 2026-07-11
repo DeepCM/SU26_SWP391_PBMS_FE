@@ -4,6 +4,7 @@ import '../styles/CheckIn.css'
 import '../styles/CheckOut.css'
 import Navbar from '../components/common/Navbar'
 import QRSessionModal from '../components/common/QRSessionModal'
+import CreateIncidentPopup from '../components/common/CreateIncidentPopup'
 import { useCheckoutCameraSession, SESSION_PHASES } from '../hooks/useCheckoutCameraSession'
 import { useCheckoutScanSession, SCAN_SESSION_PHASES } from '../hooks/useCheckoutScanSession'
 import { verifyGuestCheckOut, verifyBookingCheckOut, confirmGuestCheckOut, confirmBookingCheckOut } from '../services/checkOutService'
@@ -151,6 +152,9 @@ function CheckOut() {
   const [exitTimeAt, setExitTimeAt] = useState(null)
   const [showPaymentQrModal, setShowPaymentQrModal] = useState(false)
   const statusPollRef = useRef(null)
+
+  // Ghi nhận sự cố — popup dùng chung với TableIncident.jsx
+  const [showIncidentPopup, setShowIncidentPopup] = useState(false)
 
   // Camera session chụp ảnh check-out
   const [showQrModal, setShowQrModal] = useState(false)
@@ -414,7 +418,11 @@ function CheckOut() {
         <main className="sci-main">
           <div className="co-top-bar">
             <h1 className="sci-page-title">Check-out</h1>
-            <button className="co-incident-btn" type="button">
+            <button
+              className="co-incident-btn"
+              type="button"
+              onClick={() => setShowIncidentPopup(true)}
+            >
               Ghi nhận sự cố
             </button>
           </div>
@@ -674,6 +682,13 @@ function CheckOut() {
           error={checkoutError}
           onClose={handleCloseQrModal}
           onCancel={handleCancelQrModal}
+        />
+      )}
+
+      {showIncidentPopup && (
+        <CreateIncidentPopup
+          defaultSessionId={sessionInfo?.parkingSessionId}
+          onClose={() => setShowIncidentPopup(false)}
         />
       )}
     </div>
