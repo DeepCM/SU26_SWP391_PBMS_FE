@@ -110,6 +110,9 @@
   border-right: 1px solid #e5e7eb;
   padding: 20px 0;
   flex-shrink: 0;
+  position: relative;
+  transition: width 0.2s ease;
+  overflow: hidden;
 }
 
 .sci-section-label {
@@ -134,7 +137,7 @@
 .sci-sidebar-item {
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  justify-content: flex-start; /* đổi từ space-between */
   padding: 10px 16px;
   font-size: 13px;
   color: #374151;
@@ -165,6 +168,7 @@
   padding: 1px 7px;
   min-width: 18px;
   text-align: center;
+  margin-left: auto; /* thêm dòng này */
 }
 
 /* ── Main ────────────────────────────────────────────── */
@@ -633,7 +637,8 @@
 }
 
 @media (max-width: 768px) {
-  .sci-sidebar {
+  .sci-sidebar,
+  .sci-sidebar--collapsed {
     display: none;
   }
 
@@ -700,4 +705,77 @@
 .sci-booking-value {
   color: #111827;
   font-weight: 500;
+}
+
+/* ── Sidebar collapse ─────────────────────────────────── */
+.sci-sidebar--collapsed {
+  width: 64px;
+  padding-top: 44px; /* chừa chỗ cho nút toggle, tránh đè lên item đầu tiên */
+}
+
+.sci-sidebar-toggle {
+  position: absolute;
+  top: 8px;
+  right: 8px; /* đổi từ -12px sang 8px, nằm hẳn trong sidebar */
+  width: 22px;
+  height: 22px;
+  border-radius: 6px;
+  border: 1px solid #e5e7eb;
+  background: #fff;
+  cursor: pointer;
+  font-size: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2;
+  color: #374151;
+  padding: 0;
+}
+
+.sci-sidebar-toggle:hover {
+  border-color: #1a56db;
+  color: #1a56db;
+  background: #eff6ff;
+}
+
+.sci-sidebar-item--collapsed {
+  justify-content: center;
+  padding-left: 0;
+  padding-right: 0;
+}
+
+.sci-sidebar-icon {
+  width: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+}
+
+.sci-sidebar-icon-wrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 20px;
+}
+
+.sci-sidebar-label {
+  margin-left: 10px;
+  flex: 1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.sci-incident-badge--dot {
+  position: absolute;
+  top: -3px;
+  right: -3px;
+  width: 8px;
+  height: 8px;
+  background: #f97316;
+  border-radius: 50%;
+  border: 1.5px solid #fff; /* viền trắng để tách khỏi icon */
 }

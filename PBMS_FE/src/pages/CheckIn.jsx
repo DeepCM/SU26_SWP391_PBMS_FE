@@ -5,6 +5,7 @@ import '../styles/CheckOut.css'
 import { useCameraSession, SESSION_PHASES } from '../hooks/useCameraSession'
 import QRSessionModal from '../components/common/QRSessionModal'
 import Navbar from '../components/common/Navbar'
+import Sidebar from '../components/common/Sidebar'
 import CreateIncidentPopup from '../components/common/CreateIncidentPopup'
 import { getVehicleTypes, getAvailableSlots } from '../services/vehicleTypeService'
 import { confirmGuestCheckIn, confirmBookingCheckIn } from '../services/checkInService'
@@ -383,25 +384,8 @@ function CheckIn() {
       <Navbar isLoggedIn={isLoggedIn} />
 
       <div className="sci-body">
-        {/* Sidebar 
-        <aside className="sci-sidebar">
-          <p className="sci-section-label">CHỨC NĂNG</p>
-          <ul className="sci-sidebar-list">
-            <li className="sci-sidebar-item sci-sidebar-item--active">
-              Check-in / Check-out
-            </li>
-            <li className="sci-sidebar-item">
-              Xử lý sự cố
-              <span className="sci-incident-badge">2</span>
-            </li>
-            <li className="sci-sidebar-item">Lịch sử ca</li>
-          </ul>
-          <p className="sci-section-label sci-section-label--support">HỖ TRỢ</p>
-          <ul className="sci-sidebar-list">
-            <li className="sci-sidebar-item">Hướng dẫn</li>
-            <li className="sci-sidebar-item">Liên hệ quản lý</li>
-          </ul>
-        </aside>
+        {/* Sidebar */}
+        <Sidebar />
           
         {/* Main */}
         <main className="sci-main">
