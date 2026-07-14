@@ -23,6 +23,8 @@ import Dashboard from './pages/Dashboard';
 import MobileCamera from './pages/MobileCamera';
 import MobileBookingScanner from './pages/MobileBookingScanner';
 import MobileCheckoutScan from './pages/MobileCheckoutScan';
+import Admin from './pages/Admin';
+import Manager from './pages/Manager';
 
 function App() {
   return (
@@ -66,10 +68,18 @@ function App() {
             </Route>
           </Route>
 
-          {/* ================= ADMIN & MANAGER CONTROL ROUTES ================= */}
-          <Route element={<ProtectedRoute allowedRoles={['admin', 'manager']} />}>
+          {/* ================= MANAGER CONTROL ROUTES ================= */}
+          <Route element={<ProtectedRoute allowedRoles={['manager']} />}>
             <Route element={<ManagementLayout />}>
               <Route path="/dashboard" element={<Dashboard />} />
+              <Route path="/manager" element={<Manager />} />
+            </Route>
+          </Route>
+
+          {/* ================= ADMIN CONTROL ROUTES ================= */}
+          <Route element={<ProtectedRoute allowedRoles={['admin']} />}>
+            <Route element={<ManagementLayout />}>
+              <Route path="/admin" element={<Admin />} />
             </Route>
           </Route>
 

@@ -28,14 +28,13 @@ const STAFF_SUPPORT_ITEMS = [
 
 const MANAGER_ITEMS = [
   { path: '/dashboard', label: 'Thống kê', Icon: ChartIcon },
-  { path: '/incidents', label: 'Xử lý sự cố', Icon: AlertIcon },
-  { path: '/reviews', label: 'Nhận phản hồi', Icon: AlertIcon },
+  { path: '/incidents', label: 'Quản lý', Icon: AlertIcon },
 ]
 
 const ADMIN_ITEMS = [
-  { path: '/dashboard', label: 'Quản lý', Icon: ChartIcon },
-  { path: '/users', label: 'Người dùng', Icon: UsersIcon },
-  { path: '/settings', label: 'Cấu hình hệ thống', Icon: SettingsIcon },
+  { path: '/admin', label: 'Quản lý', Icon: ChartIcon },
+  // { path: '/users', label: 'Người dùng', Icon: UsersIcon },
+  // { path: '/settings', label: 'Cấu hình hệ thống', Icon: SettingsIcon },
 ]
 
 const STORAGE_KEY = 'sidebar-collapsed'
