@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import Navbar from '../components/common/Navbar'
+import Sidebar from '../components/common/Sidebar'
 import { IconCar, IconMotorbike, IconEbike } from '../components/svg/Icons'
 import '../styles/CheckIn.css'
 import '../styles/Dashboard.css'
@@ -16,64 +17,12 @@ export default function Dashboard() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
 
-  // ── GHOST SERVICE LAYER (ACTOR-AGNOSTIC TABLE INTERACTION) ────────────────
-  /*
-  // Note: Services are divided by database tables. Cross-table coordination 
-  // is handled entirely here by the frontend state framework.
-  
-  import { getFloorOccupancy } from '../services/floorService'
-  import { getRevenueMetrics } from '../services/revenueService'
-  import { getPricingPolicies } from '../services/policyService'
-
-  async function fetchDashboardAnalytics(period) {
-    try {
-      // Parallel table requests to compile analytical overview
-      const [occupancy, revenue, policies] = await Promise.all([
-        getFloorOccupancy(),
-        getRevenueMetrics(period),
-        getPricingPolicies()
-      ])
-      return { occupancy, revenue, policies }
-    } catch (err) {
-      throw new Error("Lỗi kết nối dữ liệu hệ thống.")
-    }
-  }
-  */
-
   // ── DATA DISPATCHER & LIFECYCLE ───────────────────────────────────────────
   useEffect(() => {
     // Simulated ghost service execution cycle
     const loadDashboardData = async () => {
       setLoading(true)
       try {
-        // Mock data matching backend entity schemas exactly
-        /*setTimeout(() => {
-          const mockOccupancy = [
-            { floorName: 'Tầng B1', type: 'Xe máy', available: 45, occupied: 105, total: 150 },
-            { floorName: 'Tầng B2', type: 'Xe máy điện', available: 20, occupied: 60, total: 80 },
-            { floorName: 'Tầng B3', type: 'Ô tô', available: 12, occupied: 38, total: 50 },
-          ]
-
-          const mockRevenue = {
-            ngày: { totalAmount: 4250000, transactionCount: 142 },
-            tuần: { totalAmount: 31200000, transactionCount: 980 },
-            tháng: { totalAmount: 124800000, transactionCount: 3890 },
-          }
-
-          const mockPolicies = [
-            { type: 'Xe máy', hourlyRate: '5,000đ', depositRate: '5,000đ' },
-            { type: 'Xe máy điện', hourlyRate: '6,000đ', depositRate: '6,000đ' },
-            { type: 'Ô tô', hourlyRate: '25,000đ', depositRate: '25,000đ' },
-          ]
-
-          setAnalyticsData({
-            occupancy: mockOccupancy,
-            revenue: mockRevenue[timePeriod],
-            policies: mockPolicies
-          })
-          
-        }, 400)
-        */
         setLoading(false)
       } catch (err) {
         setError(err.message || 'Không thể tải thông tin tổng quan.')
@@ -97,19 +46,21 @@ export default function Dashboard() {
       <Navbar isLoggedIn={true} />
 
       <main className="sci-main sci-dashboard-container">
+        <Sidebar /> {/* Column 1 */}
 
-        <div className="sci-header-container">
-          <div>
+        {/* Column 2: New wrapper containing everything else */}
+        <div className="sci-dashboard-content">
+          <div className="sci-header-container">
             <h1 className="sci-header-title">Tổng Quan Hệ Thống PBMS</h1>
             <p className="sci-header-subtitle">Giám sát mật độ bãi đỗ, bảng giá chính sách và báo cáo doanh thu tài chính.</p>
           </div>
         </div>
         {error && <div className="sci-confirm-error">{error}</div>}
 
-        {/* Analytics Dashboard Grid Framework 
+        {/* Analytics Dashboard Grid Framework */}
         <div className="sci-dashboard-grid">
 
-          // Card 1
+          {/* Card 1 */}
           <div className="sci-stat-card">
             <div className="sci-stat-header">
               <span className="sci-stat-title">Doanh Thu Thu Về</span>
@@ -124,12 +75,12 @@ export default function Dashboard() {
             <div className="sci-stat-footer">Tổng số lượt giao dịch: <strong>{analyticsData?.revenue?.transactionCount}</strong></div>
           </div>
 
-          // Card 2: Occupancy (Now uses helper class for span)
+          {/* Card 2: Occupancy (Now uses helper class for span) */}
           <div className="sci-stat-card sci-span-2">
             <div className="sci-stat-header">
               <span className="sci-stat-title">Mật Độ Các Tầng</span>
               <span className="sci-badge-status">Trạng Thái</span>
-              {/*
+              
                 <div className="sci-legend">
                   <span><span className="sci-indicator-dot sci-dot--available"></span>Trống</span>
                   <span><span className="sci-indicator-dot sci-dot--occupied"></span>Đầy</span>
@@ -151,7 +102,7 @@ export default function Dashboard() {
             ))}
           </div>
 
-          // Card 3
+          {/* Card 3 */}
           <div className="sci-stat-card">
             <div className="sci-stat-header">
               <span className="sci-stat-title">Phân Giá Phương Tiện</span>
@@ -177,17 +128,8 @@ export default function Dashboard() {
             ))}
           </div>
         </div>
-            */}
-        {/* Table Framework */}
-        <div className="">
-          <TableFloor />
-        </div>
-        <div className="">
-          <TableIncident />
-        </div>
-        <div className="">
-          <TablePricing />
-        </div>
+            
+        
       </main>
     </div>
   )

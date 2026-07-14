@@ -135,9 +135,9 @@ const TablePricing = () => {
                             outline: 'none'
                         }}
                     />
-                    <button className="sci-btn sci-btn-primary" onClick={handleCreate}>
+                    {/* <button className="sci-btn sci-btn-primary" onClick={handleCreate}>
                         + Thêm Mới
-                    </button>
+                    </button> */}
                 </div>
             </div>
 
@@ -182,7 +182,7 @@ const TablePricing = () => {
                             >
                                 Áp Dụng Đến
                             </th>
-                            <th className="sci-text-right">Hành Động</th>
+                            {/* <th className="sci-text-right">Hành Động</th> */}
                         </tr>
                     </thead>
                     <tbody>
@@ -203,7 +203,7 @@ const TablePricing = () => {
                                     {row.effectiveTo ? new Date(row.effectiveTo).toLocaleDateString('vi-VN') : '-'}
                                 </td>
 
-                                {/* ACTION BUTTONS */}
+                                {/* ACTION BUTTONS
                                 <td className="sci-text-right">
                                     <div className="sci-action-group">
                                         <button className="sci-btn-text sci-edit-btn" onClick={() => handleUpdate(row)}>Sửa</button>
@@ -211,7 +211,7 @@ const TablePricing = () => {
                                             Vô hiệu hóa
                                         </button>
                                     </div>
-                                </td>
+                                </td> */}
                             </tr>
                         ))}
                         {getFilteredAndSortedData().length === 0 && (

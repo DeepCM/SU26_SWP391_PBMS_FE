@@ -18,8 +18,7 @@ import '../../styles/CheckIn.css'
 const STAFF_ITEMS = [
   { path: '/checkin', label: 'Check-in', Icon: CarIcon },
   { path: '/checkout', label: 'Check-out', Icon: CarIcon },
-  { path: '/incidents', label: 'Xử lý sự cố', Icon: AlertIcon, badge: 2 },
-  { path: '/shift-history', label: 'Lịch sử ca', Icon: ClockIcon },
+  { path: '/incidents', label: 'Xử lý sự cố', Icon: AlertIcon }, //, badge: 2
 ]
 
 const STAFF_SUPPORT_ITEMS = [
@@ -28,9 +27,9 @@ const STAFF_SUPPORT_ITEMS = [
 ]
 
 const MANAGER_ITEMS = [
-  { path: '/dashboard', label: 'Tổng quan', Icon: ChartIcon },
+  { path: '/dashboard', label: 'Thống kê', Icon: ChartIcon },
   { path: '/incidents', label: 'Xử lý sự cố', Icon: AlertIcon },
-  { path: '/staff', label: 'Nhân viên', Icon: UsersIcon },
+  { path: '/reviews', label: 'Nhận phản hồi', Icon: AlertIcon },
 ]
 
 const ADMIN_ITEMS = [

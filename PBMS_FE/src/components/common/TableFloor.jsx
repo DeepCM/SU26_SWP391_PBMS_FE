@@ -155,9 +155,11 @@ const TableFloor = () => {
                             outline: 'none'
                         }}
                     />
+                    {/*
                     <button className="sci-btn sci-btn-primary" onClick={handleCreate}>
                         + Thêm Mới
                     </button>
+                    */}
                 </div>
             </div>
 
@@ -200,7 +202,8 @@ const TableFloor = () => {
                             >
                                 Sức Chứa
                             </th>
-                            <th className="sci-text-right">Hành Động</th>
+
+                            {/* <th className="sci-text-right">Hành Động</th> */}
                         </tr>
                     </thead>
                     <tbody>
@@ -219,16 +222,17 @@ const TableFloor = () => {
                                 <td className="sci-font-medium">{row.available}</td>
                                 <td className="sci-font-medium">{row.inUse}</td>
                                 <td className="sci-font-medium">{row.capacity}</td>
-                                {/* ACTION BUTTONS */}
+                                {/* ACTION BUTTONS
                                 <td className="sci-text-right">
                                     <div className="sci-action-group">
                                         <button className="sci-btn-text sci-edit-btn" onClick={() => handleUpdate(row)}>Sửa</button>
                                         <button className="sci-btn-text sci-disable-btn" onClick={() => handleDisable(row.id)}>
-                                            {/*{row.status === 'Hoạt động' ? 'Vô hiệu hóa' : 'Kích hoạt'}*/}
+                                            {row.status === 'Hoạt động' ? 'Vô hiệu hóa' : 'Kích hoạt'}
                                             Vô hiệu hóa
                                         </button>
                                     </div>
-                                </td>
+                                </td> 
+                                */}
                             </tr>
                         ))}
                     </tbody>
