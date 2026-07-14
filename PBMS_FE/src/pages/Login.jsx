@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom'
 import '../styles/Login.css'
 import Footer from '../components/common/Footer'
 import Header from '../components/common/Header'
+import { getProfile } from "../services/profileService"
 import {
   IconAccountCard,
   IconEnvelope,
@@ -12,32 +13,45 @@ import {
   IconSubmit
 } from '../components/svg/Icons'
 import { loginUser } from '../services/authService'
+// Add this import at the top of Login.jsx
+import { useAuth } from '../components/auth/AuthContext' 
 
 function Login() {
   const [showPassword, setShowPassword] = useState(false)
-  const { register, handleSubmit, watch, formState: { errors } } = useForm({
-    defaultValues: {
-      email: '',
-      password: '',
-      remember: false
-    }
-  })
+  const { login } = useAuth() // <--- Extract the login action here
   const navigate = useNavigate()
+  
+  const { register, handleSubmit, formState: { errors } } = useForm({
+    defaultValues: { email: '', password: '', remember: false }
+  })
 
   const onSubmit = async (data) => {
     try {
       const result = await loginUser(data.email, data.password)
 
       if (result.status === 200) {
-        const user = {
+        const userRole = result.data.role;
+
+        const userData = {
           email: result.data.email,
           fullName: result.data.fullName,
-          role: result.data.role,
+          role: userRole,
           avatarUrl: result.data.avatarUrl ?? null
         }
-        localStorage.setItem("token", result.data.accessToken)
-        localStorage.setItem("user", JSON.stringify(user))
-        navigate('/')
+
+        // This updates React State and LocalStorage simultaneously
+        login(userData, result.data.accessToken)
+
+        // Now routing will evaluate with the correct, fresh state
+        if (userRole === 'driver') {
+          navigate('/')
+        } else if (userRole === 'staff') {
+          navigate('/checkin')
+        } else if (userRole === 'admin' || userRole === 'manager') {
+          navigate('/dashboard')
+        } else {
+          navigate('/')
+        }
       } else {
         alert(result.data.message || 'Đăng nhập thất bại')
       }
