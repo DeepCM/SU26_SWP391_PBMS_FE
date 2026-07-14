@@ -25,6 +25,7 @@ import MobileBookingScanner from './pages/MobileBookingScanner';
 import MobileCheckoutScan from './pages/MobileCheckoutScan';
 import Admin from './pages/Admin';
 import Manager from './pages/Manager';
+import Unknown from './pages/Unknown';
 
 function App() {
   return (
@@ -84,7 +85,7 @@ function App() {
           </Route>
 
           {/* Fallback Catch-All Redirect */}
-          <Route path="*" element={<Home />} />
+          <Route path="*" element={<Unknown />} />
         </Routes>
       </BrowserRouter>
     </AuthProvider>
