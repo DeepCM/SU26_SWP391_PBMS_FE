@@ -2,38 +2,19 @@
 /* 1. CORE CONTAINER & GRID LAYOUT                                           */
 /* ========================================================================= */
 
-/* 1. The main layout wrapper becomes a flex row container */
 .sci-dashboard-container {
-  display: flex;
-  gap: 24px; /* Creates a clean gutter space between the sidebar and content */
   padding: 24px;
   max-width: 1400px;
   margin: 0 auto;
   width: 100%;
   box-sizing: border-box;
-  align-items: flex-start; /* Prevents sidebar from stretching weirdly if content is short */
 }
 
-/* 2. Target the sidebar to ensure it holds a fixed, predictable width */
-.sci-dashboard-container > aside, 
-.sidebar { /* Use whichever class matches your <Sidebar /> root component */
-  width: 100px;
-  flex-shrink: 0; /* Prevents the sidebar from squishing on smaller screens */
-}
-
-/* 3. The new content wrapper takes up all the remaining horizontal room */
-.sci-dashboard-content {
-  flex: 1;
-  min-width: 0; /* Anti-overflow safety hatch for responsive child tables/charts */
-}
-
-/* 4. Your header stays a flex row, but now operates safely inside the content wrapper */
 .sci-header-container {
   display: flex;
   justify-content: space-between;
   align-items: center;
   margin-bottom: 24px;
-  width: 100%;
 }
 
 .sci-header-title {
