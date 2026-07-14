@@ -13,43 +13,36 @@ import {
   IconSubmit
 } from '../components/svg/Icons'
 import { loginUser } from '../services/authService'
+// Add this import at the top of Login.jsx
+import { useAuth } from '../components/auth/AuthContext' 
 
 function Login() {
   const [showPassword, setShowPassword] = useState(false)
-  const { register, handleSubmit, watch, formState: { errors } } = useForm({
-    defaultValues: {
-      email: '',
-      password: '',
-      remember: false
-    }
-  })
+  const { login } = useAuth() // <--- Extract the login action here
   const navigate = useNavigate()
+  
+  const { register, handleSubmit, formState: { errors } } = useForm({
+    defaultValues: { email: '', password: '', remember: false }
+  })
 
   const onSubmit = async (data) => {
     try {
       const result = await loginUser(data.email, data.password)
 
       if (result.status === 200) {
-        // 1. Save token first so subsequent API calls (like getProfile) are authorized
-        localStorage.setItem("token", result.data.accessToken)
+        const userRole = result.data.role;
 
-        // 2. Fetch the profile details to determine the user's role
-        const profileResult = await getProfile()
-        
-        // Handle both standard axios wrapper layouts { data: ... } and direct payloads
-        const profileData = profileResult?.data || profileResult
-        const userRole = profileData?.role
-
-        // 3. Construct and save the local user state
-        const user = {
-          email: result.data.email || profileData?.email,
-          fullName: result.data.fullName || profileData?.fullName,
+        const userData = {
+          email: result.data.email,
+          fullName: result.data.fullName,
           role: userRole,
-          avatarUrl: result.data.avatarUrl ?? profileData?.avatarUrl ?? null
+          avatarUrl: result.data.avatarUrl ?? null
         }
-        localStorage.setItem("user", JSON.stringify(user))
 
-        // 4. Role-based routing matrix redirection
+        // This updates React State and LocalStorage simultaneously
+        login(userData, result.data.accessToken)
+
+        // Now routing will evaluate with the correct, fresh state
         if (userRole === 'driver') {
           navigate('/')
         } else if (userRole === 'staff') {
@@ -57,15 +50,13 @@ function Login() {
         } else if (userRole === 'admin' || userRole === 'manager') {
           navigate('/dashboard')
         } else {
-          // Fallback route if role doesn't match standard profiles
           navigate('/')
         }
       } else {
         alert(result.data.message || 'Đăng nhập thất bại')
       }
     } catch (error) {
-      console.error("Login/Profile retrieval error: ", error)
-      alert(error.message || 'Có lỗi xảy ra trong quá trình đăng nhập.')
+      console.error(error)
     }
   }
 
