@@ -1,101 +1,84 @@
-import { BrowserRouter, Routes, Route } from 'react-router-dom'
-import Home from './pages/Home.jsx'
-import Login from './pages/Login.jsx'
-import Signup from './pages/Signup.jsx'
-import UserProfile from './pages/UserProfile.jsx'
-import Bookings from './pages/Bookings.jsx'
-import Vehicles from './pages/Vehicles.jsx'
-import CheckIn from './pages/CheckIn.jsx'
-import CheckOut from './pages/CheckOut.jsx'
-import MobileCamera from './pages/MobileCamera.jsx'
-import MobileBookingScanner from './pages/MobileBookingScanner.jsx'
-import MobileCheckoutScan from './pages/MobileCheckoutScan.jsx'
-import Dashboard from './pages/Dashboard.jsx'
-import Incidents from './pages/Incidents.jsx'
+// src/App.jsx
+import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import { AuthProvider } from './components/auth/AuthContext';
+
+// Layouts
+import DriverLayout from './layouts/DriverLayout';
+import ManagementLayout from './layouts/ManagementLayout';
+
+// Auth Guard
+import ProtectedRoute from './components/auth/ProtectedRoute';
+
+// Pages
+import Home from './pages/Home';
+import Login from './pages/Login';
+import Signup from './pages/Signup';
+import Bookings from './pages/Bookings';
+import Vehicles from './pages/Vehicles';
+import UserProfile from './pages/UserProfile';
+import CheckIn from './pages/CheckIn';
+import CheckOut from './pages/CheckOut';
+import Incidents from './pages/Incidents';
+import Dashboard from './pages/Dashboard';
+import MobileCamera from './pages/MobileCamera';
+import MobileBookingScanner from './pages/MobileBookingScanner';
+import MobileCheckoutScan from './pages/MobileCheckoutScan';
 
 function App() {
   return (
-    <BrowserRouter>
-      <Routes>
-        <Route
-          path="/"
-          element={<Home />}
-        />
+    <AuthProvider>
+      <BrowserRouter>
+        <Routes>
+          {/* ================= PUBLIC AUTH ROUTES ================= */}
+          <Route path="/login" element={<Login />} />
+          <Route path="/signup" element={<Signup />} />
 
-        <Route
-          path="/login"
-          element={<Login />}
-        />
+          {/* ================= DRIVER & GUEST CUSTOMER ROUTES ================= */}
+          <Route element={<DriverLayout />}>
+            <Route path="/" element={<Home />} />
+            <Route path="/vehicles" element={<Vehicles />} />
+            <Route path="/bookings" element={<Bookings />} />
 
-        <Route
-          path="/signup"
-          element={<Signup />}
-        />
+            {/* Profile is shared by everyone but requires a valid active session */}
+            <Route element={<ProtectedRoute allowedRoles={['driver', 'staff', 'admin', 'manager']} />}>
+              <Route path="/profile" element={<UserProfile
+                stats={null}
+                recentHistory={[]}
+                notificationSettings={null}
+                onNotifChange={(settings) => console.log('Notif settings:', settings)}
+                onChangePassword={() => console.log('Change password')}
+                onActivate2FA={() => console.log('Activate 2FA')}
+                onManageDevices={() => console.log('Manage devices')}
+                onDeleteAccount={() => console.log('Delete account')}
+              />} />
+            </Route>
+          </Route>
 
-        <Route
-          path="/bookings"
-          element={<Bookings />}
-        />
+          {/* ================= STAFF WORKSPACE ROUTES ================= */}
+          <Route element={<ProtectedRoute allowedRoles={['staff']} />}>
+            <Route element={<ManagementLayout />}>
+              <Route path="/checkin" element={<CheckIn />} />
+              <Route path="/checkout" element={<CheckOut />} />
+              <Route path="/incidents" element={<Incidents />} />
+              <Route path="/mobile-camera" element={<MobileCamera />} />
+              <Route path="/mobile-booking-scanner" element={<MobileBookingScanner />} />
+              <Route path="/mobile-checkout-scan" element={<MobileCheckoutScan />} />
+            </Route>
+          </Route>
 
-        <Route
-          path="/vehicles"
-          element={<Vehicles />}
-        />
+          {/* ================= ADMIN & MANAGER CONTROL ROUTES ================= */}
+          <Route element={<ProtectedRoute allowedRoles={['admin', 'manager']} />}>
+            <Route element={<ManagementLayout />}>
+              <Route path="/dashboard" element={<Dashboard />} />
+            </Route>
+          </Route>
 
-        <Route
-          path="/profile"
-          element={
-            <UserProfile
-              stats={null}
-              recentHistory={[]}
-              notificationSettings={null}
-              onNotifChange={(settings) => console.log('Notif settings:', settings)}
-              onChangePassword={() => console.log('Change password')}
-              onActivate2FA={() => console.log('Activate 2FA')}
-              onManageDevices={() => console.log('Manage devices')}
-              onDeleteAccount={() => console.log('Delete account')}
-            />
-          }
-        />
-
-        <Route
-          path="/checkin"
-          element={<CheckIn />}
-        />
-
-        <Route
-          path="/checkout"
-          element={<CheckOut />}
-        />
-
-        <Route
-          path="/mobile-camera"
-          element={<MobileCamera />}
-        />
-
-        <Route
-          path="/mobile-booking-scanner"
-          element={<MobileBookingScanner />}
-        />
-
-        <Route
-          path="/mobile-checkout-scan"
-          element={<MobileCheckoutScan />}
-        />
-
-        <Route
-          path="/dashboard"
-          element={<Dashboard />}
-        />
-
-        <Route
-          path="/incidents"
-          element={<Incidents />}
-        />
-
-      </Routes>
-    </BrowserRouter>
-  )
+          {/* Fallback Catch-All Redirect */}
+          <Route path="*" element={<Home />} />
+        </Routes>
+      </BrowserRouter>
+    </AuthProvider>
+  );
 }
 
-export default App
+export default App;

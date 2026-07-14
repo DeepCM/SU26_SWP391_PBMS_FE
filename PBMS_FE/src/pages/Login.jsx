@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom'
 import '../styles/Login.css'
 import Footer from '../components/common/Footer'
 import Header from '../components/common/Header'
+import { getProfile } from "../services/profileService"
 import {
   IconAccountCard,
   IconEnvelope,
@@ -29,20 +30,42 @@ function Login() {
       const result = await loginUser(data.email, data.password)
 
       if (result.status === 200) {
-        const user = {
-          email: result.data.email,
-          fullName: result.data.fullName,
-          role: result.data.role,
-          avatarUrl: result.data.avatarUrl ?? null
-        }
+        // 1. Save token first so subsequent API calls (like getProfile) are authorized
         localStorage.setItem("token", result.data.accessToken)
+
+        // 2. Fetch the profile details to determine the user's role
+        const profileResult = await getProfile()
+        
+        // Handle both standard axios wrapper layouts { data: ... } and direct payloads
+        const profileData = profileResult?.data || profileResult
+        const userRole = profileData?.role
+
+        // 3. Construct and save the local user state
+        const user = {
+          email: result.data.email || profileData?.email,
+          fullName: result.data.fullName || profileData?.fullName,
+          role: userRole,
+          avatarUrl: result.data.avatarUrl ?? profileData?.avatarUrl ?? null
+        }
         localStorage.setItem("user", JSON.stringify(user))
-        navigate('/')
+
+        // 4. Role-based routing matrix redirection
+        if (userRole === 'driver') {
+          navigate('/')
+        } else if (userRole === 'staff') {
+          navigate('/checkin')
+        } else if (userRole === 'admin' || userRole === 'manager') {
+          navigate('/dashboard')
+        } else {
+          // Fallback route if role doesn't match standard profiles
+          navigate('/')
+        }
       } else {
         alert(result.data.message || 'Đăng nhập thất bại')
       }
     } catch (error) {
-      console.error(error)
+      console.error("Login/Profile retrieval error: ", error)
+      alert(error.message || 'Có lỗi xảy ra trong quá trình đăng nhập.')
     }
   }
 
