@@ -1,0 +1,245 @@
+/* --- STATUS PILL VARIANTS (extend .sci-status-pill from Table.css) --- */
+.sci-status-open {
+    background-color: #eff6ff;
+    color: #2563eb;
+}
+
+.sci-status-pending_info {
+    background-color: #fffbeb;
+    color: #d97706;
+}
+
+.sci-status-in_progress {
+    background-color: #eef2ff;
+    color: #4f46e5;
+}
+
+.sci-status-resolved {
+    background-color: #ecfdf5;
+    color: #059669;
+}
+
+/* --- FILTER / SORT DROPDOWNS --- */
+.sci-filter-select {
+    padding: 6px 12px;
+    border-radius: 6px;
+    border: 1px solid #cbd5e1;
+    font-size: 14px;
+    outline: none;
+    background-color: #ffffff;
+    color: #111827;
+}
+
+/* --- CLICKABLE ROW --- */
+.sci-row-clickable {
+    cursor: pointer;
+}
+
+/* --- MODAL CHROME --- */
+.sci-incident-modal-overlay {
+    position: fixed;
+    inset: 0;
+    background-color: rgba(0, 0, 0, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+    padding: 16px;
+}
+
+.sci-incident-modal {
+    background-color: #ffffff;
+    border-radius: 8px;
+    width: 100%;
+    max-width: 560px;
+    max-height: 85vh;
+    overflow-y: auto;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+}
+
+.sci-incident-modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 16px 20px;
+    border-bottom: 1px solid #e5e7eb;
+}
+
+.sci-incident-modal-header h3 {
+    margin: 0;
+    font-size: 16px;
+    font-weight: 600;
+    color: #111827;
+}
+
+.sci-incident-modal-close {
+    background: transparent;
+    border: none;
+    font-size: 20px;
+    line-height: 1;
+    color: #6b7280;
+    cursor: pointer;
+}
+
+.sci-incident-modal-close:hover {
+    color: #111827;
+}
+
+.sci-incident-modal-body {
+    padding: 20px;
+}
+
+.sci-incident-modal-footer {
+    display: flex;
+    justify-content: flex-end;
+    gap: 12px;
+    padding: 16px 20px;
+    border-top: 1px solid #e5e7eb;
+}
+
+/* --- BUTTON VARIANT (Table.css only has the primary/dark button) --- */
+.sci-btn-secondary {
+    background-color: #f3f4f6;
+    color: #111827;
+}
+
+.sci-btn-secondary:hover {
+    background-color: #e5e7eb;
+}
+
+/* --- FORM FIELDS --- */
+.sci-form-group {
+    display: flex;
+    flex-direction: column;
+    margin-bottom: 16px;
+}
+
+.sci-form-label {
+    font-size: 13px;
+    font-weight: 500;
+    color: #374151;
+    margin-bottom: 6px;
+}
+
+.sci-form-input,
+.sci-form-select,
+.sci-form-textarea {
+    padding: 6px 12px;
+    border-radius: 6px;
+    border: 1px solid #cbd5e1;
+    font-size: 14px;
+    outline: none;
+    font-family: inherit;
+    color: #111827;
+}
+
+.sci-form-textarea {
+    resize: vertical;
+}
+
+.sci-form-error {
+    color: #dc2626;
+    font-size: 12px;
+    margin-top: 4px;
+}
+
+/* --- INCIDENT DETAIL LAYOUT --- */
+.sci-incident-detail-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px 20px;
+    margin-bottom: 16px;
+}
+
+.sci-incident-detail-item {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.sci-incident-detail-label {
+    font-size: 12px;
+    color: #6b7280;
+}
+
+.sci-incident-detail-value {
+    font-size: 14px;
+    color: #111827;
+}
+
+.sci-incident-section {
+    margin-top: 16px;
+    padding-top: 16px;
+    border-top: 1px solid #f3f4f6;
+}
+
+.sci-incident-section-title {
+    font-size: 13px;
+    font-weight: 600;
+    color: #374151;
+    margin: 0 0 8px 0;
+}
+
+/* --- HISTORY TIMELINE --- */
+.sci-history-list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.sci-history-item {
+    border-left: 2px solid #e5e7eb;
+    padding-left: 12px;
+}
+
+.sci-history-badge {
+    display: inline-block;
+    font-size: 12px;
+    font-weight: 500;
+    padding: 2px 8px;
+    border-radius: 10px;
+    margin-bottom: 4px;
+}
+
+.sci-history-badge--manager-request {
+    background-color: #fffbeb;
+    color: #d97706;
+}
+
+.sci-history-badge--additional-info {
+    background-color: #eff6ff;
+    color: #2563eb;
+}
+
+.sci-history-badge--handling-note {
+    background-color: #eef2ff;
+    color: #4f46e5;
+}
+
+.sci-history-content {
+    font-size: 14px;
+    color: #111827;
+    margin: 0;
+}
+
+/* --- ACTION BUTTONS + INLINE ACTION FORM --- */
+.sci-incident-action-buttons {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.sci-inline-action {
+    margin-top: 12px;
+    padding: 14px;
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+    background-color: #f9fafb;
+}
+
+.sci-inline-action-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    margin-top: 10px;
+}

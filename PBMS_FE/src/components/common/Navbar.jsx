@@ -29,7 +29,7 @@ export default function Navbar({ isLoggedIn, userAvatar }) {
             <>
               <li><a href="#" onClick={() => navigate('/checkin')}>Check-in</a></li>
               <li><a href="#" onClick={() => navigate('/checkout')}>Check-out</a></li>
-              <li><a href="#" onClick={() => navigate('/checkout')}>Xử lý sự cố</a></li>
+              <li><a href="#" onClick={() => navigate('/incidents')}>Xử lý sự cố</a></li>
               <li><a href="#" onClick={() => navigate('/checkout')}>Hướng dẫn</a></li>
               <li><a href="#" onClick={() => navigate('/checkout')}>Liên hệ quản lý</a></li>
             </>

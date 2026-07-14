@@ -1,9 +1,11 @@
 import { useState, useEffect, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import '../styles/CheckIn.css'
+import '../styles/CheckOut.css'
 import { useCameraSession, SESSION_PHASES } from '../hooks/useCameraSession'
 import QRSessionModal from '../components/common/QRSessionModal'
 import Navbar from '../components/common/Navbar'
+import CreateIncidentPopup from '../components/common/CreateIncidentPopup'
 import { getVehicleTypes, getAvailableSlots } from '../services/vehicleTypeService'
 import { confirmGuestCheckIn, confirmBookingCheckIn } from '../services/checkInService'
 import { redirectToLoginIfUnauthorized } from '../utils/authRedirect'
@@ -87,6 +89,9 @@ function CheckIn() {
   const [qrPopupUrl, setQrPopupUrl] = useState(null)
   const [guestTicket, setGuestTicket] = useState(null)
   const [showGuestTicketModal, setShowGuestTicketModal] = useState(false)
+
+  // Ghi nhận sự cố — popup dùng chung với TableIncident.jsx / CheckOut.jsx
+  const [showIncidentPopup, setShowIncidentPopup] = useState(false)
 
   const {
     phase,
@@ -397,7 +402,7 @@ function CheckIn() {
             <li className="sci-sidebar-item">Liên hệ quản lý</li>
           </ul>
         </aside>
-          */}
+          
         {/* Main */}
         <main className="sci-main">
           <div className="sci-page-header">
@@ -405,18 +410,27 @@ function CheckIn() {
           </div>
 
           {/* Tabs */}
-          <div className="sci-tabs">
+          <div className="co-top-bar">
+            <div className="sci-tabs" style={{ marginBottom: 0 }}>
+              <button
+                className={`sci-tab-btn ${activeTab === 'guest' ? 'sci-tab-btn--active' : ''}`}
+                onClick={() => handleSwitchTab('guest')}
+              >
+                Guest
+              </button>
+              <button
+                className={`sci-tab-btn ${activeTab === 'booking' ? 'sci-tab-btn--active' : ''}`}
+                onClick={() => handleSwitchTab('booking')}
+              >
+                Booking
+              </button>
+            </div>
             <button
-              className={`sci-tab-btn ${activeTab === 'guest' ? 'sci-tab-btn--active' : ''}`}
-              onClick={() => handleSwitchTab('guest')}
+              className="co-incident-btn"
+              type="button"
+              onClick={() => setShowIncidentPopup(true)}
             >
-              Guest
-            </button>
-            <button
-              className={`sci-tab-btn ${activeTab === 'booking' ? 'sci-tab-btn--active' : ''}`}
-              onClick={() => handleSwitchTab('booking')}
-            >
-              Booking
+              Ghi nhận sự cố
             </button>
           </div>
 
@@ -601,9 +615,21 @@ function CheckIn() {
                           ? 'Không có tầng phù hợp'
                           : '-- Chọn tầng --'}
                   </option>
-                  {floors.map((f) => (
-                    <option key={f.floorId} value={String(f.floorId)}>{f.floorName}</option>
-                  ))}
+                  {floors.map((f) => {
+                    const percentRemaining = f.totalSlots > 0
+                      ? (f.availableSlots / f.totalSlots) * 100
+                      : 0
+                    const color = percentRemaining <= 10
+                      ? '#EF4444'
+                      : percentRemaining <= 30
+                        ? '#F59E0B'
+                        : '#22C55E'
+                    return (
+                      <option key={f.floorId} value={String(f.floorId)} style={{ color }}>
+                        {f.floorName} ({f.availableSlots} chỗ trống)
+                      </option>
+                    )
+                  })}
                 </select>
               </div>
 
@@ -671,6 +697,10 @@ function CheckIn() {
           onClose={handleCloseModal}
           onCancel={handleCancelSession}
         />
+      )}
+
+      {showIncidentPopup && (
+        <CreateIncidentPopup onClose={() => setShowIncidentPopup(false)} />
       )}
     </div>
   )

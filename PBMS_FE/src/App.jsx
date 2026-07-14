@@ -11,6 +11,7 @@ import MobileCamera from './pages/MobileCamera.jsx'
 import MobileBookingScanner from './pages/MobileBookingScanner.jsx'
 import MobileCheckoutScan from './pages/MobileCheckoutScan.jsx'
 import Dashboard from './pages/Dashboard.jsx'
+import Incidents from './pages/Incidents.jsx'
 
 function App() {
   return (
@@ -85,6 +86,11 @@ function App() {
         <Route
           path="/dashboard"
           element={<Dashboard />}
+        />
+
+        <Route
+          path="/incidents"
+          element={<Incidents />}
         />
 
       </Routes>
