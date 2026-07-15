@@ -20,6 +20,9 @@ import CheckIn from './pages/CheckIn';
 import CheckOut from './pages/CheckOut';
 import Incidents from './pages/Incidents';
 import Dashboard from './pages/Dashboard';
+import Manager from './pages/Manager';
+import Review from './pages/Review';
+import ManagerReviews from './pages/ManagerReviews';
 import MobileCamera from './pages/MobileCamera';
 import MobileBookingScanner from './pages/MobileBookingScanner';
 import MobileCheckoutScan from './pages/MobileCheckoutScan';
@@ -38,6 +41,7 @@ function App() {
             <Route path="/" element={<Home />} />
             <Route path="/vehicles" element={<Vehicles />} />
             <Route path="/bookings" element={<Bookings />} />
+            <Route path="/my-reviews" element={<Review />} />
 
             {/* Profile is shared by everyone but requires a valid active session */}
             <Route element={<ProtectedRoute allowedRoles={['driver', 'staff', 'admin', 'manager']} />}>
@@ -70,6 +74,8 @@ function App() {
           <Route element={<ProtectedRoute allowedRoles={['admin', 'manager']} />}>
             <Route element={<ManagementLayout />}>
               <Route path="/dashboard" element={<Dashboard />} />
+              <Route path="/manager" element={<Manager />} />
+              <Route path="/reviews" element={<ManagerReviews />} />
             </Route>
           </Route>
 

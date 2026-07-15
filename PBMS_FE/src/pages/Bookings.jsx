@@ -2,7 +2,9 @@ import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { getMyBookings, cancelBooking } from '../services/bookingService'
 import { syncPaymentStatus } from '../services/paymentService'
+import { getMyReviewableSessions } from '../services/reviewService'
 import Navbar from '../components/common/Navbar'
+import ReviewModal from '../components/review/ReviewModal'
 import '../styles/Home.css'
 import '../styles/Bookings.css'
 import {
@@ -86,8 +88,9 @@ function QRModal({ qrUrl, onClose }) {
 }
 
 // ─── Booking Card ──────────────────────────────────────────────
-function BookingCard({ booking, onCancel }) {
+function BookingCard({ booking, onCancel, reviewableSession, onReviewSubmitted }) {
   const [showQR, setShowQR] = useState(false)
+  const [showReviewModal, setShowReviewModal] = useState(false)
   const status = STATUS_CONFIG[booking.status] || STATUS_CONFIG['active'];
   const vehicle = VEHICLE_ICON[booking.vehicleType] || VEHICLE_ICON['car'];
   const VEHICLE_NAME_MAP = {
@@ -185,9 +188,25 @@ function BookingCard({ booking, onCancel }) {
           <>
             <button className="btn-action btn-action--outline">🔄 Đặt lại</button>
             <button className="btn-action btn-action--outline">🧾 Hóa đơn</button>
+            {reviewableSession && (
+              <button className="btn-action btn-action--blue" onClick={() => setShowReviewModal(true)}>
+                ⭐ Đánh giá
+              </button>
+            )}
           </>
         )}
       </div>
+
+      {showReviewModal && reviewableSession && (
+        <ReviewModal
+          session={reviewableSession}
+          onClose={() => setShowReviewModal(false)}
+          onSuccess={(created) => {
+            onReviewSubmitted?.(created)
+            setShowReviewModal(false)
+          }}
+        />
+      )}
     </div>
   )
 }
@@ -210,6 +229,7 @@ export default function Bookings() {
   const [loading, setLoading] = useState(true) // Add loading state
   // Replace with API call when available
   const [bookings, setBookings] = useState([])
+  const [reviewableSessions, setReviewableSessions] = useState([])
   useEffect(() => {
     // TRANSFORM the API data to match your component
     const formatBookings = (data) => data.map(item => ({
@@ -247,8 +267,23 @@ export default function Bookings() {
       }
     };
 
+    const fetchReviewableSessions = async () => {
+      try {
+        const data = await getMyReviewableSessions();
+        setReviewableSessions(data);
+      } catch (err) {
+        console.error("Lỗi khi lấy danh sách có thể đánh giá:", err);
+      }
+    };
+
     fetchBookings();
+    fetchReviewableSessions();
   }, []);
+
+  const handleReviewSubmitted = (createdReview) => {
+    setReviewableSessions(prev => prev.filter(s => s.sessionId !== createdReview.sessionId))
+  }
+
   const handleCancel = async (id) => {
     if (!window.confirm('Bạn có chắc muốn hủy đặt chỗ này không?')) return
     try {
@@ -336,7 +371,13 @@ export default function Bookings() {
         {/* Cards grid */}
         <div className="bookings-grid">
           {filtered.map(booking => (
-            <BookingCard key={booking.id} booking={booking} onCancel={handleCancel} />
+            <BookingCard
+              key={booking.id}
+              booking={booking}
+              onCancel={handleCancel}
+              reviewableSession={reviewableSessions.find(s => s.bookingId === booking.id)}
+              onReviewSubmitted={handleReviewSubmitted}
+            />
           ))}
         </div>
       </main>

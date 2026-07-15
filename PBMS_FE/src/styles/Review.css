@@ -1,0 +1,31 @@
+/* --- STATUS PILL VARIANTS (extend .sci-status-pill from Table.css) --- */
+.sci-status-replied {
+    background-color: #ecfdf5;
+    color: #059669;
+}
+
+.sci-status-unreplied {
+    background-color: #fffbeb;
+    color: #d97706;
+}
+
+/* --- STAR RATING --- */
+.sci-star-rating {
+    display: inline-flex;
+    align-items: center;
+    gap: 2px;
+}
+
+.sci-star {
+    font-size: 18px;
+    line-height: 1;
+    color: #d1d5db;
+}
+
+.sci-star--filled {
+    color: #f59e0b;
+}
+
+.sci-star--interactive {
+    cursor: pointer;
+}
