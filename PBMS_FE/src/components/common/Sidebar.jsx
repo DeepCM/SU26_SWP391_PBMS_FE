@@ -28,7 +28,7 @@ const STAFF_SUPPORT_ITEMS = [
 
 const MANAGER_ITEMS = [
   { path: '/dashboard', label: 'Thống kê', Icon: ChartIcon },
-  { path: '/incidents', label: 'Xử lý sự cố', Icon: AlertIcon },
+  { path: '/manager', label: 'Quản Lý', Icon: AlertIcon },
   { path: '/reviews', label: 'Nhận phản hồi', Icon: AlertIcon },
 ]
 
