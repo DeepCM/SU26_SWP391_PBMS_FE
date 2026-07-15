@@ -26,6 +26,9 @@ import ManagerReviews from './pages/ManagerReviews';
 import MobileCamera from './pages/MobileCamera';
 import MobileBookingScanner from './pages/MobileBookingScanner';
 import MobileCheckoutScan from './pages/MobileCheckoutScan';
+import Admin from './pages/Admin';
+import Manager from './pages/Manager';
+import Unknown from './pages/Unknown';
 
 function App() {
   return (
@@ -70,8 +73,8 @@ function App() {
             </Route>
           </Route>
 
-          {/* ================= ADMIN & MANAGER CONTROL ROUTES ================= */}
-          <Route element={<ProtectedRoute allowedRoles={['admin', 'manager']} />}>
+          {/* ================= MANAGER CONTROL ROUTES ================= */}
+          <Route element={<ProtectedRoute allowedRoles={['manager']} />}>
             <Route element={<ManagementLayout />}>
               <Route path="/dashboard" element={<Dashboard />} />
               <Route path="/manager" element={<Manager />} />
@@ -79,8 +82,15 @@ function App() {
             </Route>
           </Route>
 
+          {/* ================= ADMIN CONTROL ROUTES ================= */}
+          <Route element={<ProtectedRoute allowedRoles={['admin']} />}>
+            <Route element={<ManagementLayout />}>
+              <Route path="/admin" element={<Admin />} />
+            </Route>
+          </Route>
+
           {/* Fallback Catch-All Redirect */}
-          <Route path="*" element={<Home />} />
+          <Route path="*" element={<Unknown />} />
         </Routes>
       </BrowserRouter>
     </AuthProvider>

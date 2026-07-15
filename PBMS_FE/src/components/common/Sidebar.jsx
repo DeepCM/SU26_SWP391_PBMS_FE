@@ -33,9 +33,9 @@ const MANAGER_ITEMS = [
 ]
 
 const ADMIN_ITEMS = [
-  { path: '/dashboard', label: 'Quản lý', Icon: ChartIcon },
-  { path: '/users', label: 'Người dùng', Icon: UsersIcon },
-  { path: '/settings', label: 'Cấu hình hệ thống', Icon: SettingsIcon },
+  { path: '/admin', label: 'Quản lý', Icon: ChartIcon },
+  // { path: '/users', label: 'Người dùng', Icon: UsersIcon },
+  // { path: '/settings', label: 'Cấu hình hệ thống', Icon: SettingsIcon },
 ]
 
 const STORAGE_KEY = 'sidebar-collapsed'
