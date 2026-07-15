@@ -6,6 +6,7 @@ import '../styles/CheckIn.css'
 import '../styles/Dashboard.css'
 import TableFloor from '../components/common/TableFloor.jsx'
 import TableIncident from '../components/common/TableIncident.jsx'
+import TablePricing from '../components/common/TablePricing.jsx'
 {/*service import
 import { , } from '../services/'
 */}
@@ -198,6 +199,9 @@ export default function Manager() {
         {/* Table Framework */}
         <div className="">
           <TableFloor />
+        </div>
+        <div className="">
+          <TablePricing />
         </div>
         <div className="">
           <TableIncident />
