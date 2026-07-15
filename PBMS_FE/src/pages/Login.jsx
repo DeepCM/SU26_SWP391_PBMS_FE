@@ -47,8 +47,10 @@ function Login() {
           navigate('/')
         } else if (userRole === 'staff') {
           navigate('/checkin')
-        } else if (userRole === 'admin' || userRole === 'manager') {
+        } else if (userRole === 'manager') {
           navigate('/dashboard')
+        } else if (userRole === 'admin') {
+          navigate('/admin')
         } else {
           navigate('/')
         }

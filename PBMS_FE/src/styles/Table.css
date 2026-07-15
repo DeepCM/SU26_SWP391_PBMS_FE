@@ -187,3 +187,353 @@
     color: #111827;
     opacity: 1;
 }
+
+/* ========================================================================= */
+/* ADMINISTRATIVE FLOOR TABLE STRUCTURAL REFACTORS                          */
+/* ========================================================================= */
+
+/* Container Layout Adjustments */
+.sci-table-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.sci-table-title {
+  margin: 0;
+}
+
+.sci-search-wrapper {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+
+.sci-search-input {
+  padding: 6px 12px;
+  border-radius: 6px;
+  border: 1px solid #cbd5e1;
+  font-size: 14px;
+  outline: none;
+  transition: border-color 0.15s ease-in-out;
+}
+
+.sci-search-input:focus {
+  border-color: #3b82f6;
+}
+
+/* Operational Row States */
+.sci-table-row {
+  transition: opacity 0.2s ease;
+}
+
+.sci-row-active {
+  opacity: 1;
+}
+
+.sci-row-inactive {
+  opacity: 0.65;
+}
+
+/* Specific Cell Typography Rules */
+.sci-cell-id {
+  font-weight: 600;
+  color: #0f172a;
+}
+
+.sci-cell-available {
+  font-weight: 600;
+  color: #22c55e;
+}
+
+.sci-cell-capacity {
+  font-weight: 600;
+}
+
+.sci-text-muted {
+  color: #64748b;
+}
+
+.sci-text-right {
+  text-align: right;
+}
+
+/* Administrative Status Toggle Buttons */
+.sci-btn-toggle-status {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 13px;
+  padding: 4px 8px;
+  border-radius: 4px;
+  transition: background-color 0.15s ease;
+}
+
+.sci-btn-toggle-status.is-active {
+  color: #ef4444; /* Red toggle state when item is active (Action: deactivate) */
+}
+
+.sci-btn-toggle-status.is-active:hover {
+  background-color: #fef2f2;
+}
+
+.sci-btn-toggle-status.is-inactive {
+  color: #3b82f6; /* Blue toggle state when item is deactivated (Action: activate) */
+}
+
+.sci-btn-toggle-status.is-inactive:hover {
+  background-color: #eff6ff;
+}
+
+/* Error and Empty States */
+.sci-table-empty-row {
+  text-align: center;
+  color: #94a3b8;
+  font-style: italic;
+  padding: 24px !important;
+}
+
+.sci-error-state {
+  color: #ef4444;
+  text-align: center;
+  padding: 20px;
+  font-weight: 500;
+}
+
+/* ========================================================================= */
+/* ADMINISTRATIVE POPUPS & MODALS CONSOLES                                   */
+/* ========================================================================= */
+
+.sci-btn-create {
+  background-color: #3b82f6;
+  color: #ffffff;
+  border: none;
+  border-radius: 6px;
+  padding: 8px 16px;
+  font-weight: 600;
+  font-size: 14px;
+  cursor: pointer;
+  transition: background-color 0.15s ease-in-out;
+}
+
+.sci-btn-create:hover {
+  background-color: #2563eb;
+}
+
+.sci-table-actions-wrapper {
+  display: flex;
+  gap: 12px;
+  justify-content: flex-end;
+  align-items: center;
+}
+
+.sci-btn-edit {
+  background: none;
+  border: none;
+  color: #475569;
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 13px;
+  padding: 4px 8px;
+  border-radius: 4px;
+  transition: all 0.15s ease;
+}
+
+.sci-btn-edit:hover {
+  background-color: #f1f5f9;
+  color: #0f172a;
+}
+
+/* Modal Core Structuring rules */
+.sci-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(15, 23, 42, 0.6);
+  backdrop-filter: blur(4px);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+  padding: 16px;
+}
+
+.sci-modal-container {
+  background-color: #ffffff;
+  border-radius: 12px;
+  width: 100%;
+  max-width: 550px;
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+  display: flex;
+  flex-direction: column;
+  max-height: 90vh;
+  overflow: hidden;
+}
+
+.sci-modal-header {
+  padding: 16px 24px;
+  border-bottom: 1px solid #f1f5f9;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.sci-modal-title {
+  margin: 0;
+  font-size: 18px;
+  color: #0f172a;
+  font-weight: 700;
+}
+
+.sci-btn-close-modal {
+  background: none;
+  border: none;
+  font-size: 24px;
+  color: #94a3b8;
+  cursor: pointer;
+  transition: color 0.15s ease;
+}
+
+.sci-btn-close-modal:hover {
+  color: #475569;
+}
+
+.sci-modal-body {
+  padding: 24px;
+  overflow-y: auto;
+}
+
+.sci-modal-error-banner {
+  background-color: #fef2f2;
+  border: 1px solid #fca5a5;
+  color: #b91c1c;
+  padding: 12px 16px;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 500;
+  margin-bottom: 20px;
+}
+
+/* Modal Form Fields controls */
+.sci-form-group {
+  margin-bottom: 18px;
+}
+
+.sci-form-grid-2col {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+.sci-form-label {
+  display: block;
+  font-size: 13px;
+  font-weight: 600;
+  color: #475569;
+  margin-bottom: 6px;
+}
+
+.sci-required {
+  color: #ef4444;
+}
+
+.sci-form-input, 
+.sci-form-textarea {
+  width: 100%;
+  padding: 10px 12px;
+  border-radius: 6px;
+  border: 1px solid #cbd5e1;
+  font-size: 14px;
+  color: #0f172a;
+  outline: none;
+  box-sizing: border-box;
+}
+
+.sci-form-input:focus, 
+.sci-form-textarea:focus {
+  border-color: #3b82f6;
+}
+
+/* Supported vehicle checkboxes */
+.sci-form-checkbox-group {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 12px;
+  border: 1px solid #e2e8f0;
+  border-radius: 6px;
+  background-color: #f8fafc;
+}
+
+.sci-form-checkbox-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+}
+
+.sci-form-checkbox {
+  width: 16px;
+  height: 16px;
+  cursor: pointer;
+}
+
+.sci-form-checkbox-text {
+  font-size: 14px;
+  color: #334155;
+  font-weight: 500;
+}
+
+/* Modal Action Footers */
+.sci-modal-footer {
+  padding: 16px 24px;
+  border-top: 1px solid #f1f5f9;
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  background-color: #f8fafc;
+}
+
+.sci-btn-cancel {
+  background-color: #ffffff;
+  color: #475569;
+  border: 1px solid #cbd5e1;
+  border-radius: 6px;
+  padding: 8px 16px;
+  font-weight: 600;
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.15s ease-in-out;
+}
+
+.sci-btn-cancel:hover {
+  background-color: #f1f5f9;
+  border-color: #94a3b8;
+}
+
+.sci-btn-submit {
+  background-color: #3b82f6;
+  color: #ffffff;
+  border: none;
+  border-radius: 6px;
+  padding: 8px 16px;
+  font-weight: 600;
+  font-size: 14px;
+  cursor: pointer;
+  transition: background-color 0.15s ease-in-out;
+}
+
+.sci-btn-submit:hover {
+  background-color: #2563eb;
+}
+
+.sci-modal-spinner-wrapper {
+  padding: 48px;
+  text-align: center;
+  color: #64748b;
+  font-weight: 500;
+}

@@ -4,7 +4,6 @@ import Sidebar from '../components/common/Sidebar'
 import { IconCar, IconMotorbike, IconEbike } from '../components/svg/Icons'
 import '../styles/CheckIn.css'
 import '../styles/Dashboard.css'
-import TableFloor from '../components/common/TableFloor.jsx'
 import TableIncident from '../components/common/TableIncident.jsx'
 import TablePricing from '../components/common/TablePricing.jsx'
 {/*service import
@@ -56,16 +55,13 @@ export default function Manager() {
 
         <div className="sci-header-container">
           <div>
-            <h1 className="sci-header-title">Tổng Quan Hệ Thống PBMS</h1>
-            <p className="sci-header-subtitle">Giám sát mật độ bãi đỗ, bảng giá chính sách và báo cáo doanh thu tài chính.</p>
+            <h1 className="sci-header-title">Hệ Thống PBMS</h1>
+            <p className="sci-header-subtitle">Quản lý bảng giá và xử lý sự cố.</p>
           </div>
         </div>
         {error && <div className="sci-confirm-error">{error}</div>}
 
         {/* Table Framework */}
-        <div className="">
-          <TableFloor />
-        </div>
         <div className="">
           <TablePricing />
         </div>

@@ -27,7 +27,6 @@ import MobileCamera from './pages/MobileCamera';
 import MobileBookingScanner from './pages/MobileBookingScanner';
 import MobileCheckoutScan from './pages/MobileCheckoutScan';
 import Admin from './pages/Admin';
-import Manager from './pages/Manager';
 import Unknown from './pages/Unknown';
 
 function App() {

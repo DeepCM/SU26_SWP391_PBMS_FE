@@ -1,38 +1,50 @@
 import { useState, useEffect } from 'react'
 import '../../styles/Table.css';
-import { getVehicleTypes, getAvailableSlots, getPricingPreview } from '../../services/vehicleTypeService'
+import { getFloors, activateFloor, deactivateFloor } from '../../services/adminService'
+import { getVehicleTypes } from '../../services/vehicleTypeService'
+import FloorPopup from './FloorPopup';
 
 const TableFloor = () => {
     const [analyticsData, setAnalyticsData] = useState(null)
+    const [vehicleTypes, setVehicleTypes] = useState([])
     const [loading, setLoading] = useState(true)
     const [error, setError] = useState(null)
-    const [showFloorPopup, setShowFloorPopup] = useState(false);
-    const [selectedFloor, setSelectedFloor] = useState(null);
-    const [vehicleTypes, setVehicleTypes] = useState([])
     const [sortConfig, setSortConfig] = useState({ key: null, direction: 'asc' });
     const [searchTerm, setSearchTerm] = useState('');
+
+    // Popup visibility and selection states
+    const [showFloorPopup, setShowFloorPopup] = useState(false);
+    const [selectedFloor, setSelectedFloor] = useState(null); // Stores the full row object
+
     const handleCreate = () => {
-        setSelectedFloor(null);
+        setSelectedFloor(null); // Sets to null for Create Mode
         setShowFloorPopup(true);
     };
 
     const handleUpdate = (floorItem) => {
-        setSelectedFloor(floorItem);
+        setSelectedFloor(floorItem); // Sets the full row details for Edit Mode
         setShowFloorPopup(true);
     };
 
-    const handleDisable = async (id) => {
-        if (!window.confirm('Bạn có chắc muốn vô hiệu hóa không?')) return;
+    const handleToggleStatus = async (floorItem) => {
+        const actionText = floorItem.isActive ? 'vô hiệu hóa' : 'kích hoạt';
+        if (!window.confirm(`Bạn có chắc muốn ${actionText} tầng này không?`)) return;
+        
         try {
-            // await disableFloor(id); // TODO: Replace with your actual API call
+            if (floorItem.isActive) {
+                await deactivateFloor(floorItem.id);
+            } else {
+                await activateFloor(floorItem.id);
+            }
 
-            // Optimistically update the UI by filtering out the disabled item
             setAnalyticsData(prev => ({
                 ...prev,
-                tableData: prev.tableData.filter(row => row.id !== id)
+                tableData: prev.tableData.map(row => 
+                    row.id === floorItem.id ? { ...row, isActive: !row.isActive } : row
+                )
             }));
         } catch (err) {
-            alert(err.message);
+            alert(err.message || `Không thể thực hiện tác vụ ${actionText}.`);
         }
     };
 
@@ -49,10 +61,8 @@ const TableFloor = () => {
 
         const searchLower = searchTerm.toLowerCase().trim();
 
-        // Stage 1: Filter entries
         let processedItems = analyticsData.tableData.filter((row) => {
-            if (!searchLower) return true; // Show everything if search bar is empty
-
+            if (!searchLower) return true;
             return (
                 row.name?.toLowerCase().includes(searchLower) ||
                 row.type?.toLowerCase().includes(searchLower) ||
@@ -60,7 +70,6 @@ const TableFloor = () => {
             );
         });
 
-        // Stage 2: Sort the remaining entries
         if (sortConfig.key !== null) {
             processedItems.sort((a, b) => {
                 const valA = a[sortConfig.key];
@@ -74,60 +83,90 @@ const TableFloor = () => {
 
         return processedItems;
     };
-    useEffect(() => {
-        async function loadTableData() {
-            setLoading(true);
-            try {
-                // 1. Get all vehicle types
-                const types = await getVehicleTypes();
-                setVehicleTypes(types);
 
-                let flattenedFloors = [];
+    const loadTableData = async () => {
+        setLoading(true);
+        setError(null);
+        try {
+            const [rawFloorsList, types] = await Promise.all([
+                getFloors(),
+                getVehicleTypes()
+            ]);
 
-                // 2. Fetch slots and pricing for all types in parallel
-                await Promise.all(
-                    types.map(async (type) => {
-                        const slots = await getAvailableSlots(type.id);
-                        // const pricing = await getPricingPreview(type.id); // Uncomment if needed for the edit popup later
+            setVehicleTypes(types);
 
-                        // 3. Extract floors and map them to match your table row structure
-                        if (slots && slots.floors) {
-                            const typeFloors = slots.floors.map(floor => ({
-                                id: floor.floorId,
-                                name: floor.floorName,
-                                type: type.name || type.id, // Tag the floor with its vehicle type name
-                                description: floor.description || `Tầng dành riêng cho ${type.name}`,
-                                inUse: Math.round(((floor.occupiedSlots) + (floor.reservedSlots))),
-                                available: floor.availableSlots,
-                                capacity: floor.totalSlots
-                            }));
+            const mappedFloors = (rawFloorsList || []).map((floor) => {
+                let displayType = 'Tất cả';
+                let rawVehicleIds = [];
 
-                            // Merge into the main array
-                            flattenedFloors = [...flattenedFloors, ...typeFloors];
-                        }
-                    })
-                );
+                // Extract and map raw vehicle IDs for popup checkboxes
+                if (floor.vehicleTypeIds && Array.isArray(floor.vehicleTypeIds)) {
+                    rawVehicleIds = floor.vehicleTypeIds;
+                    displayType = floor.vehicleTypeIds
+                        .map(id => types.find(t => t.id === id)?.name || id)
+                        .join(', ');
+                } else if (floor.vehicleTypeId) {
+                    rawVehicleIds = [floor.vehicleTypeId];
+                    displayType = types.find(t => t.id === floor.vehicleTypeId)?.name || floor.vehicleTypeId;
+                } else if (floor.vehicleTypes && Array.isArray(floor.vehicleTypes)) {
+                    rawVehicleIds = floor.vehicleTypes.map(vt => typeof vt === 'object' ? vt.id : vt);
+                    displayType = floor.vehicleTypes
+                        .map(vt => {
+                            if (typeof vt === 'object') return vt.name || vt.id;
+                            const match = types.find(t => t.id === vt || t.name === vt);
+                            return match ? match.name : vt;
+                        })
+                        .join(', ');
+                } else if (floor.vehicleTypeName) {
+                    displayType = floor.vehicleTypeName;
+                } else if (floor.vehicleType) {
+                    const match = types.find(t => t.id === floor.vehicleType);
+                    rawVehicleIds = match ? [match.id] : [];
+                    displayType = match ? match.name : floor.vehicleType;
+                }
 
-                // 4. Set state to match the { tableData: [...] } structure expected by your JSX
-                setAnalyticsData({
-                    tableData: flattenedFloors
-                });
+                return {
+                    id: floor.floorId ?? floor.id,
+                    name: floor.name || `Tầng ${floor.floorNumber ?? floor.floorId}`,
+                    floorNumber: floor.floorNumber ?? 1,
+                    type: displayType,
+                    vehicleTypeIds: rawVehicleIds, // Preserved for the popup state
+                    description: floor.description || `Khu vực vận hành tầng ${floor.floorNumber ?? ''}`,
+                    inUse: Math.round((floor.currentOccupiedSlots || 0) + (floor.currentReservedSlots || 0)),
+                    available: floor.currentAvailableSlots ?? 0,
+                    capacity: floor.totalSlots ?? 0,
+                    isActive: floor.isActive ?? true
+                };
+            });
 
-            } catch (err) {
-                console.error("Failed to load init data:", err);
-                setError(err.message || 'Không thể tải dữ liệu tầng.');
-            } finally {
-                setLoading(false);
-            }
+            setAnalyticsData({
+                tableData: mappedFloors
+            });
+
+        } catch (err) {
+            console.error("Failed to load admin floor data:", err);
+            setError(err.message || 'Không thể tải dữ liệu tầng.');
+        } finally {
+            setLoading(false);
         }
+    };
 
+    useEffect(() => {
         loadTableData();
     }, []);
 
     if (loading) {
         return (
             <div className="sci-page sci-loading-state">
-                <p>Đang tải dữ liệu phân tích...</p>
+                <p>Đang tải danh sách quản lý tầng...</p>
+            </div>
+        )
+    }
+
+    if (error) {
+        return (
+            <div className="sci-page sci-error-state">
+                <p>{error}</p>
             </div>
         )
     }
@@ -135,31 +174,21 @@ const TableFloor = () => {
     return (
         <div className="sci-table-card">
 
-            {/* HEADER: Title and Add Button */}
+            {/* HEADER: Title, Search and Create Trigger */}
             <div className="sci-table-header">
                 <h2 className="sci-table-title">Quản Lý Tầng Đỗ Xe</h2>
 
-                {/* NEW SEARCH CONTAINER */}
-                <div className="sci-search-wrapper" style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
+                <div className="sci-search-wrapper">
                     <input
                         type="text"
                         className="sci-search-input"
                         placeholder="Tìm kiếm tầng, loại xe..."
                         value={searchTerm}
                         onChange={(e) => setSearchTerm(e.target.value)}
-                        style={{
-                            padding: '6px 12px',
-                            borderRadius: '6px',
-                            border: '1px solid #cbd5e1',
-                            fontSize: '14px',
-                            outline: 'none'
-                        }}
                     />
-                    {/*
-                    <button className="sci-btn sci-btn-primary" onClick={handleCreate}>
-                        + Thêm Mới
+                    <button className="sci-btn-create" onClick={handleCreate}>
+                        + Thêm Mới Tầng
                     </button>
-                    */}
                 </div>
             </div>
 
@@ -180,19 +209,16 @@ const TableFloor = () => {
                             >
                                 Loại Phương Tiện
                             </th>
-
-                            {/* Unsortable column: no extra classes or click handlers */}
                             <th>Mô Tả</th>
-
                             <th
                                 className={`sci-sortable ${sortConfig.key === 'available' ? `sci-sortable-${sortConfig.direction}` : ''}`}
                                 onClick={() => requestSort('available')}
                             >
-                                Chổ Trống
+                                Chỗ Trống
                             </th>
                             <th
-                                className={`sci-sortable ${sortConfig.key === 'occupied' ? `sci-sortable-${sortConfig.direction}` : ''}`}
-                                onClick={() => requestSort('occupied')}
+                                className={`sci-sortable ${sortConfig.key === 'inUse' ? `sci-sortable-${sortConfig.direction}` : ''}`}
+                                onClick={() => requestSort('inUse')}
                             >
                                 Đã chiếm
                             </th>
@@ -202,51 +228,58 @@ const TableFloor = () => {
                             >
                                 Sức Chứa
                             </th>
-
-                            {/* <th className="sci-text-right">Hành Động</th> */}
+                            <th className="sci-text-right">Hành Động</th>
                         </tr>
                     </thead>
                     <tbody>
-                        {getFilteredAndSortedData().map((row) => (
-                            <tr key={row.id}>
-                                <td className="sci-text-muted">B{row.id}</td>
-                                <td className="sci-font-medium">{row.type}</td>
-                                <td className="sci-font-medium">{row.description}</td>
-                                {/*
-                                <td>
-                                    <span className={`sci-status-pill ${row.status === 'Hoạt động' ? 'sci-status-active' : 'sci-status-disabled'}`}>
-                                        {row.status}
-                                    </span>
+                        {getFilteredAndSortedData().length === 0 ? (
+                            <tr>
+                                <td colSpan="7" className="sci-table-empty-row">
+                                    Không tìm thấy tầng đỗ xe nào tương thích
                                 </td>
-                                */}
-                                <td className="sci-font-medium">{row.available}</td>
-                                <td className="sci-font-medium">{row.inUse}</td>
-                                <td className="sci-font-medium">{row.capacity}</td>
-                                {/* ACTION BUTTONS
-                                <td className="sci-text-right">
-                                    <div className="sci-action-group">
-                                        <button className="sci-btn-text sci-edit-btn" onClick={() => handleUpdate(row)}>Sửa</button>
-                                        <button className="sci-btn-text sci-disable-btn" onClick={() => handleDisable(row.id)}>
-                                            {row.status === 'Hoạt động' ? 'Vô hiệu hóa' : 'Kích hoạt'}
-                                            Vô hiệu hóa
-                                        </button>
-                                    </div>
-                                </td> 
-                                */}
                             </tr>
-                        ))}
+                        ) : (
+                            getFilteredAndSortedData().map((row) => (
+                                <tr key={row.id} className={`sci-table-row ${row.isActive ? 'sci-row-active' : 'sci-row-inactive'}`}>
+                                    <td className="sci-cell-id">
+                                        {row.name}
+                                    </td>
+                                    <td className="sci-font-medium">{row.type}</td>
+                                    <td className="sci-text-muted">{row.description}</td>
+                                    <td className="sci-cell-available">{row.available}</td>
+                                    <td className="sci-font-medium">{row.inUse}</td>
+                                    <td className="sci-cell-capacity">{row.capacity}</td>
+                                    <td className="sci-text-right">
+                                        <div className="sci-table-actions-wrapper">
+                                            <button className="sci-btn-edit" onClick={() => handleUpdate(row)}>
+                                                Sửa
+                                            </button>
+                                            <button 
+                                                className={`sci-btn-toggle-status ${row.isActive ? 'is-active' : 'is-inactive'}`}
+                                                onClick={() => handleToggleStatus(row)}
+                                            >
+                                                {row.isActive ? 'Vô hiệu hóa' : 'Kích hoạt'}
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                            ))
+                        )}
                     </tbody>
                 </table>
             </div>
-            {/* Floor Popup collect floor data
+
+            {/* Floor Popup handling Create / Edit operations */}
             {showFloorPopup && (
                 <FloorPopup
+                    key={selectedFloor?.id || 'new'} // Forces a clean state reset on mode switch
                     floorData={selectedFloor}
+                    vehicleTypes={vehicleTypes}
                     onClose={() => setShowFloorPopup(false)}
-                // onRefresh={loadDashboardData} // Useful to trigger a re-fetch after a successful save
+                    onRefresh={loadTableData}
                 />
-            )}  */}
-        </div >
+            )}
+        </div>
     );
 };
 
