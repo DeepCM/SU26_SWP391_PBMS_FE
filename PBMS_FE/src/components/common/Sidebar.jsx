@@ -8,6 +8,7 @@ import {
   PhoneIcon,
   ChartIcon,
   UsersIcon,
+  ClockIcon,
   SettingsIcon,
   ChevronLeftIcon,
   ChevronRightIcon,
