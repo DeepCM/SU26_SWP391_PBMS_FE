@@ -7,27 +7,23 @@ export default function Navbar({ isLoggedIn, userAvatar }) {
   const navigate = useNavigate()
   const user = getUser()
   const avatarSrc = userAvatar || user?.avatarUrl || defaultAvatar
-  const isStaff = user?.role?.toLowerCase() === 'staff'
+  const isDriver = user?.role?.toLowerCase() === 'driver'
   return (
     <nav className="navbar">
       <div className="navbar-inner">
         <span className="nav-logo">PBMS</span>
         <ul className="nav-links">
-          {isStaff ? (
-            <>
-              <li><a href="#" onClick={() => navigate('/checkin')}>Check-in</a></li>
-              <li><a href="#" onClick={() => navigate('/checkout')}>Check-out</a></li>
-            </>
-          ) : (
+          {isDriver ? (
             <>
               <li><a href="#" onClick={() => navigate('/')}>Tổng quan</a></li>
               <li><a href="#" onClick={() => navigate('/bookings')}>Đặt chỗ của tôi</a></li>
               <li><a href="#" onClick={() => navigate('/vehicles')}>Xe của tôi</a></li>
-              <li><a href="#">Hỗ trợ</a></li>
-              <li><a href="#">Hướng dẫn</a></li>
+              <li><a href="#" onClick={() => navigate('/my-reviews')}>Đánh giá của tôi</a></li>
               <li><a href="#">Liên hệ</a></li>
               <li><a href="#">Giới thiệu</a></li>
             </>
+          ) : (
+            <li><a href="#"></a></li>
           )}
         </ul>
         {isLoggedIn ? (

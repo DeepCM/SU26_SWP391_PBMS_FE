@@ -1,0 +1,764 @@
+/* ========================================================================= */
+/* 1. CORE CONTAINER & SIDE-BY-SIDE FRAMEWORK                                */
+/* ========================================================================= */
+
+.sci-loading-state {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+}
+
+.sci-loading-text {
+  font-size: 1.2rem;
+  font-weight: 600;
+  color: #64748b;
+}
+
+.sci-body {
+  display: flex;
+  width: 100%;
+  min-height: calc(100vh - 70px);
+  /* Offsets standard upper Navbar bounds */
+}
+
+.sci-main {
+  flex: 1;
+  padding: 24px;
+  box-sizing: border-box;
+  min-width: 0;
+  /* Prevents layout clipping within flex nodes */
+}
+
+.sci-header-container {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24px;
+}
+
+.sci-header-title {
+  font-size: 1.75rem;
+  font-weight: 700;
+  color: #1e293b;
+  margin: 0;
+}
+
+.sci-header-subtitle {
+  font-size: 13px;
+  color: #64748b;
+  margin: 4px 0 0 0;
+}
+
+.sci-dashboard-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 24px;
+  margin-bottom: 32px;
+}
+
+.sci-confirm-error {
+  padding: 12px;
+  background: #fee2e2;
+  color: #991b1b;
+  border-radius: 6px;
+  margin-bottom: 20px;
+}
+
+/* ========================================================================= */
+/* 2. STATISTICAL KPI CARDS & INTERNAL LAYOUTS                               */
+/* ========================================================================= */
+
+.sci-stat-card {
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+.sci-stat-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+.sci-stat-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: #64748b;
+}
+
+.sci-stat-value {
+  font-size: 2rem;
+  font-weight: 700;
+  color: #0f172a;
+  margin: 0 0 8px 0;
+}
+
+.sci-stat-currency {
+  font-size: 1rem;
+  font-weight: 500;
+}
+
+/* Footer Layout Architectures */
+.sci-stat-footer-lines {
+  border-top: 1px solid #f1f5f9;
+  padding-top: 12px;
+  margin-top: 12px;
+  font-size: 0.85rem;
+  color: #64748b;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.sci-stat-footer-split {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.75rem;
+  margin-top: 4px;
+}
+
+.sci-stat-footer-flex {
+  font-size: 0.85rem;
+  color: #64748b;
+  display: flex;
+  justify-content: space-between;
+  margin-top: 4px;
+}
+
+.sci-stat-footer-flex-row {
+  border-top: 1px solid #f1f5f9;
+  padding-top: 12px;
+  margin-top: 12px;
+  font-size: 0.85rem;
+  color: #64748b;
+  display: flex;
+  justify-content: space-between;
+}
+
+/* ========================================================================= */
+/* 3. PROGRESS TRACKS & INTERACTION CONTROLS                                 */
+/* ========================================================================= */
+
+.sci-progress-track {
+  width: 100%;
+  height: 8px;
+  background: #e2e8f0;
+  border-radius: 4px;
+  overflow: hidden;
+  display: flex;
+  margin: 16px 0 8px 0;
+}
+
+.sci-progress-bar-occupied {
+  height: 100%;
+  background: #ef4444;
+}
+
+.sci-progress-bar-reserved {
+  height: 100%;
+  background: #3b82f6;
+}
+
+.sci-period-filters-container {
+  display: flex;
+  gap: 8px;
+  background: #e2e8f0;
+  padding: 4px;
+  border-radius: 8px;
+}
+
+.sci-period-pill {
+  padding: 6px 12px;
+  font-size: 12px;
+  font-weight: 500;
+  border-radius: 6px;
+  border: none;
+  background: transparent;
+  color: #475569;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.sci-period-pill--active {
+  background: #ffffff;
+  color: #0f172a;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+}
+
+/* Category Badges */
+.sci-badge-finance,
+.sci-badge-status,
+.sci-badge-policy {
+  font-size: 11px;
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: 4px;
+}
+
+.sci-badge-finance {
+  background: #dcfce7;
+  color: #15803d;
+}
+
+.sci-badge-status {
+  background: #dbeafe;
+  color: #1d4ed8;
+}
+
+.sci-badge-policy {
+  background: #fef3c7;
+  color: #b45309;
+}
+
+/* Semantic Variables */
+.text-green {
+  color: #10b981;
+}
+
+.text-orange {
+  color: #f59e0b;
+}
+
+.text-red {
+  color: #ef4444;
+}
+
+.text-blue {
+  color: #3b82f6;
+}
+
+/* ========================================================================= */
+/* 4. ADVANCED VISUALIZATIONS CHARTS GRID PLUG-INS                           */
+/* ========================================================================= */
+
+
+.sci-chart-placeholder {
+  background: #ffffff;
+  padding: 20px;
+  border-radius: 12px;
+  border: 2px dashed #cbd5e1;
+  min-height: 270px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #94a3b8;
+  font-weight: 500;
+  box-sizing: border-box;
+}
+
+/* ========================================================================= */
+
+.sci-chart-card {
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  padding: 24px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  display: flex;
+  flex-direction: column;
+  box-sizing: border-box;
+}
+
+.sci-chart-card-title {
+  font-size: 15px;
+  font-weight: 600;
+  color: #1e293b;
+  margin: 0 0 20px 0;
+}
+
+/* Donut Chart Presentation Framework */
+.sci-donut-wrapper {
+  position: relative;
+  width: 150px;
+  height: 150px;
+  margin: 0 auto 20px auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.sci-donut-svg {
+  transform: rotate(-90deg);
+  width: 100%;
+  height: 100%;
+}
+
+.sci-donut-track {
+  fill: none;
+  stroke: #f1f5f9;
+  stroke-width: 16;
+}
+
+.sci-donut-segment {
+  fill: none;
+  stroke-width: 16;
+  stroke-linecap: round;
+}
+
+.sci-segment-occupied {
+  stroke: #ef4444;
+  stroke-dasharray: 377;
+  /* Circumference mapping bounds */
+  stroke-dashoffset: 120;
+  /* Dynamic mock arc layout factor */
+}
+
+.sci-donut-center-text {
+  position: absolute;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+
+.sci-donut-percentage {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #0f172a;
+}
+
+.sci-donut-label {
+  font-size: 11px;
+  color: #64748b;
+  font-weight: 500;
+}
+
+/* Legend Visual Structures */
+.sci-chart-legend-grid {
+  display: flex;
+  justify-content: space-between;
+  border-top: 1px solid #f1f5f9;
+  padding-top: 16px;
+  margin-top: auto;
+}
+
+.sci-legend-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.sci-legend-marker {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+}
+
+.sci-legend-txt {
+  font-size: 12px;
+  color: #475569;
+}
+
+.bg-green {
+  background-color: #10b981;
+}
+
+.bg-red {
+  background-color: #ef4444;
+}
+
+.bg-blue {
+  background-color: #3b82f6;
+}
+
+.sci-charts-twin-container {
+  display: flex;
+  flex-direction: row;
+  /* Explicitly forces side-by-side alignment */
+  justify-content: fill;
+  /* Spreads blocks evenly across space */
+  align-items: center;
+  gap: 24px;
+  width: 100%;
+  margin: auto 0;
+  padding: 16px 0;
+  box-sizing: border-box;
+}
+
+.sci-donut-sub-block {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  flex: 1;
+  min-width: 0;
+  /* Prevents flex items from overflowing container boundaries */
+}
+
+/* ========================================================================= */
+/* TWIN DONUT ARCHITECTURE REFACTORS                                        */
+/* ========================================================================= */
+
+/* Remove the old hardcoded static stroke-dashoffsets so the dynamic values can take effect */
+.sci-segment-occupied {
+  stroke: #ef4444;
+  stroke-linecap: round;
+}
+
+.sci-segment-reserved-ratio {
+  stroke: #3b82f6;
+  stroke-linecap: round;
+}
+
+/* Remove old wide shared layout selector if present */
+.sci-chart-legend-grid {
+  display: none;
+}
+
+/* Contextual Split Vertical Micro-Legends */
+.sci-mini-legend-vertical {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  width: 100%;
+  max-width: 180px;
+  border-top: 1px solid #f1f5f9;
+  padding-top: 12px;
+  margin-top: 8px;
+}
+
+.sci-mini-legend-vertical .sci-legend-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+}
+
+/* Financial Line/Trend SVG Graphics */
+.sci-trend-wrapper {
+  width: 100%;
+  margin-top: auto;
+}
+
+.sci-trend-svg {
+  width: 100%;
+  height: auto;
+  overflow: visible;
+}
+
+.sci-grid-line {
+  stroke: #f1f5f9;
+  stroke-width: 1.5;
+  stroke-dasharray: 4 4;
+}
+
+.sci-trend-polyline {
+  fill: none;
+  stroke: #3b82f6;
+  stroke-width: 3;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.sci-trend-dot {
+  fill: #ffffff;
+  stroke: #3b82f6;
+  stroke-width: 2.5;
+  transition: all 0.2s ease;
+}
+
+.sci-trend-node-group:hover .sci-trend-dot {
+  fill: #3b82f6;
+  r: 6px;
+}
+
+.sci-trend-value-label {
+  font-size: 11px;
+  font-weight: 600;
+  fill: #1e293b;
+  text-anchor: middle;
+}
+
+.sci-trend-axis-label {
+  font-size: 10px;
+  fill: #64748b;
+  text-anchor: middle;
+  font-weight: 500;
+}
+
+/* ========================================================================= */
+
+.sci-chart-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.sci-compact-legend {
+  display: flex;
+  gap: 12px;
+  font-size: 11px;
+  font-weight: 600;
+  color: #64748b;
+  align-items: center;
+}
+
+.sci-compact-legend span {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+/* Vehicle Types Custom Distribution Rows */
+.sci-vehicle-list {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  margin-top: auto;
+  margin-bottom: auto;
+}
+
+.sci-vehicle-row {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.sci-vehicle-info {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.sci-vehicle-name {
+  font-size: 13px;
+  font-weight: 600;
+  color: #1e293b;
+}
+
+.sci-vehicle-total {
+  font-size: 11px;
+  color: #64748b;
+  font-weight: 500;
+}
+
+.sci-vehicle-bar-wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.sci-double-bar-track {
+  width: 100%;
+  height: 16px;
+  background: #f1f5f9;
+  border-radius: 4px;
+  overflow: hidden;
+  position: relative;
+}
+
+.sci-double-bar {
+  height: 100%;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  padding-right: 8px;
+  box-sizing: border-box;
+  min-width: 24px;
+  transition: width 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.sci-bar-label {
+  font-size: 9px;
+  font-weight: 700;
+  color: #ffffff;
+}
+
+/* Operational Performance Table */
+.sci-table-wrapper {
+  width: 100%;
+  overflow-x: auto;
+  margin-top: auto;
+}
+
+.sci-performance-table {
+  width: 100%;
+  border-collapse: collapse;
+  text-align: left;
+}
+
+.sci-performance-table th {
+  padding: 10px 12px;
+  font-size: 11px;
+  font-weight: 600;
+  color: #64748b;
+  text-transform: uppercase;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.sci-performance-table td {
+  padding: 12px;
+  font-size: 13px;
+  color: #334155;
+  border-bottom: 1px solid #f1f5f9;
+  vertical-align: middle;
+}
+
+.sci-performance-table tr:last-child td {
+  border-bottom: none;
+}
+
+.sci-table-bold {
+  font-weight: 600;
+  color: #0f172a;
+}
+
+.sci-text-divider {
+  margin: 0 4px;
+  color: #cbd5e1;
+}
+
+/* Floor Progress Indicators */
+.sci-table-progress-container {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.sci-table-progress-track {
+  width: 80px;
+  height: 6px;
+  background: #e2e8f0;
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+.sci-table-progress-bar {
+  height: 100%;
+  border-radius: 3px;
+}
+
+.sci-table-progress-text {
+  font-size: 11px;
+  font-weight: 600;
+  color: #475569;
+  min-width: 28px;
+}
+
+.sci-empty-text {
+  text-align: center;
+  color: #94a3b8;
+  font-size: 13px;
+  padding: 20px 0;
+  font-style: italic;
+  margin: 0;
+}
+
+.font-semibold {
+  font-weight: 600;
+}
+
+/* ========================================================================= */
+/* PHASE 3: EXTENDED PERFORMANCE GRID COLUMN STYLES                          */
+/* ========================================================================= */
+
+.sci-table-sub-info {
+  font-size: 11px;
+  color: #64748b;
+  margin-top: 4px;
+  font-weight: 500;
+}
+
+.sci-table-sub-info strong {
+  color: #0f172a;
+}
+
+.sci-table-traffic-split {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  font-size: 12px;
+}
+
+/* Adjust layout rules for the expanded table structure */
+.sci-performance-table th {
+  letter-spacing: 0.02em;
+}
+
+.sci-performance-table td {
+  padding: 14px 12px;
+  /* Slight padding increase to balance secondary lines nicely */
+}
+
+/* Container bọc ngoài Input và Nút mắt */
+.sci-password-input-wrapper {
+  position: relative;
+  width: 100%;
+}
+
+/* Tùy chỉnh riêng cho ô input nhập mật khẩu để tránh đè chữ lên icon */
+.sci-password-input-wrapper .sci-form-input {
+  padding-right: 40px !important;
+  /* Tạo khoảng trống bên phải */
+  width: 100%;
+}
+
+/* Nút bấm ẩn/hiện mật khẩu */
+.sci-password-input-wrapper .login-eye-btn {
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  /* Căn giữa hoàn hảo theo chiều dọc */
+  background: none;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  padding: 0;
+  opacity: 0.7;
+  transition: opacity 0.2s ease;
+}
+
+.sci-password-input-wrapper .login-eye-btn:hover {
+  opacity: 1;
+}
+
+/* Đảm bảo icon SVG bên trong có kích thước chuẩn */
+.sci-password-input-wrapper .login-eye-btn svg {
+  width: 20px;
+  height: 20px;
+  display: block;
+}
+
+/* ========================================================================= */
+/* 5. RESPONSIVE BREAKPOINTS                                                 */
+/* ========================================================================= */
+
+@media (max-width: 1024px) {
+
+  .sci-dashboard-grid,
+  .sci-charts-row-1,
+  .sci-charts-row-2 {
+    grid-template-columns: 1fr;
+    gap: 20px;
+  }
+
+  .sci-header-container {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 16px;
+  }
+
+  .sci-body {
+    flex-direction: column;
+  }
+
+  @media (max-width: 560px) {
+    .sci-charts-twin-container {
+      flex-direction: column;
+      /* Safe fallback only for extreme narrow widths */
+      gap: 20px;
+    }
+  }
+}

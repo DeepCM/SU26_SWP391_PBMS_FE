@@ -3,7 +3,9 @@ import { useNavigate } from 'react-router-dom'
 import '../styles/CheckIn.css'
 import '../styles/CheckOut.css'
 import Navbar from '../components/common/Navbar'
+import Sidebar from '../components/common/Sidebar'
 import QRSessionModal from '../components/common/QRSessionModal'
+import CreateIncidentPopup from '../components/common/CreateIncidentPopup'
 import { useCheckoutCameraSession, SESSION_PHASES } from '../hooks/useCheckoutCameraSession'
 import { useCheckoutScanSession, SCAN_SESSION_PHASES } from '../hooks/useCheckoutScanSession'
 import { verifyGuestCheckOut, verifyBookingCheckOut, confirmGuestCheckOut, confirmBookingCheckOut } from '../services/checkOutService'
@@ -151,6 +153,9 @@ function CheckOut() {
   const [exitTimeAt, setExitTimeAt] = useState(null)
   const [showPaymentQrModal, setShowPaymentQrModal] = useState(false)
   const statusPollRef = useRef(null)
+
+  // Ghi nhận sự cố — popup dùng chung với TableIncident.jsx
+  const [showIncidentPopup, setShowIncidentPopup] = useState(false)
 
   // Camera session chụp ảnh check-out
   const [showQrModal, setShowQrModal] = useState(false)
@@ -391,30 +396,17 @@ function CheckOut() {
 
       <div className="sci-body">
         {/* Sidebar */}
-        <aside className="sci-sidebar">
-          <p className="sci-section-label">CHỨC NĂNG</p>
-          <ul className="sci-sidebar-list">
-            <li className="sci-sidebar-item sci-sidebar-item--active">
-              Check-in / Check-out
-            </li>
-            <li className="sci-sidebar-item">
-              Xử lý sự cố
-              <span className="sci-incident-badge">2</span>
-            </li>
-            <li className="sci-sidebar-item">Lịch sử ca</li>
-          </ul>
-          <p className="sci-section-label sci-section-label--support">HỖ TRỢ</p>
-          <ul className="sci-sidebar-list">
-            <li className="sci-sidebar-item">Hướng dẫn</li>
-            <li className="sci-sidebar-item">Liên hệ quản lý</li>
-          </ul>
-        </aside>
+        <Sidebar />
 
         {/* Main */}
         <main className="sci-main">
           <div className="co-top-bar">
             <h1 className="sci-page-title">Check-out</h1>
-            <button className="co-incident-btn" type="button">
+            <button
+              className="co-incident-btn"
+              type="button"
+              onClick={() => setShowIncidentPopup(true)}
+            >
               Ghi nhận sự cố
             </button>
           </div>
@@ -674,6 +666,13 @@ function CheckOut() {
           error={checkoutError}
           onClose={handleCloseQrModal}
           onCancel={handleCancelQrModal}
+        />
+      )}
+
+      {showIncidentPopup && (
+        <CreateIncidentPopup
+          defaultSessionId={sessionInfo?.parkingSessionId}
+          onClose={() => setShowIncidentPopup(false)}
         />
       )}
     </div>
