@@ -31,8 +31,8 @@ export const MANAGER_ACTIONS_CONFIG = {
 }
 
 export function getManagerAvailableActions(status) {
-    if (status === 'open') return ['handle']
-    if (status === 'in_progress') return ['request-info', 'resolve']
+    if (status === 'open') return ['handle', 'request-info', 'resolve']
+    if (status === 'in_progress') return ['handle', 'request-info', 'resolve']
     return []
 }
 

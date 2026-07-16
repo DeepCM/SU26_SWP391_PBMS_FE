@@ -27,6 +27,7 @@ import MobileCamera from './pages/MobileCamera';
 import MobileBookingScanner from './pages/MobileBookingScanner';
 import MobileCheckoutScan from './pages/MobileCheckoutScan';
 import Admin from './pages/Admin';
+import ParkingHistory from './pages/ParkingHistory';
 import Unknown from './pages/Unknown';
 
 function App() {
@@ -60,15 +61,24 @@ function App() {
             </Route>
           </Route>
 
+          {/* ================= MOBILE QR SCAN ROUTES (public — opened by a phone from a QR code, no login) ================= */}
+          <Route path="/mobile-camera" element={<MobileCamera />} />
+          <Route path="/mobile-booking-scanner" element={<MobileBookingScanner />} />
+          <Route path="/mobile-checkout-scan" element={<MobileCheckoutScan />} />
+
           {/* ================= STAFF WORKSPACE ROUTES ================= */}
           <Route element={<ProtectedRoute allowedRoles={['staff']} />}>
             <Route element={<ManagementLayout />}>
               <Route path="/checkin" element={<CheckIn />} />
               <Route path="/checkout" element={<CheckOut />} />
               <Route path="/incidents" element={<Incidents />} />
-              <Route path="/mobile-camera" element={<MobileCamera />} />
-              <Route path="/mobile-booking-scanner" element={<MobileBookingScanner />} />
-              <Route path="/mobile-checkout-scan" element={<MobileCheckoutScan />} />
+            </Route>
+          </Route>
+
+          {/* ================= SHARED STAFF/MANAGER ROUTES ================= */}
+          <Route element={<ProtectedRoute allowedRoles={['staff', 'manager']} />}>
+            <Route element={<ManagementLayout />}>
+              <Route path="/parking-history" element={<ParkingHistory />} />
             </Route>
           </Route>
 

@@ -110,7 +110,13 @@
   border-right: 1px solid #e5e7eb;
   padding: 20px 0;
   flex-shrink: 0;
-  position: relative;
+  position: sticky;
+  top: 60px; /* bằng chiều cao .navbar (Home.css) — tránh đè lên Navbar cũng đang sticky top:0 */
+  /* align-items:stretch (mặc định của .sci-body) khiến sticky không ăn khi item bị kéo giãn
+     theo chiều cao nội dung rất dài của .sci-main — phải opt-out bằng align-self rồi tự bù
+     chiều cao bằng min-height để cột (và border-right) vẫn phủ hết khung nhìn. */
+  align-self: flex-start;
+  min-height: calc(100vh - 60px);
   transition: width 0.2s ease;
   overflow: hidden;
 }

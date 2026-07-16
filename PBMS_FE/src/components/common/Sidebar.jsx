@@ -19,6 +19,7 @@ const STAFF_ITEMS = [
   { path: '/checkin', label: 'Check-in', Icon: CarIcon },
   { path: '/checkout', label: 'Check-out', Icon: CarIcon },
   { path: '/incidents', label: 'Xử lý sự cố', Icon: AlertIcon }, //, badge: 2
+  { path: '/parking-history', label: 'Lịch sử', Icon: ClockIcon },
 ]
 
 const STAFF_SUPPORT_ITEMS = [
@@ -30,6 +31,7 @@ const MANAGER_ITEMS = [
   { path: '/dashboard', label: 'Thống kê', Icon: ChartIcon },
   { path: '/manager', label: 'Quản Lý', Icon: AlertIcon },
   { path: '/reviews', label: 'Nhận phản hồi', Icon: AlertIcon },
+  { path: '/parking-history', label: 'Lịch sử', Icon: ClockIcon },
 ]
 
 const ADMIN_ITEMS = [

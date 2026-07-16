@@ -11,25 +11,28 @@ function Incidents() {
   return (
     <div className="sci-page">
       <Navbar isLoggedIn={isLoggedIn} />
-      
-      <main className="sci-main sci-dashboard-container">
-        
-        <div className="sci-header-container">
-          <div>
-            
-            <h1 className="sci-header-title">Sự Cố Đã Báo Cáo</h1>
-            <p className="sci-header-subtitle">Danh sách sự cố bạn đã báo cáo và trạng thái xử lý.</p>
-          </div>
-        </div>
 
-        <TableIncident
-          fetchIncidents={getMyReportedIncidents}
-          fetchIncidentById={getMyReportedIncidentById}
-          title="Sự Cố Đã Báo Cáo"
-          actionsConfig={STAFF_ACTIONS_CONFIG}
-          getAvailableActions={getStaffAvailableActions}
-        />
-      </main>
+      <div className="sci-body">
+        <Sidebar />
+        <main className="sci-main sci-dashboard-container">
+
+          <div className="sci-header-container">
+            <div>
+
+              <h1 className="sci-header-title">Sự Cố Đã Báo Cáo</h1>
+              <p className="sci-header-subtitle">Danh sách sự cố bạn đã báo cáo và trạng thái xử lý.</p>
+            </div>
+          </div>
+
+          <TableIncident
+            fetchIncidents={getMyReportedIncidents}
+            fetchIncidentById={getMyReportedIncidentById}
+            title="Sự Cố Đã Báo Cáo"
+            actionsConfig={STAFF_ACTIONS_CONFIG}
+            getAvailableActions={getStaffAvailableActions}
+          />
+        </main>
+      </div>
     </div>
   )
 }
