@@ -1,9 +1,39 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import Navbar from '../components/common/Navbar'
 import Sidebar from '../components/common/Sidebar'
 import '../styles/CheckIn.css'
 import '../styles/Dashboard.css'
 import { getOverview, getOccupancy, getRevenue, getSlotUsage, getTraffic } from '../services/reportService'
+
+// ── DATE UTILITIES FOR API PARAMETERS (Moved outside Component) ───────────
+const getTodayStr = () => {
+  const today = new Date();
+  const yyyy = today.getFullYear();
+  const mm = String(today.getMonth() + 1).padStart(2, '0');
+  const dd = String(today.getDate()).padStart(2, '0');
+  return `${yyyy}-${mm}-${dd}`;
+};
+
+const getCurrentMonthStr = () => {
+  const today = new Date();
+  const yyyy = today.getFullYear();
+  const mm = String(today.getMonth() + 1).padStart(2, '0');
+  return `${yyyy}-${mm}`;
+};
+
+const getMonthDateRange = (yearMonthStr) => {
+  if (!yearMonthStr) return { startDate: '', endDate: '' };
+
+  const [year, month] = yearMonthStr.split('-').map(Number);
+  const startDate = `${yearMonthStr}-01`;
+
+  // Ngày thứ '0' của tháng sau chính là ngày cuối cùng của tháng này
+  const lastDay = new Date(year, month, 0).getDate();
+  const formattedLastDay = lastDay < 10 ? `0${lastDay}` : lastDay;
+  const endDate = `${yearMonthStr}-${formattedLastDay}`;
+
+  return { startDate, endDate };
+};
 
 export default function Dashboard() {
   // ── STATE MANAGEMENT ──────────────────────────────────────────────────────
@@ -36,20 +66,27 @@ export default function Dashboard() {
   const maxVehicleEntries = Math.max(...vehicleTypes.map(v => Math.max(v.entries || 0, v.exits || 0)), 1);
   // Computes peak value to auto-scale the revenue trend line safely inside the SVG bounds
   const maxRevenue = Math.max(...revenueTrend.map(d => d.revenue || 0), 1);
-  // ── DATE UTILITY FOR API PARAMETERS ───────────────────────────────────────
-  const getDateRange = (period) => {
-    const anchorDate = '2026-07-15'
-    if (period === 'tuần') return { from: '2026-07-09', to: anchorDate }
-    if (period === 'tháng') return { from: '2026-07-01', to: anchorDate }
-    return { from: anchorDate, to: anchorDate }
-  }
 
   // ── DATA DISPATCHER & LIFECYCLE ───────────────────────────────────────────
   useEffect(() => {
     const loadDashboardData = async () => {
       setLoading(true)
       setError(null)
-      const { from, to } = getDateRange(timePeriod)
+      
+      // Khởi tạo tham số thời gian dựa vào state timePeriod hiện tại
+      let from = '';
+      let to = '';
+
+      if (timePeriod === 'ngày') {
+        const today = getTodayStr();
+        from = today;
+        to = today;
+      } else if (timePeriod === 'tháng') {
+        const range = getMonthDateRange(getCurrentMonthStr());
+        from = range.startDate;
+        to = range.endDate;
+      }
+
       const groupBy = timePeriod === 'ngày' ? 'hour' : 'day'
 
       try {
@@ -106,13 +143,12 @@ export default function Dashboard() {
               <p className="sci-header-subtitle">Giám sát mật độ bãi đỗ, bảng giá chính sách và báo cáo doanh thu tài chính liên tục.</p>
             </div>
 
-            {/* Time Period Filter Pills Wrapper 
+            {/* Time Period Filter Pills Wrapper  */}
             <div className="sci-period-filters-container">
               <button className={`sci-period-pill ${timePeriod === 'ngày' ? 'sci-period-pill--active' : ''}`} onClick={() => setTimePeriod('ngày')}>Hôm nay</button>
-              <button className={`sci-period-pill ${timePeriod === 'tuần' ? 'sci-period-pill--active' : ''}`} onClick={() => setTimePeriod('tuần')}>Tuần này</button>
               <button className={`sci-period-pill ${timePeriod === 'tháng' ? 'sci-period-pill--active' : ''}`} onClick={() => setTimePeriod('tháng')}>Tháng này</button>
             </div>
-            */}
+
           </div>
 
           {error && <div className="sci-confirm-error">{error}</div>}
@@ -290,7 +326,10 @@ export default function Dashboard() {
                             {pt.revenue ? `${(pt.revenue / 1000).toFixed(0)}k` : '0'}
                           </text>
                           <text x={x} y="185" className="sci-trend-axis-label">
-                            {new Date(pt.periodStart).toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' })}
+                            {timePeriod === 'ngày' 
+                              ? new Date(pt.periodStart).toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' })
+                              : new Date(pt.periodStart).toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit' })
+                            }
                           </text>
                         </g>
                       );
@@ -399,7 +438,7 @@ export default function Dashboard() {
                                 </div>
                               </td>
 
-                              {/* Committed Financial Capacity Node (New) */}
+                              {/* Committed Financial Capacity Node */}
                               <td>
                                 <div className="sci-table-progress-container">
                                   <div className="sci-table-progress-track">

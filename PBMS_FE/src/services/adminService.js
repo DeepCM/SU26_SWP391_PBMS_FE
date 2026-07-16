@@ -1,9 +1,21 @@
 import getAuthHeader from "../components/auth/authHeader"
 
 const API_URL = `${import.meta.env.VITE_API_URL}/api/admin`
+const API_URL_VT = `${import.meta.env.VITE_API_URL}/api/vehicle-types`
 
 // ── UTILITY ERROR HANDLER ──────────────────────────────────────────────────
 async function handleResponse(response, defaultErrorMessage) {
+  // ── DUAL-STREAM STREAM CLONING FOR RAW LOGGING ────────────────────────────
+  const debugClone = response.clone();
+  try {
+    const rawText = await debugClone.text();
+    console.log(`%c[API RAW PAYLOAD] ${response.method || 'FETCH'} -> ${response.url} (${response.status})`, "color: #00bfff; font-weight: bold;");
+    console.log(rawText || "[Empty Response Body]");
+  } catch (logErr) {
+    console.warn("[Log Stream Clone Failed]:", logErr);
+  }
+  // ──────────────────────────────────────────────────────────────────────────
+
   if (!response.ok) {
     let detailError = ""
     try {
@@ -14,8 +26,7 @@ async function handleResponse(response, defaultErrorMessage) {
     }
     throw new Error(detailError ? `${defaultErrorMessage}: ${detailError}` : defaultErrorMessage)
   }
-  
-  // Return empty object on 204 No Content or empty responses
+
   if (response.status === 204) return true
   const text = await response.text()
   return text ? JSON.parse(text) : true
@@ -245,4 +256,72 @@ export async function updateUserRole(id, roleData) {
     body: JSON.stringify(roleData)
   })
   return handleResponse(response, `Không thể chuyển đổi vai trò hệ thống của tài khoản ID: ${id}`)
+}
+
+// ==========================================
+// VEHICLE TYPES APIs
+// ==========================================
+
+export async function getVehicleTypes() {
+  const response = await fetch(`${API_URL_VT}/admin`, {
+    method: "GET",
+    headers: {
+      ...getAuthHeader()
+    }
+  })
+  return handleResponse(response, "Không thể lấy danh sách loại xe hệ thống.")
+}
+
+export async function getVehicleTypeById(id) {
+  const response = await fetch(`${API_URL_VT}/admin/${id}`, {
+    method: "GET",
+    headers: {
+      ...getAuthHeader()
+    }
+  })
+  return handleResponse(response, `Không thể lấy thông tin chi tiết loại xe ID: ${id}`)
+}
+
+export async function createVehicleType(payload) {
+  const response = await fetch(`${API_URL_VT}`, {
+    method: "POST",
+    headers: {
+      ...getAuthHeader(),
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify(payload)
+  })
+  return handleResponse(response, "Không thể thêm mới loại xe hệ thống.")
+}
+
+export async function updateVehicleType(id, payload) {
+  const response = await fetch(`${API_URL_VT}/${id}`, {
+    method: "PUT",
+    headers: {
+      ...getAuthHeader(),
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify(payload)
+  })
+  return handleResponse(response, `Không thể cập nhật thông tin loại xe ID: ${id}`)
+}
+
+export async function activateVehicleType(id) {
+  const response = await fetch(`${API_URL_VT}/${id}/activate`, {
+    method: "POST",
+    headers: {
+      ...getAuthHeader()
+    }
+  })
+  return handleResponse(response, `Không thể kích hoạt hoạt động loại xe ID: ${id}`)
+}
+
+export async function deactivateVehicleType(id) {
+  const response = await fetch(`${API_URL_VT}/${id}/deactivate`, {
+    method: "POST",
+    headers: {
+      ...getAuthHeader()
+    }
+  })
+  return handleResponse(response, `Không thể vô hiệu hóa hoạt động loại xe ID: ${id}`)
 }
