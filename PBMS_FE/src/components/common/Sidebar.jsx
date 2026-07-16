@@ -4,7 +4,6 @@ import { getUser } from '../../services/authService'
 import {
   CarIcon,
   AlertIcon,
-  ClockIcon,
   BookIcon,
   PhoneIcon,
   ChartIcon,

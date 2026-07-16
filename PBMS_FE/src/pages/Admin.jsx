@@ -1,79 +1,80 @@
-import { useState, useEffect } from 'react'
+import { useEffect } from 'react'
+import { useSearchParams, useNavigate } from 'react-router-dom'
 import Navbar from '../components/common/Navbar'
 import Sidebar from '../components/common/Sidebar'
-import { IconCar, IconMotorbike, IconEbike } from '../components/svg/Icons'
 import '../styles/CheckIn.css'
 import '../styles/Dashboard.css'
 import TableFloor from '../components/common/TableFloor.jsx'
 import TablePolicy from '../components/common/TablePolicy.jsx'
 import TableUser from '../components/common/TableUser.jsx'
-{/*service import
-import { , } from '../services/'
-*/}
+import TableVehicleType from '../components/common/TableVehicleType.jsx'
+
 export default function Admin() {
-  // ── STATE MANAGEMENT ──────────────────────────────────────────────────────
-  // const [timePeriod, setTimePeriod] = useState('ngày') // 'day' | 'week' | 'month'
-  const [analyticsData, setAnalyticsData] = useState(null)
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState(null)
+  const [searchParams] = useSearchParams()
+  const navigate = useNavigate()
+  
+  // Lấy giá trị của tham số ?tab từ URL, mặc định hiển thị "users" (Người dùng)
+  const activeTab = searchParams.get('tab') || 'users'
 
-
-  // ── DATA DISPATCHER & LIFECYCLE ───────────────────────────────────────────
+  // Tự động chuyển hướng /admin thành /admin?tab=users để đồng bộ URL đẹp mắt
   useEffect(() => {
-    // Simulated ghost service execution cycle
-    const loadDashboardData = async () => {
-      setLoading(true)
-      try {
-        setLoading(false)
-      } catch (err) {
-        setError(err.message || 'Không thể tải thông tin tổng quan.')
-        setLoading(false)
-      }
+    if (!searchParams.has('tab')) {
+      navigate('/admin?tab=users', { replace: true })
     }
+  }, [searchParams, navigate])
 
-
-    loadDashboardData() //}, [timePeriod])
-  }, []);
-
-
-  if (loading) {
-    return (
-      <div className="sci-page sci-loading-state">
-        <p>Đang tải dữ liệu phân tích...</p>
-      </div>
-    )
+  // Hàm render động bảng tương ứng với tab đang chọn
+  const renderActiveTable = () => {
+    switch (activeTab) {
+      case 'users':
+        return <TableUser />
+      case 'policies':
+        return <TablePolicy />
+      case 'floors':
+        return <TableFloor />
+      case 'vehicle-types':
+        return <TableVehicleType />
+      default:
+        return <TableUser />
+    }
   }
 
+  // Hàm tự động đổi phụ đề header theo tab cho chuyên nghiệp
+  const getHeaderSubtitle = () => {
+    switch (activeTab) {
+      case 'users':
+        return 'Quản lý danh sách tài khoản, phân quyền và trạng thái người dùng.'
+      case 'policies':
+        return 'Cập nhật hệ thống nội quy bãi đỗ xe và các quy định biểu phí phạt.'
+      case 'floors':
+        return 'Thiết lập danh sách và trạng thái sức chứa của các tầng đỗ xe.'
+      case 'vehicle-types':
+        return 'Định cấu hình các loại phương tiện được phép hoạt động trong hệ thống.'
+      default:
+        return 'Quản lý cấu hình hệ thống PBMS.'
+    }
+  }
 
   return (
     <div className="sci-page">
       <Navbar isLoggedIn={true} />
 
-    <div className="sci-body">
+      <div className="sci-body">
         <Sidebar />
-      <main className="sci-main sci-dashboard-container">
-
-
-        <div className="sci-header-container">
-          <div>
-            <h1 className="sci-header-title">Hệ Thống PBMS</h1>
-            <p className="sci-header-subtitle">Quản lý tầng, chính sách và tài khoản người dùng.</p>
+        <main className="sci-main sci-dashboard-container">
+          <div className="sci-header-container">
+            <div>
+              <h1 className="sci-header-title">Hệ Thống PBMS</h1>
+              <p className="sci-header-subtitle">{getHeaderSubtitle()}</p>
+            </div>
           </div>
-        </div>
-        {error && <div className="sci-confirm-error">{error}</div>}
 
-        {/* Table Framework */}
-        <div className="">
-          <TableFloor />
-        </div>
-        <div className="">
-          <TablePolicy />
-        </div>
-        <div className="">
-          <TableUser />
-        </div>
-      </main>
-    </div>
+          {/* Chỉ render duy nhất bảng đang được kích hoạt */}
+          <div className="sci-table-wrapper">
+            {renderActiveTable()}
+          </div>
+        </main>
+      </div>
     </div>
   )
 }
