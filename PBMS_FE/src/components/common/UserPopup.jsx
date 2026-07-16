@@ -7,9 +7,13 @@ import {
     activateUser,
     deactivateUser
 } from '../../services/adminService';
+import {
+    IconEye
+} from '../../components/svg/Icons'
 
 const UserPopup = ({ userData, onClose, onRefresh }) => {
     const isEditMode = !!userData;
+    const [showPassword, setShowPassword] = useState(false);
 
     // SỬA LỖI 1: Đồng bộ hóa kiểu chữ thường (lowercase) để khớp hoàn toàn với select option
     const getInitialRole = () => {
@@ -27,12 +31,14 @@ const UserPopup = ({ userData, onClose, onRefresh }) => {
 
     const [submitting, setSubmitting] = useState(false);
     const [popupError, setPopupError] = useState(null);
+
     const ROLE_MAP = {
         admin: 'Quản trị viên',
         manager: 'Quản lý',
         staff: 'Nhân viên',
         driver: 'Người dùng',
     };
+
     const handleSubmit = async (e) => {
         e.preventDefault();
 
@@ -167,7 +173,7 @@ const UserPopup = ({ userData, onClose, onRefresh }) => {
                                 <label className="sci-form-label">Vai Trò (Role) <span className="sci-required">*</span></label>
                                 <select
                                     className="sci-form-input"
-                                    value={role} // Hoặc tên biến State quản lý role của bạn (ví dụ: userRole)
+                                    value={role}
                                     onChange={(e) => setRole(e.target.value)}
                                     disabled={submitting}
                                 >
@@ -218,14 +224,26 @@ const UserPopup = ({ userData, onClose, onRefresh }) => {
                                     {isEditMode ? "Mật Khẩu Mới" : "Mật Khẩu"}
                                     {!isEditMode && <span className="sci-required"> *</span>}
                                 </label>
-                                <input
-                                    type="password"
-                                    className="sci-form-input"
-                                    value={password}
-                                    onChange={(e) => setPassword(e.target.value)}
-                                    placeholder={isEditMode ? "Để trống nếu không đổi" : "Nhập mật khẩu khởi tạo"}
-                                    disabled={submitting}
-                                />
+
+                                {/* Cấu trúc cực kỳ sạch sẽ, không có inline-style */}
+                                <div className="sci-password-input-wrapper">
+                                    <input
+                                        type={showPassword ? "text" : "password"}
+                                        className="sci-form-input"
+                                        value={password}
+                                        onChange={(e) => setPassword(e.target.value)}
+                                        placeholder={isEditMode ? "Để trống nếu không đổi" : "Nhập mật khẩu khởi tạo"}
+                                        disabled={submitting}
+                                    />
+                                    <button
+                                        type="button"
+                                        className="login-eye-btn"
+                                        onClick={() => setShowPassword(v => !v)}
+                                        aria-label="Toggle password visibility"
+                                    >
+                                        <IconEye />
+                                    </button>
+                                </div>
                             </div>
 
                             <div className="sci-form-group">
@@ -233,14 +251,26 @@ const UserPopup = ({ userData, onClose, onRefresh }) => {
                                     Xác Nhận Mật Khẩu
                                     {!isEditMode && <span className="sci-required"> *</span>}
                                 </label>
-                                <input
-                                    type="password"
-                                    className="sci-form-input"
-                                    value={confirmPassword}
-                                    onChange={(e) => setConfirmPassword(e.target.value)}
-                                    placeholder={isEditMode ? "Để trống nếu không đổi" : "Nhập lại mật khẩu"}
-                                    disabled={submitting}
-                                />
+
+                                {/* Cấu trúc cực kỳ sạch sẽ, không có inline-style */}
+                                <div className="sci-password-input-wrapper">
+                                    <input
+                                        type={showPassword ? "text" : "password"}
+                                        className="sci-form-input"
+                                        value={confirmPassword}
+                                        onChange={(e) => setConfirmPassword(e.target.value)}
+                                        placeholder={isEditMode ? "Để trống nếu không đổi" : "Nhập lại mật khẩu"}
+                                        disabled={submitting}
+                                    />
+                                    <button
+                                        type="button"
+                                        className="login-eye-btn"
+                                        onClick={() => setShowPassword(v => !v)}
+                                        aria-label="Toggle password visibility"
+                                    >
+                                        <IconEye />
+                                    </button>
+                                </div>
                             </div>
                         </div>
                     </div>
