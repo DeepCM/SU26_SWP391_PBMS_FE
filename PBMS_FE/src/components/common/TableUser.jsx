@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import '../../styles/Table.css';
-import { getUsers, updateUser } from '../../services/adminService';
+import { getUsers, activateUser, deactivateUser } from '../../services/adminService';
 import UserPopup from './UserPopup';
 
 const TableUser = () => {
@@ -12,7 +12,12 @@ const TableUser = () => {
 
     const [showUserPopup, setShowUserPopup] = useState(false);
     const [selectedUser, setSelectedUser] = useState(null);
-
+    const ROLE_MAP = {
+        admin: 'Quản trị viên',
+        manager: 'Quản lý',
+        staff: 'Nhân viên',
+        driver: 'Người dùng',
+    };
     const handleCreate = () => {
         setSelectedUser(null);
         setShowUserPopup(true);
@@ -28,9 +33,12 @@ const TableUser = () => {
         if (!window.confirm(`Bạn có chắc muốn ${actionText} tài khoản này không?`)) return;
 
         try {
-            await updateUser(userItem.id, {
-                isActive: !userItem.isActive
-            });
+            // Sử dụng các API endpoint chuyên dụng thay thế cho hàm updateUser chung
+            if (userItem.isActive) {
+                await deactivateUser(userItem.id);
+            } else {
+                await activateUser(userItem.id);
+            }
 
             setAnalyticsData(prev => ({
                 ...prev,
@@ -59,9 +67,11 @@ const TableUser = () => {
         let processedItems = analyticsData.tableData.filter((row) => {
             if (!searchLower) return true;
             return (
+                row.id?.toString().includes(searchLower) ||
                 row.fullName?.toLowerCase().includes(searchLower) ||
                 row.email?.toLowerCase().includes(searchLower) ||
-                row.role?.toLowerCase().includes(searchLower)
+                row.phone?.toLowerCase().includes(searchLower) ||
+                (ROLE_MAP[row.role] || row.role)?.toLowerCase().includes(searchLower)
             );
         });
 
@@ -85,13 +95,18 @@ const TableUser = () => {
         try {
             const rawUsersList = await getUsers();
 
-            // Locate this block in loadTableData inside TableUser.jsx:
+            // Mape hóa toàn bộ thuộc tính trả về từ payload của hệ thống
             const mappedUsers = (rawUsersList || []).map((user) => ({
                 id: user.id,
                 fullName: user.fullName || '',
                 email: user.email || '',
-                role: user.role?.toLowerCase() || 'user', // Safe-mapped to lowercase
-                isActive: user.isActive ?? true
+                phone: user.phone || '-',
+                role: user.role?.toLowerCase() || 'user',
+                isEmailVerified: user.isEmailVerified ?? false,
+                isActive: user.isActive ?? true,
+                createdAt: user.createdAt ? new Date(user.createdAt).toLocaleString('vi-VN') : '-',
+                updatedAt: user.updatedAt || '',
+                avatarUrl: user.avatarUrl || ''
             }));
 
             setAnalyticsData({
@@ -134,7 +149,7 @@ const TableUser = () => {
                     <input
                         type="text"
                         className="sci-search-input"
-                        placeholder="Tìm tên, email, vai trò..."
+                        placeholder="Tìm ID, tên, email, SĐT, vai trò..."
                         value={searchTerm}
                         onChange={(e) => setSearchTerm(e.target.value)}
                     />
@@ -148,6 +163,12 @@ const TableUser = () => {
                 <table className="sci-data-table">
                     <thead>
                         <tr>
+                            {/* <th 
+                                className={`sci-sortable ${sortConfig.key === 'id' ? `sci-sortable-${sortConfig.direction}` : ''}`}
+                                onClick={() => requestSort('id')}
+                            >
+                                ID
+                            </th> */}
                             <th
                                 className={`sci-sortable ${sortConfig.key === 'fullName' ? `sci-sortable-${sortConfig.direction}` : ''}`}
                                 onClick={() => requestSort('fullName')}
@@ -161,33 +182,68 @@ const TableUser = () => {
                                 Email
                             </th>
                             <th
+                                className={`sci-sortable ${sortConfig.key === 'phone' ? `sci-sortable-${sortConfig.direction}` : ''}`}
+                                onClick={() => requestSort('phone')}
+                            >
+                                Số Điện Thoại
+                            </th>
+                            <th
                                 className={`sci-sortable ${sortConfig.key === 'role' ? `sci-sortable-${sortConfig.direction}` : ''}`}
                                 onClick={() => requestSort('role')}
                             >
                                 Vai Trò
                             </th>
+                            {/* <th
+                                className={`sci-sortable ${sortConfig.key === 'isEmailVerified' ? `sci-sortable-${sortConfig.direction}` : ''}`}
+                                onClick={() => requestSort('isEmailVerified')}
+                            >
+                                Xác Thực
+                            </th> */}
+                            {/* <th
+                                className={`sci-sortable ${sortConfig.key === 'isActive' ? `sci-sortable-${sortConfig.direction}` : ''}`}
+                                onClick={() => requestSort('isActive')}
+                            >
+                                Trạng Thái
+                            </th> */}
+                            {/* <th
+                                className={`sci-sortable ${sortConfig.key === 'createdAt' ? `sci-sortable-${sortConfig.direction}` : ''}`}
+                                onClick={() => requestSort('createdAt')}
+                            >
+                                Ngày Tạo
+                            </th> */}
                             <th className="sci-text-right">Hành Động</th>
                         </tr>
                     </thead>
                     <tbody>
                         {getFilteredAndSortedData().length === 0 ? (
                             <tr>
-                                <td colSpan="4" className="sci-table-empty-row">
+                                <td colSpan="9" className="sci-table-empty-row">
                                     Không tìm thấy người dùng nào phù hợp
                                 </td>
                             </tr>
                         ) : (
                             getFilteredAndSortedData().map((row) => (
                                 <tr key={row.id} className={`sci-table-row ${row.isActive ? 'sci-row-active' : 'sci-row-inactive'}`}>
-                                    <td className="sci-cell-id">
-                                        {row.fullName || '-'}
-                                    </td>
-                                    <td className="sci-font-medium">{row.email || '-'}</td>
+                                    {/*<td className="sci-cell-id">{row.id}</td> */}
+                                    <td className="sci-font-medium">{row.fullName || '-'}</td>
+                                    <td>{row.email || '-'}</td>
+                                    <td>{row.phone || '-'}</td>
                                     <td>
                                         <span className={`sci-badge-role ${row.role?.toLowerCase()}`}>
-                                            {row.role}
+                                            {ROLE_MAP[row.role] || row.role}
                                         </span>
                                     </td>
+                                    {/* <td>
+                                        <span className={`sci-badge-verified ${row.isEmailVerified ? 'verified' : 'unverified'}`}>
+                                            {row.isEmailVerified ? 'Đã xác thực' : 'Chưa xác thực'}
+                                        </span>
+                                    </td> */}
+                                    {/* <td>
+                                        <span className={`sci-badge-status ${row.isActive ? 'active' : 'inactive'}`}>
+                                            {row.isActive ? 'Hoạt động' : 'Bị khóa'}
+                                        </span>
+                                    </td> */}
+                                    {/* <td className="sci-cell-date">{row.createdAt}</td> */}
                                     <td className="sci-text-right">
                                         <div className="sci-table-actions-wrapper">
                                             <button className="sci-btn-edit" onClick={() => handleUpdate(row)}>

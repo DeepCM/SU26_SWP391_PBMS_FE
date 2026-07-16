@@ -4,7 +4,6 @@ import { getUser } from '../../services/authService'
 import {
   CarIcon,
   AlertIcon,
-  ClockIcon,
   BookIcon,
   PhoneIcon,
   ChartIcon,
@@ -18,7 +17,7 @@ import '../../styles/CheckIn.css'
 const STAFF_ITEMS = [
   { path: '/checkin', label: 'Check-in', Icon: CarIcon },
   { path: '/checkout', label: 'Check-out', Icon: CarIcon },
-  { path: '/incidents', label: 'Xử lý sự cố', Icon: AlertIcon }, //, badge: 2
+  { path: '/incidents', label: 'Xử lý sự cố', Icon: AlertIcon },
 ]
 
 const STAFF_SUPPORT_ITEMS = [
@@ -28,14 +27,17 @@ const STAFF_SUPPORT_ITEMS = [
 
 const MANAGER_ITEMS = [
   { path: '/dashboard', label: 'Thống kê', Icon: ChartIcon },
-  { path: '/manager', label: 'Quản Lý', Icon: AlertIcon },
+  { path: '/manager?tab=pricing', label: 'Bảng giá', Icon: BookIcon }, // Chuyển hướng thẳng tới tab bảng giá
+  { path: '/manager?tab=incidents', label: 'Sự cố', Icon: AlertIcon },  // Chuyển hướng thẳng tới tab sự cố
   { path: '/reviews', label: 'Nhận phản hồi', Icon: AlertIcon },
 ]
 
+// Định nghĩa menu Admin tương ứng với từng bảng
 const ADMIN_ITEMS = [
-  { path: '/admin', label: 'Quản lý', Icon: ChartIcon },
-  // { path: '/users', label: 'Người dùng', Icon: UsersIcon },
-  // { path: '/settings', label: 'Cấu hình hệ thống', Icon: SettingsIcon },
+  { path: '/admin?tab=users', label: 'Người dùng', Icon: UsersIcon },
+  { path: '/admin?tab=policies', label: 'Chính sách', Icon: BookIcon },
+  { path: '/admin?tab=floors', label: 'Sơ đồ tầng', Icon: SettingsIcon },
+  { path: '/admin?tab=vehicle-types', label: 'Loại xe', Icon: CarIcon },
 ]
 
 const STORAGE_KEY = 'sidebar-collapsed'
@@ -102,6 +104,12 @@ function Sidebar() {
 
   if (!items) return null
 
+  // Đọc đầy đủ cả Pathname và Search Query (ví dụ: "/admin?tab=users") để làm nổi bật menu tương ứng
+  const currentFullUrl = location.pathname + location.search
+
+  // Nếu người dùng chỉ vào "/admin" trống không, tự động làm sáng tab "Người dùng" làm mặc định
+  const activeHighlightPath = currentFullUrl === '/admin' ? '/admin?tab=users' : currentFullUrl
+
   return (
     <aside className={`sci-sidebar ${collapsed ? 'sci-sidebar--collapsed' : ''}`}>
       <button
@@ -116,7 +124,7 @@ function Sidebar() {
       <SidebarSection
         title="CHỨC NĂNG"
         items={items}
-        currentPath={location.pathname}
+        currentPath={activeHighlightPath}
         onNavigate={handleNavigate}
         collapsed={collapsed}
       />
@@ -125,7 +133,7 @@ function Sidebar() {
         <SidebarSection
           title="HỖ TRỢ"
           items={STAFF_SUPPORT_ITEMS}
-          currentPath={location.pathname}
+          currentPath={activeHighlightPath}
           onNavigate={handleNavigate}
           collapsed={collapsed}
         />

@@ -9,10 +9,15 @@ const PolicyPopup = ({ policyData, onClose, onRefresh }) => {
     // Default to empty string or the existing policyType
     const [policyType, setPolicyType] = useState(policyData?.policyType || '');
     const [content, setContent] = useState(policyData?.content || '');
-
+    const isActive = policyData?.isActive ?? true;
     const [submitting, setSubmitting] = useState(false);
     const [popupError, setPopupError] = useState(null);
-
+    const POLICY_TYPE_MAP = {
+        parking_rules: 'Quy định giữ xe',
+        deposit_refund: 'Chính sách hoàn tiền cọc',
+        fine: 'Quy định xử phạt vi phạm',
+        operating_hours: 'Giờ hoạt động'
+    };
     const handleSubmit = async (e) => {
         e.preventDefault();
 
@@ -33,11 +38,12 @@ const PolicyPopup = ({ policyData, onClose, onRefresh }) => {
         setPopupError(null);
 
         try {
+            // Khôi phục payload chuẩn 4 trường theo Swagger của bạn
             const payload = {
+                policyType: policyType, // Sẽ truyền giá trị Enum đã khớp ở Bước 2
                 title: policyTitle.trim(),
-                policyType: policyType, // Already strictly mapped from dropdown
                 content: content.trim(),
-                isActive: policyData ? policyData.isActive : true
+                isActive: isActive
             };
 
             if (isEditMode) {
@@ -50,7 +56,17 @@ const PolicyPopup = ({ policyData, onClose, onRefresh }) => {
             onClose();
         } catch (err) {
             console.error("Policy transaction failed:", err);
-            setPopupError(err.message || "Xảy ra lỗi trong quá trình xử lý.");
+
+            // BỘ CÀO LỖI: Đảm bảo mọi loại mã lỗi (kể cả lỗi validation) sẽ hiển thị lên UI banner
+            const errorBody = err.response?.data || err.data || err;
+            const serverValidationError = errorBody?.errors;
+
+            if (serverValidationError) {
+                const extractedMessages = Object.values(serverValidationError).flat().join(" ");
+                setPopupError(extractedMessages);
+            } else {
+                setPopupError(errorBody?.message || err.message || "Xảy ra lỗi trong quá trình xử lý.");
+            }
         } finally {
             setSubmitting(false);
         }
@@ -94,10 +110,11 @@ const PolicyPopup = ({ policyData, onClose, onRefresh }) => {
                                     disabled={submitting}
                                 >
                                     <option value="">-- Chọn loại chính sách --</option>
-                                    <option value="parking_rules">Quy định giữ xe (parking_rules)</option>
-                                    <option value="deposit_refund">Chính sách hoàn tiền cọc (deposit_refund)</option>
-                                    <option value="fine">Quy định xử phạt vi phạm (fine)</option>
-                                    <option value="operating_hours">Giờ hoạt động (operating_hours)</option>
+                                    {Object.entries(POLICY_TYPE_MAP).map(([key, label]) => (
+                                        <option key={key} value={key}>
+                                            {label}
+                                        </option>
+                                    ))}
                                 </select>
                             </div>
                         </div>
