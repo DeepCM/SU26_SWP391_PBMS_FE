@@ -5,26 +5,21 @@ import '../styles/Home.css'
 import Navbar from '../components/common/Navbar'
 import BookingPopup from '../components/common/BookingPopup'
 import { getVehicleTypes, getAvailableSlots, getPricingPreview } from '../services/vehicleTypeService'
-import { getMyBookings } from '../services/bookingService'
 import { getMyVehicles } from '../services/vehicleService'
-import { } from '../services/paymentService'
 import {
   IconCar,
   IconMotorbike,
   IconEbike,
-  IconEye,
-  IconExpand,
-  IconClock,
-  IconPin,
-  IconArrow,
 } from '../components/svg/Icons'
-function Home({ }) {
 
+function Home() {
   const navigate = useNavigate();
-  const { register, handleSubmit, setValue, watch
-  } = useForm({
+  const [searchParams] = useSearchParams();
+  const paymentStatus = searchParams.get('payment');
+
+  const { register, handleSubmit, setValue } = useForm({
     defaultValues: {
-      vehicleTypeID: 'Xe máy',
+      vehicleTypeID: '', // Sẽ được cập nhật động sau khi fetch API
       licensePlate: '',
       scheduledCheckin: ''
     }
@@ -33,6 +28,11 @@ function Home({ }) {
   const [loading, setLoading] = useState(true)
   const [selectedVehicle, setSelectedVehicle] = useState('')
   const [vehicleTypes, setVehicleTypes] = useState([])
+  const [slotStatus, setSlotStatus] = useState([])
+  const [vehicles, setVehicles] = useState([])
+  const [showBookingPopup, setShowBookingPopup] = useState(false);
+  const [isLoggedIn, setIsLoggedIn] = useState(!!localStorage.getItem("token"))
+
   const VEHICLE_NAME_MAP = {
     "Xe máy": {
       icon: <IconMotorbike />,
@@ -46,7 +46,6 @@ function Home({ }) {
       icon: <IconCar />,
       label: " Ô tô"
     }
-
   };
 
   const FLOOR_TO_VEHICLE_MAP = {
@@ -54,9 +53,8 @@ function Home({ }) {
     "Tầng B2": " - Xe máy điện",
     "Tầng B3": " - Ô tô"
   };
-  const [slotStatus, setSlotStatus] = useState([])
-  const [vehicles, setVehicles] = useState([])
-  const [parkingData, setParkingData] = useState(true)
+
+  // Khởi tạo dữ liệu trang Home
   useEffect(() => {
     async function initializeHome() {
       try {
@@ -66,35 +64,53 @@ function Home({ }) {
 
         if (localStorage.getItem("token")) {
           try {
-            const vehicles = await getMyVehicles();
-            setVehicles(vehicles);
+            const myVehicles = await getMyVehicles();
+            setVehicles(myVehicles);
           } catch (err) {
             console.error("Failed to load vehicles:", err);
           }
         }
+
         if (types.length > 0) {
           setSelectedVehicle(types[0].name);
-          setValue('vehicleTypeID', types[0].id);
+          setValue('vehicleTypeID', types[0].id); // Gán giá trị ID thực tế vào form
         }
 
         const statusData = await Promise.all(
           types.map(async (type) => {
-            const slots = await getAvailableSlots(type.id);
-            const pricing = await getPricingPreview(type.id);
+            // 1. Khởi tạo giá trị mặc định đề phòng API lỗi
+            let slots = { totalAvailableSlots: 0, floors: [] };
+            let pricing = { pricePerHour: 0, depositAmount: 0 };
 
-            // Calculate the total across all floors
-            const totalSlots = slots.floors.reduce((sum, floor) => sum + floor.totalSlots, 0);
+            // 2. Gọi API lấy số chỗ trống (Có try/catch riêng)
+            try {
+              slots = await getAvailableSlots(type.id);
+            } catch (slotErr) {
+              console.warn(`Không thể tải sơ đồ chỗ cho loại xe ${type.name} (ID: ${type.id}):`, slotErr);
+            }
+
+            // 3. Gọi API lấy thông tin giá (Có try/catch riêng)
+            // Nếu Admin chưa cấu hình bảng giá, hệ thống vẫn chạy bình thường với giá = 0
+            try {
+              pricing = await getPricingPreview(type.id);
+            } catch (pricingErr) {
+              console.warn(`Không thể tải bảng giá cho loại xe ${type.name} (ID: ${type.id}):`, pricingErr);
+            }
+
+            // Tính tổng số slot trên các tầng dựa trên dữ liệu an toàn thu được
+            const totalSlots = (slots.floors || []).reduce((sum, floor) => sum + (floor.totalSlots || 0), 0);
 
             return {
               ...type,
-              available: slots.totalAvailableSlots,
-              total: totalSlots, // Use the calculated sum
-              floors: slots.floors,
-              pricePerHour: pricing.pricePerHour,
-              deposit: pricing.depositAmount
+              available: slots.totalAvailableSlots || 0,
+              total: totalSlots,
+              floors: slots.floors || [],
+              pricePerHour: pricing.pricePerHour || 0,
+              deposit: pricing.depositAmount || 0
             };
           })
         );
+
         setSlotStatus(statusData);
       } catch (err) {
         console.error("Failed to load init data:", err);
@@ -105,6 +121,23 @@ function Home({ }) {
     initializeHome();
   }, [setValue]);
 
+  // Lắng nghe trạng thái đăng nhập
+  useEffect(() => {
+    setIsLoggedIn(!!localStorage.getItem("token"))
+  }, [])
+
+  // Xử lý phản hồi từ cổng thanh toán (URL query parameters)
+  useEffect(() => {
+    if (paymentStatus === 'success') {
+      alert("Thanh toán thành công!");
+      navigate('/bookings');
+    } else if (paymentStatus === 'cancel') {
+      alert("Giao dịch đã bị hủy.");
+      navigate('/', { replace: true });
+    }
+  }, [paymentStatus, navigate]);
+
+  // Lọc thông tin của tầng dựa trên loại xe đang chọn
   const selectedSlotStatus = slotStatus.find(type => type.name === selectedVehicle)
   const allFloors = (selectedSlotStatus?.floors || []).map(floor => ({
     id: floor.floorId,
@@ -113,39 +146,22 @@ function Home({ }) {
     badgeType: floor.hasAvailability ? "green" : "red",
     tags: [`Tầng ${floor.floorNumber}`],
     total: floor.totalSlots,
-    inUse: Math.round(((floor.occupiedSlots) + (floor.reservedSlots))),
-    available: Math.round((floor.totalSlots)-((floor.occupiedSlots) + (floor.reservedSlots))),
+    inUse: Math.round(floor.occupiedSlots + floor.reservedSlots),
+    available: Math.round(floor.totalSlots - (floor.occupiedSlots + floor.reservedSlots)),
     deposit: selectedSlotStatus?.deposit,
     pricePerHour: selectedSlotStatus?.pricePerHour,
     fillPercent: floor.totalSlots > 0
-      ? Math.round(
-        ((floor.availableSlots) / floor.totalSlots) * 100
-      )
+      ? Math.round((floor.availableSlots / floor.totalSlots) * 100)
       : 0,
     fillColor: floor.availableSlots > 0 ? "#22C55E" : "#EF4444"
   }));
 
-  const selectedType = vehicleTypes.find(
-    x => x.name === selectedVehicle
-  )
-  const [pendingBooking, setPendingBooking] = useState(null);
-  const [showBookingPopup, setShowBookingPopup] = useState(false);
-
-  const handleProceedToPayment = (bookingData) => {
-    setPendingBooking(bookingData); // Save the data collected from BookingPopup
-    setShowBookingPopup(false);
-  };
-  const [isLoggedIn, setIsLoggedIn] = useState(
-    !!localStorage.getItem("token")
-  )
-
-  useEffect(() => {
-    setIsLoggedIn(!!localStorage.getItem("token"))
-  }, [])
+  const selectedType = vehicleTypes.find(x => x.name === selectedVehicle)
 
   const onSubmit = (data) => {
-    console.log(data)
+    console.log("Form Submitted: ", data)
   }
+
   const handleBookingClick = () => {
     if (!selectedSlotStatus) {
       alert("Không tìm thấy loại phương tiện")
@@ -161,90 +177,55 @@ function Home({ }) {
       alert("Vui lòng đăng nhập để đặt chỗ.");
       return;
     }
+
     const hasMatchingVehicle = vehicles.some((v) => {
       const typeMatches = v.vehicleTypeName === selectedType.name;
       const isAvailable = v.hasActiveBooking === 'false' || v.hasActiveBooking === false;
       return typeMatches && isAvailable;
     });
-    
+
     if (!hasMatchingVehicle) {
-      alert("Bạn chưa đăng kí phương tiện nào thuộc loại này hoặc phương tiện đã có lịch đặt.");
+      alert("Bạn chưa đăng ký phương tiện nào thuộc loại này hoặc phương tiện đã có lịch đặt.");
       return;
     }
 
     setShowBookingPopup(true)
   }
 
-  const [searchParams] = useSearchParams();
-  const paymentStatus = searchParams.get('payment');
-
-  useEffect(() => {
-    if (paymentStatus === 'success') {
-      // 1. Show success alert/popup
-      alert("Thanh toán thành công!");
-      // 2. Redirect to bookings page
-      navigate('/bookings');
-    } else if (paymentStatus === 'cancel') {
-      // Show local state alert instead of redirecting
-      alert("Giao dịch đã bị hủy.");
-      // Optional: Clean the URL
-      navigate('/', { replace: true });
-    }
-  }, [paymentStatus, navigate]);
-
   if (loading) {
-    return <div>Loading...</div>
+    return <div className="loading-container">Loading...</div>
   }
+
   return (
     <div className="page-wrapper">
-      {/* Navbar */}
-      <Navbar
-        isLoggedIn={isLoggedIn}
-      />
+      <Navbar isLoggedIn={isLoggedIn} />
 
-      {/* Hero */}
+      {/* Hero Section */}
       <section className="hero-section">
         <div className="hero-inner">
           <div className="hero-left">
             <h1 className="hero-title">Đặt chỗ đỗ xe nhanh, tiện lợi</h1>
-            <form
-              className="search-card"
-              onSubmit={handleSubmit(onSubmit)}
-            >
+            <form className="search-card" onSubmit={handleSubmit(onSubmit)}>
               <div className="vehicle-tabs">
                 {vehicleTypes.map(vehicle => (
                   <button
                     type="button"
                     key={vehicle.id}
-                    className={`vtab ${selectedVehicle === vehicle.name
-                      ? 'vtab--active'
-                      : ''
-                      }`}
+                    className={`vtab ${selectedVehicle === vehicle.name ? 'vtab--active' : ''}`}
                     onClick={() => {
                       setSelectedVehicle(vehicle.name)
-                      setValue('vehicleType', vehicle.name)
+                      setValue('vehicleTypeID', vehicle.id) // SỬA: Gán chính xác 'vehicleTypeID' bằng ID của xe
                     }}
                   >
-                    {VEHICLE_NAME_MAP[vehicle.name].icon}
-                    {VEHICLE_NAME_MAP[vehicle.name].label || vehicle.name}
-
-                    <input
-                      type="hidden"
-                      {...register('vehicleType')}
-                    />
+                    {VEHICLE_NAME_MAP[vehicle.name]?.icon}
+                    {VEHICLE_NAME_MAP[vehicle.name]?.label || vehicle.name}
                   </button>
                 ))}
               </div>
-              {/*
-              <div className="time-row">
-                <div className="time-field">
-                  <span className="time-label">Giờ vào</span>
-                  <span className="time-value">
-                    {parkingData?.entryTime || ''}
-                  </span>
-                </div>
-              </div>
-                  */}
+
+              {/* input ẩn đồng bộ giá trị với React Hook Form */}
+              <input type="hidden" {...register('vehicleTypeID')} />
+
               <button
                 type="submit"
                 className="btn-book"
@@ -253,6 +234,7 @@ function Home({ }) {
                 Đặt chỗ ngay
               </button>
             </form>
+
             {showBookingPopup && (
               <BookingPopup
                 selectedVehicle={selectedVehicle}
@@ -262,6 +244,7 @@ function Home({ }) {
             )}
           </div>
 
+          {/* Status Card (Hôm nay) */}
           <div className="status-card">
             <p className="status-card-title">TÌNH TRẠNG HÔM NAY</p>
 
@@ -269,17 +252,14 @@ function Home({ }) {
               <div key={type.id}>
                 <div className="status-row">
                   <span className="status-vehicle">
-                    {VEHICLE_NAME_MAP[type.name].icon} {VEHICLE_NAME_MAP[type.name].label || type.vehicleType}
+                    {VEHICLE_NAME_MAP[type.name]?.icon} {VEHICLE_NAME_MAP[type.name]?.label || type.name}
                   </span>
 
                   <div className="status-count-group">
                     <span className="status-count">
                       {type.available}/{type.total}
                     </span>
-
-                    <span className="status-unit">
-                      chỗ trống
-                    </span>
+                    <span className="status-unit">chỗ trống</span>
                   </div>
                 </div>
 
@@ -290,13 +270,14 @@ function Home({ }) {
             ))}
           </div>
         </div>
-      </section >
+      </section>
 
       {/* Floor Status */}
-      < section className="floors-section" >
+      <section className="floors-section">
         <h2 className="section-title">Tình trạng các tầng đỗ xe</h2>
         <div className="floor-grid">
-          {allFloors.map(floor => (
+          {/* .slice(0, 4) đảm bảo render tối đa 4 card */}
+          {allFloors.slice(0, 4).map(floor => (
             <FloorCard
               key={floor.id}
               name={floor.name}
@@ -306,18 +287,16 @@ function Home({ }) {
               available={floor.available}
               inUse={floor.inUse}
               total={floor.total}
-              deposit={floor.deposit}
-              pricePerHour={floor.pricePerHour}
               fillPercent={floor.fillPercent}
               fillColor={floor.fillColor}
               FLOOR_TO_VEHICLE_MAP={FLOOR_TO_VEHICLE_MAP}
             />
           ))}
         </div>
-      </section >
+      </section>
 
-      {/* Bottom Row */}
-      < section className="bottom-section" >
+      {/* Pricing & Announcements */}
+      <section className="bottom-section">
         <div className="pricing-card">
           <h3 className="card-heading">Bảng giá vé lượt</h3>
           <table className="pricing-table">
@@ -340,7 +319,7 @@ function Home({ }) {
           </table>
         </div>
 
-        <div className="announcements-card">
+        {/* <div className="announcements-card">
           <h3 className="card-heading">Thông báo &amp; vận hành</h3>
           <ul className="announcement-list">
             <li className="announcement-item announcement-item--blue">
@@ -356,14 +335,13 @@ function Home({ }) {
               <span className="announcement-date">01/05/2026</span>
             </li>
           </ul>
-        </div>
-      </section >
-    </div >
+        </div> */}
+      </section>
+    </div>
   )
 }
 
-function FloorCard({ name, badge, badgeType, tags, available, inUse, total, deposit, pricePerHour, fillPercent, fillColor, FLOOR_TO_VEHICLE_MAP }) {
-
+function FloorCard({ name, badge, badgeType, tags, available, inUse, total, fillPercent, fillColor, FLOOR_TO_VEHICLE_MAP }) {
   return (
     <div className="floor-card">
       <div className="floor-card-header">
@@ -373,6 +351,8 @@ function FloorCard({ name, badge, badgeType, tags, available, inUse, total, depo
       <div className="floor-tags">
         {tags.map(t => <span key={t} className="floor-tag">{t}</span>)}
       </div>
+
+      {/* Chỉ giữ lại các thông số số lượng đỗ xe thực tế */}
       <div className="floor-stats">
         <div className="floor-stat">
           <span className="floor-stat-number">{total}</span>
@@ -386,16 +366,8 @@ function FloorCard({ name, badge, badgeType, tags, available, inUse, total, depo
           <span className="floor-stat-number">{inUse}</span>
           <span className="floor-stat-label">Đang dùng</span>
         </div>
-
-        <div className="floor-stat">
-          <span className="floor-stat-number">{deposit?.toLocaleString()} VNĐ</span>
-          <span className="floor-stat-label">Giá cọc</span>
-        </div>
-        <div className="floor-stat">
-          <span className="floor-stat-number">{pricePerHour?.toLocaleString()} VNĐ</span>
-          <span className="floor-stat-label">Giá mỗi giờ</span>
-        </div>
       </div>
+
       <div className="floor-bar-bg">
         <div className="floor-bar-fill" style={{ width: `${fillPercent}%`, background: fillColor }} />
       </div>

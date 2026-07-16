@@ -688,6 +688,49 @@
   /* Slight padding increase to balance secondary lines nicely */
 }
 
+/* Container bọc ngoài Input và Nút mắt */
+.sci-password-input-wrapper {
+  position: relative;
+  width: 100%;
+}
+
+/* Tùy chỉnh riêng cho ô input nhập mật khẩu để tránh đè chữ lên icon */
+.sci-password-input-wrapper .sci-form-input {
+  padding-right: 40px !important;
+  /* Tạo khoảng trống bên phải */
+  width: 100%;
+}
+
+/* Nút bấm ẩn/hiện mật khẩu */
+.sci-password-input-wrapper .login-eye-btn {
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  /* Căn giữa hoàn hảo theo chiều dọc */
+  background: none;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  padding: 0;
+  opacity: 0.7;
+  transition: opacity 0.2s ease;
+}
+
+.sci-password-input-wrapper .login-eye-btn:hover {
+  opacity: 1;
+}
+
+/* Đảm bảo icon SVG bên trong có kích thước chuẩn */
+.sci-password-input-wrapper .login-eye-btn svg {
+  width: 20px;
+  height: 20px;
+  display: block;
+}
+
 /* ========================================================================= */
 /* 5. RESPONSIVE BREAKPOINTS                                                 */
 /* ========================================================================= */
