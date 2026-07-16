@@ -18,6 +18,7 @@ const STAFF_ITEMS = [
   { path: '/checkin', label: 'Check-in', Icon: CarIcon },
   { path: '/checkout', label: 'Check-out', Icon: CarIcon },
   { path: '/incidents', label: 'Xử lý sự cố', Icon: AlertIcon },
+  { path: '/parking-history', label: 'Lịch sử', Icon: ClockIcon },
 ]
 
 const STAFF_SUPPORT_ITEMS = [
@@ -30,6 +31,7 @@ const MANAGER_ITEMS = [
   { path: '/manager?tab=pricing', label: 'Bảng giá', Icon: BookIcon }, // Chuyển hướng thẳng tới tab bảng giá
   { path: '/manager?tab=incidents', label: 'Sự cố', Icon: AlertIcon },  // Chuyển hướng thẳng tới tab sự cố
   { path: '/reviews', label: 'Nhận phản hồi', Icon: AlertIcon },
+  { path: '/parking-history', label: 'Lịch sử', Icon: ClockIcon },
 ]
 
 // Định nghĩa menu Admin tương ứng với từng bảng
