@@ -292,7 +292,7 @@
 
 .sci-donut-track {
   fill: none;
-  stroke: #cecfd8;
+  stroke: #cccdd7;
   stroke-width: 16;
 }
 
@@ -355,11 +355,15 @@
 }
 
 .bg-green {
-  background-color: #10b981;
+  background-color: #c1c2cd;
 }
 
 .bg-red {
   background-color: #ef4444;
+}
+
+.bg-yellow {
+  background-color: #eeea10;
 }
 
 .bg-blue {
@@ -393,15 +397,13 @@
 /* ========================================================================= */
 /* TWIN DONUT ARCHITECTURE REFACTORS                                        */
 /* ========================================================================= */
-
-/* Remove the old hardcoded static stroke-dashoffsets so the dynamic values can take effect */
 .sci-segment-occupied {
-  stroke: #ef4444;
+  stroke: #efec44;
   stroke-linecap: round;
 }
 
 .sci-segment-reserved-ratio {
-  stroke: #3b82f6;
+  stroke: #c1c2cd;
   stroke-linecap: round;
 }
 
@@ -442,7 +444,7 @@
 }
 
 .sci-grid-line {
-  stroke: #f1f5f9;
+  stroke: #becad5;
   stroke-width: 1.5;
   stroke-dasharray: 4 4;
 }

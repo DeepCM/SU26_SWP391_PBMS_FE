@@ -286,7 +286,7 @@ export default function Dashboard() {
                         <span className="sci-legend-txt">Đặt trước: <strong>{globalReserved}</strong> ({reservedRatio}%)</span>
                       </div>
                       <div className="sci-legend-item">
-                        <span className="sci-legend-marker bg-red"></span>
+                        <span className="sci-legend-marker bg-yellow"></span>
                         <span className="sci-legend-txt">Xe thực tế: <strong>{globalOccupied}</strong> ({occupiedRatio}%)</span>
                       </div>
                     </div>
