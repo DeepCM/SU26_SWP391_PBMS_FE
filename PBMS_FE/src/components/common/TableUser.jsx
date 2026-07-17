@@ -12,12 +12,24 @@ const TableUser = () => {
 
     const [showUserPopup, setShowUserPopup] = useState(false);
     const [selectedUser, setSelectedUser] = useState(null);
+
     const ROLE_MAP = {
         admin: 'Quản trị viên',
         manager: 'Quản lý',
         staff: 'Nhân viên',
         driver: 'Người dùng',
     };
+
+    // Hàm lấy ID của Admin đang đăng nhập từ bộ nhớ tạm localStorage
+    const getCurrentAdminId = () => {
+        try {
+            const auth = JSON.parse(localStorage.getItem('auth') || '{}');
+            return auth?.user?.id || null;
+        } catch (e) {
+            return null;
+        }
+    };
+
     const handleCreate = () => {
         setSelectedUser(null);
         setShowUserPopup(true);
@@ -29,11 +41,18 @@ const TableUser = () => {
     };
 
     const handleToggleStatus = async (userItem) => {
+        const currentAdminId = getCurrentAdminId();
+
+        // CHẶN ADMIN TỰ VÔ HIỆU HÓA CHÍNH MÌNH TỪ BẢN GHI DANH SÁCH BẢNG
+        if (userItem.isActive && String(userItem.id) === String(currentAdminId)) {
+            alert("Bạn không thể tự vô hiệu hóa tài khoản quản trị đang đăng nhập!");
+            return;
+        }
+
         const actionText = userItem.isActive ? 'vô hiệu hóa' : 'kích hoạt';
         if (!window.confirm(`Bạn có chắc muốn ${actionText} tài khoản này không?`)) return;
 
         try {
-            // Sử dụng các API endpoint chuyên dụng thay thế cho hàm updateUser chung
             if (userItem.isActive) {
                 await deactivateUser(userItem.id);
             } else {
@@ -95,7 +114,6 @@ const TableUser = () => {
         try {
             const rawUsersList = await getUsers();
 
-            // Mape hóa toàn bộ thuộc tính trả về từ payload của hệ thống
             const mappedUsers = (rawUsersList || []).map((user) => ({
                 id: user.id,
                 fullName: user.fullName || '',
@@ -163,12 +181,6 @@ const TableUser = () => {
                 <table className="sci-data-table">
                     <thead>
                         <tr>
-                            {/* <th 
-                                className={`sci-sortable ${sortConfig.key === 'id' ? `sci-sortable-${sortConfig.direction}` : ''}`}
-                                onClick={() => requestSort('id')}
-                            >
-                                ID
-                            </th> */}
                             <th
                                 className={`sci-sortable ${sortConfig.key === 'fullName' ? `sci-sortable-${sortConfig.direction}` : ''}`}
                                 onClick={() => requestSort('fullName')}
@@ -193,38 +205,19 @@ const TableUser = () => {
                             >
                                 Vai Trò
                             </th>
-                            {/* <th
-                                className={`sci-sortable ${sortConfig.key === 'isEmailVerified' ? `sci-sortable-${sortConfig.direction}` : ''}`}
-                                onClick={() => requestSort('isEmailVerified')}
-                            >
-                                Xác Thực
-                            </th> */}
-                            {/* <th
-                                className={`sci-sortable ${sortConfig.key === 'isActive' ? `sci-sortable-${sortConfig.direction}` : ''}`}
-                                onClick={() => requestSort('isActive')}
-                            >
-                                Trạng Thái
-                            </th> */}
-                            {/* <th
-                                className={`sci-sortable ${sortConfig.key === 'createdAt' ? `sci-sortable-${sortConfig.direction}` : ''}`}
-                                onClick={() => requestSort('createdAt')}
-                            >
-                                Ngày Tạo
-                            </th> */}
                             <th className="sci-text-right">Hành Động</th>
                         </tr>
                     </thead>
                     <tbody>
                         {getFilteredAndSortedData().length === 0 ? (
                             <tr>
-                                <td colSpan="9" className="sci-table-empty-row">
+                                <td colSpan="5" className="sci-table-empty-row">
                                     Không tìm thấy người dùng nào phù hợp
                                 </td>
                             </tr>
                         ) : (
                             getFilteredAndSortedData().map((row) => (
                                 <tr key={row.id} className={`sci-table-row ${row.isActive ? 'sci-row-active' : 'sci-row-inactive'}`}>
-                                    {/*<td className="sci-cell-id">{row.id}</td> */}
                                     <td className="sci-font-medium">{row.fullName || '-'}</td>
                                     <td>{row.email || '-'}</td>
                                     <td>{row.phone || '-'}</td>
@@ -233,17 +226,6 @@ const TableUser = () => {
                                             {ROLE_MAP[row.role] || row.role}
                                         </span>
                                     </td>
-                                    {/* <td>
-                                        <span className={`sci-badge-verified ${row.isEmailVerified ? 'verified' : 'unverified'}`}>
-                                            {row.isEmailVerified ? 'Đã xác thực' : 'Chưa xác thực'}
-                                        </span>
-                                    </td> */}
-                                    {/* <td>
-                                        <span className={`sci-badge-status ${row.isActive ? 'active' : 'inactive'}`}>
-                                            {row.isActive ? 'Hoạt động' : 'Bị khóa'}
-                                        </span>
-                                    </td> */}
-                                    {/* <td className="sci-cell-date">{row.createdAt}</td> */}
                                     <td className="sci-text-right">
                                         <div className="sci-table-actions-wrapper">
                                             <button className="sci-btn-edit" onClick={() => handleUpdate(row)}>

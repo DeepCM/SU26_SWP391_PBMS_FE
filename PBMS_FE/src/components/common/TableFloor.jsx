@@ -130,10 +130,10 @@ const TableFloor = () => {
                     name: floor.name || `Tầng ${floor.floorNumber ?? floor.floorId}`,
                     floorNumber: floor.floorNumber ?? 1,
                     type: displayType,
-                    vehicleTypeIds: rawVehicleIds, // Preserved for the popup state
+                    vehicleTypeIds: vehicleTypes.name,
                     description: floor.description || `Khu vực vận hành tầng ${floor.floorNumber ?? ''}`,
-                    inUse: Math.round((floor.currentOccupiedSlots || 0) + (floor.currentReservedSlots || 0)),
-                    available: floor.currentAvailableSlots ?? 0,
+                    inUse: Math.round((floor.occupiedSlots || 0) + (floor.reservedSlots || 0)),
+                    available: floor.availableSlots ?? 0,
                     capacity: floor.totalSlots ?? 0,
                     isActive: floor.isActive ?? true
                 };
