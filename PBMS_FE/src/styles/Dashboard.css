@@ -397,12 +397,28 @@
 /* TWIN DONUT ARCHITECTURE REFACTORS                                        */
 /* ========================================================================= */
 .sci-segment-occupied {
-  stroke: #efec44;
+  stroke: #ef4444;
   stroke-linecap: round;
 }
 
 .sci-segment-reserved-ratio {
-  stroke: #c1c2cd;
+  stroke: #3b82f6;
+  stroke-linecap: round;
+}
+
+.sci-segment-reserved-nested {
+  fill: none;
+  stroke: #3b82f6;
+  /* Blue */
+  stroke-width: 16;
+  stroke-linecap: round;
+}
+
+.sci-segment-occupied-yellow {
+  fill: none;
+  stroke: #eeea10;
+  /* Yellow */
+  stroke-width: 16;
   stroke-linecap: round;
 }
 

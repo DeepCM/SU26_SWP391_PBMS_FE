@@ -59,8 +59,13 @@ export default function Dashboard() {
   const totalAllocatedSlots = globalOccupied + globalReserved;
   const occupiedRatio = totalAllocatedSlots > 0 ? Math.round((globalOccupied / totalAllocatedSlots) * 100) : 0;
   const reservedRatio = totalAllocatedSlots > 0 ? Math.round((globalReserved / totalAllocatedSlots) * 100) : 0;
+  const totalCommitted = globalOccupied + globalReserved;
+  const totalCommittedRatio = globalTotalSlots > 0
+    ? Math.round((totalCommitted / globalTotalSlots) * 100)
+    : 0;
 
-  // Dynamic SVG Stroke Arc Offsets (Circumference = 377)
+  // Calculate offset for the SVG
+  const arcOffsetCommitted = 377 - (377 * totalCommittedRatio) / 100;
   const arcOffsetOccupied = 377 - (377 * systemOccupancyRate) / 100;
   const arcOffsetReserved = totalAllocatedSlots > 0 ? 377 - (377 * reservedRatio) / 100 : 377;// Computes peak vehicle entries to scale comparative horizontal bars safely
   const maxVehicleEntries = Math.max(...vehicleTypes.map(v => Math.max(v.entries || 0, v.exits || 0)), 1);
@@ -72,7 +77,7 @@ export default function Dashboard() {
     const loadDashboardData = async () => {
       setLoading(true)
       setError(null)
-      
+
       // Khởi tạo tham số thời gian dựa vào state timePeriod hiện tại
       let from = '';
       let to = '';
@@ -87,7 +92,7 @@ export default function Dashboard() {
         to = range.endDate;
       }
 
-      const groupBy = timePeriod === 'ngày' ? 'hour' : 'day'
+      const groupBy = timePeriod === 'ngày' ? 'month' : 'day'
 
       try {
         const [overviewRes, occupancyRes, revenueRes, trafficRes, slotUsageRes] = await Promise.all([
@@ -97,6 +102,7 @@ export default function Dashboard() {
           getTraffic({ from, to, groupBy }),
           getSlotUsage({ from, to })
         ])
+        console.log("Revenue Trend Data:", revenueRes.data || revenueRes);
 
         setAnalyticsData({
           overview: overviewRes?.data || overviewRes,
@@ -224,9 +230,9 @@ export default function Dashboard() {
 
                 <div className="sci-charts-twin-container">
 
-                  {/* Sub-Chart 1: Total Lot Footprint */}
+                  {/* Sub-Chart 1: Total Committed Capacity */}
                   <div className="sci-donut-sub-block">
-                    <span className="sci-sub-chart-label">Tổng quan bãi đỗ</span>
+                    <span className="sci-sub-chart-label">Tổng tải hệ thống</span>
                     <div className="sci-donut-wrapper">
                       <svg viewBox="0 0 160 160" className="sci-donut-svg">
                         <circle className="sci-donut-track" cx="80" cy="80" r="60" />
@@ -236,20 +242,20 @@ export default function Dashboard() {
                           cy="80"
                           r="60"
                           strokeDasharray="377"
-                          strokeDashoffset={arcOffsetOccupied}
+                          strokeDashoffset={arcOffsetCommitted}
                         />
                       </svg>
                       <div className="sci-donut-center-text">
-                        <span className="sci-donut-percentage">{systemOccupancyRate}%</span>
-                        <span className="sci-donut-label">Đang đỗ</span>
+                        <span className="sci-donut-percentage">{totalCommittedRatio}%</span>
+                        <span className="sci-donut-label">Đã đặt/đỗ</span>
                       </div>
                     </div>
 
-                    {/* Dedicated Legend for Chart 1 */}
+                    {/* Updated Legend for Combined Load */}
                     <div className="sci-mini-legend-vertical">
                       <div className="sci-legend-item">
                         <span className="sci-legend-marker bg-red"></span>
-                        <span className="sci-legend-txt">Có xe: <strong>{globalOccupied}</strong> ({systemOccupancyRate}%)</span>
+                        <span className="sci-legend-txt">Đã dùng: <strong>{totalCommitted}</strong></span>
                       </div>
                       <div className="sci-legend-item">
                         <span className="sci-legend-marker bg-green"></span>
@@ -258,21 +264,36 @@ export default function Dashboard() {
                     </div>
                   </div>
 
-                  {/* Sub-Chart 2: Reserved vs In Use */}
+                  {/* Sub-Chart 2: Reserved vs In Use (Allocated Capacity Only) */}
                   <div className="sci-donut-sub-block">
-                    <span className="sci-sub-chart-label">Đặt chỗ với Thực tế</span>
+                    <span className="sci-sub-chart-label">Đặt chỗ vs. Thực tế</span>
                     <div className="sci-donut-wrapper">
                       <svg viewBox="0 0 160 160" className="sci-donut-svg">
+                        {/* Background Track (Neutral base) */}
                         <circle className="sci-donut-track" cx="80" cy="80" r="60" />
+
+                        {/* Reserved Segment (Blue) */}
                         <circle
-                          className="sci-donut-segment sci-segment-reserved-ratio"
-                          cx="80"
-                          cy="80"
-                          r="60"
-                          strokeDasharray="377"
-                          strokeDashoffset={arcOffsetReserved}
+                          className="sci-segment-reserved-nested"
+                          cx="80" cy="80" r="60"
+                          strokeWidth="16"
+                          // Length of reserved segment based on ratio
+                          strokeDasharray={`${reservedRatio * 3.77} 377`}
+                          strokeDashoffset="0"
+                        />
+
+                        {/* Occupied Segment (Yellow) */}
+                        <circle
+                          className="sci-segment-occupied-yellow"
+                          cx="80" cy="80" r="60"
+                          strokeWidth="16"
+                          // Length of occupied segment based on ratio
+                          strokeDasharray={`${occupiedRatio * 3.77} 377`}
+                          // Offset by the reserved length to start immediately after it
+                          strokeDashoffset={`-${reservedRatio * 3.77}`}
                         />
                       </svg>
+
                       <div className="sci-donut-center-text">
                         <span className="sci-donut-percentage">{reservedRatio}%</span>
                         <span className="sci-donut-label">Đặt trước</span>
@@ -299,26 +320,34 @@ export default function Dashboard() {
               <div className="sci-chart-card">
                 <h3 className="sci-chart-card-title">Biểu Đồ Xu Hướng Doanh Thu Dòng Tiền</h3>
                 <div className="sci-trend-wrapper">
+                  {/* Optimized Financial Trend Chart */}
                   <svg viewBox="0 0 600 220" className="sci-trend-svg">
-                    {/* Horizontal background grid references */}
+                    {/* Horizontal grid lines */}
                     <line x1="40" y1="30" x2="560" y2="30" className="sci-grid-line" />
                     <line x1="40" y1="95" x2="560" y2="95" className="sci-grid-line" />
                     <line x1="40" y1="160" x2="560" y2="160" className="sci-grid-line" />
 
-                    {/* Dynamic Scalable Trend Polyline */}
-                    <polyline
-                      className="sci-trend-polyline"
-                      points={revenueTrend.map((pt, i) => {
-                        const x = 40 + (i * (520 / Math.max(revenueTrend.length - 1, 1)));
-                        const y = 160 - ((pt.revenue || 0) / maxRevenue) * 120;
-                        return `${x},${y}`;
-                      }).join(' ')}
-                    />
+                    {/* Draw line only if there are 2 or more points */}
+                    {revenueTrend.length > 1 && (
+                      <polyline
+                        className="sci-trend-polyline"
+                        points={revenueTrend.map((pt, i) => {
+                          const x = 40 + (i * (520 / (revenueTrend.length - 1)));
+                          const y = 160 - ((pt.revenue || 0) / maxRevenue) * 120;
+                          return `${x},${y}`;
+                        }).join(' ')}
+                      />
+                    )}
 
-                    {/* Interactive Node Anchors */}
+                    {/* Nodes and Labels */}
                     {revenueTrend.map((pt, i) => {
-                      const x = 40 + (i * (520 / Math.max(revenueTrend.length - 1, 1)));
+                      // If length is 1, center it (x=300). Otherwise, space evenly.
+                      const x = revenueTrend.length > 1
+                        ? 40 + (i * (520 / (revenueTrend.length - 1)))
+                        : 300;
+
                       const y = 160 - ((pt.revenue || 0) / maxRevenue) * 120;
+
                       return (
                         <g key={i} className="sci-trend-node-group">
                           <circle cx={x} cy={y} r="5" className="sci-trend-dot" />
@@ -326,10 +355,8 @@ export default function Dashboard() {
                             {pt.revenue ? `${(pt.revenue / 1000).toFixed(0)}k` : '0'}
                           </text>
                           <text x={x} y="185" className="sci-trend-axis-label">
-                            {timePeriod === 'ngày' 
-                              ? new Date(pt.periodStart).toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' })
-                              : new Date(pt.periodStart).toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit' })
-                            }
+                            {/* Using Date object to format correctly */}
+                            {new Date(pt.periodStart).toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit' })}
                           </text>
                         </g>
                       );
