@@ -15,7 +15,18 @@ const UserPopup = ({ userData, onClose, onRefresh }) => {
     const isEditMode = !!userData;
     const [showPassword, setShowPassword] = useState(false);
 
-    // SỬA LỖI 1: Đồng bộ hóa kiểu chữ thường (lowercase) để khớp hoàn toàn với select option
+    // Giả lập lấy thông tin Admin đang đăng nhập từ hệ thống (thường lưu ở localStorage hoặc Redux/AuthContext)
+    const getCurrentAdminId = () => {
+        try {
+            const auth = JSON.parse(localStorage.getItem('auth') || '{}');
+            return auth?.user?.id || null; // Trả về ID của admin đang thao tác
+        } catch (e) {
+            return null;
+        }
+    };
+
+    const currentAdminId = getCurrentAdminId();
+
     const getInitialRole = () => {
         const rawRole = userData?.role?.name || userData?.role || 'user';
         return rawRole.toLowerCase();
@@ -39,6 +50,12 @@ const UserPopup = ({ userData, onClose, onRefresh }) => {
         driver: 'Người dùng',
     };
 
+    // Regex kiểm tra định dạng email tiêu chuẩn
+    const validateEmail = (emailStr) => {
+        const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+        return emailRegex.test(emailStr);
+    };
+
     const handleSubmit = async (e) => {
         e.preventDefault();
 
@@ -50,9 +67,20 @@ const UserPopup = ({ userData, onClose, onRefresh }) => {
             setPopupError("Vui lòng nhập email.");
             return;
         }
+        
+        // 1. KIỂM TRA ĐỊNH DẠNG EMAIL
+        if (!validateEmail(email.trim())) {
+            setPopupError("Định dạng email không hợp lệ (Ví dụ đúng: ten@domain.com).");
+            return;
+        }
+
+        // 2. NGĂN CẢN ADMIN TỰ VÔ HIỆU HÓA HOẶC ĐỔI TRẠNG THÁI SANG INACTIVE
+        if (isEditMode && String(userData.id) === String(currentAdminId) && !isActive) {
+            setPopupError("Bạn không thể tự vô hiệu hóa tài khoản quản trị của chính mình.");
+            return;
+        }
 
         if (!isEditMode) {
-            // KHI TẠO MỚI: Bắt buộc nhập mật khẩu đủ mạnh
             if (!password.trim()) {
                 setPopupError("Mật khẩu là bắt buộc khi tạo tài khoản mới.");
                 return;
@@ -66,7 +94,6 @@ const UserPopup = ({ userData, onClose, onRefresh }) => {
                 return;
             }
         } else {
-            // SỬA LỖI 2: KHI CHỈNH SỬA - Chỉ kiểm tra độ dài và trùng khớp NẾU người dùng nhập mật khẩu mới
             const hasPasswordInput = password.trim() !== '';
             const hasConfirmInput = confirmPassword.trim() !== '';
 
@@ -87,7 +114,6 @@ const UserPopup = ({ userData, onClose, onRefresh }) => {
 
         try {
             if (isEditMode) {
-                // HÀNH ĐỘNG 1: Cập nhật thông tin cơ bản
                 const updatePayload = {
                     fullName: fullName.trim(),
                     email: email.trim(),
@@ -96,12 +122,10 @@ const UserPopup = ({ userData, onClose, onRefresh }) => {
                 };
                 await updateUser(userData.id, updatePayload);
 
-                // HÀNH ĐỘNG 2: Đồng bộ vai trò hệ thống nếu có thay đổi công tác
                 if (role !== userData.role?.toLowerCase()) {
                     await updateUserRole(userData.id, { role: role });
                 }
 
-                // HÀNH ĐỘNG 3: Đồng bộ trạng thái hoạt động qua endpoint chuyên biệt
                 if (isActive !== userData.isActive) {
                     if (isActive) {
                         await activateUser(userData.id);
@@ -110,7 +134,6 @@ const UserPopup = ({ userData, onClose, onRefresh }) => {
                     }
                 }
 
-                // HÀNH ĐỘNG 4: Xử lý thay đổi mật khẩu (Chỉ gửi API reset khi có nhập mật khẩu mới)
                 if (password.trim()) {
                     await resetUserPassword(userData.id, {
                         newPassword: password.trim(),
@@ -208,24 +231,27 @@ const UserPopup = ({ userData, onClose, onRefresh }) => {
                                         className="sci-form-input"
                                         value={isActive ? "true" : "false"}
                                         onChange={(e) => setIsActive(e.target.value === "true")}
-                                        disabled={submitting}
+                                        disabled={submitting || String(userData.id) === String(currentAdminId)} // Disable không cho chuyển nếu là chính mình
                                     >
                                         <option value="true">Hoạt Động (Active)</option>
                                         <option value="false">Tạm Khóa (Inactive)</option>
                                     </select>
+                                    {String(userData.id) === String(currentAdminId) && (
+                                        <small style={{ color: '#ef4444', marginTop: '4px', display: 'block' }}>
+                                            Bạn không thể tự khóa tài khoản của chính mình.
+                                        </small>
+                                    )}
                                 </div>
                             )}
                         </div>
 
-                        {/* HÀNG 3: Mật khẩu mới và Xác nhận mật khẩu */}
+                        {/* HÀNG 3: Mật khẩu */}
                         <div className="sci-form-grid-2col">
                             <div className="sci-form-group">
                                 <label className="sci-form-label">
                                     {isEditMode ? "Mật Khẩu Mới" : "Mật Khẩu"}
                                     {!isEditMode && <span className="sci-required"> *</span>}
                                 </label>
-
-                                {/* Cấu trúc cực kỳ sạch sẽ, không có inline-style */}
                                 <div className="sci-password-input-wrapper">
                                     <input
                                         type={showPassword ? "text" : "password"}
@@ -251,8 +277,6 @@ const UserPopup = ({ userData, onClose, onRefresh }) => {
                                     Xác Nhận Mật Khẩu
                                     {!isEditMode && <span className="sci-required"> *</span>}
                                 </label>
-
-                                {/* Cấu trúc cực kỳ sạch sẽ, không có inline-style */}
                                 <div className="sci-password-input-wrapper">
                                     <input
                                         type={showPassword ? "text" : "password"}
