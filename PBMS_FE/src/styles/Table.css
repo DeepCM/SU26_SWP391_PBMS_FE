@@ -46,13 +46,18 @@
 
 /* --- TABLE STRUCTURE --- */
 .sci-table-responsive {
-    overflow-x: auto; /* Allows horizontal scroll on small screens */
+  width: 100%;
+  overflow-x: auto; /* Tự động xuất hiện thanh cuộn ngang khi bảng quá rộng */
+  -webkit-overflow-scrolling: touch;
+  margin-top: 16px;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
 }
 
 .sci-data-table {
-    width: 100%;
-    border-collapse: collapse;
-    text-align: left;
+  width: 100%;
+  min-width: 800px; /* Định nghĩa chiều rộng tối thiểu an toàn để bảng không bị méo chữ khi co màn hình */
+  border-collapse: collapse;
 }
 
 /* Table Headers */
