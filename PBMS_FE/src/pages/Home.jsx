@@ -6,6 +6,7 @@ import Navbar from '../components/common/Navbar'
 import BookingPopup from '../components/common/BookingPopup'
 import { getVehicleTypes, getAvailableSlots, getPricingPreview } from '../services/vehicleTypeService'
 import { getMyVehicles } from '../services/vehicleService'
+import { getPolicies } from '../services/policyService';
 import {
   IconCar,
   IconMotorbike,
@@ -30,6 +31,7 @@ function Home() {
   const [vehicleTypes, setVehicleTypes] = useState([])
   const [slotStatus, setSlotStatus] = useState([])
   const [vehicles, setVehicles] = useState([])
+  const [policies, setPolicies] = useState([]) // State lưu trữ danh sách chính sách vận hành từ API
   const [showBookingPopup, setShowBookingPopup] = useState(false);
   const [isLoggedIn, setIsLoggedIn] = useState(!!localStorage.getItem("token"))
 
@@ -62,6 +64,16 @@ function Home() {
         const types = await getVehicleTypes();
         setVehicleTypes(types);
 
+        // Gọi API lấy danh sách chính sách (Policies) để hiển thị động ở dưới trang
+        try {
+          const fetchedPolicies = await getPolicies();
+          // Lọc chỉ lấy các chính sách đang được kích hoạt (isActive === true) nếu backend có trả về trường này
+          const activePolicies = (fetchedPolicies || []).filter(p => p.isActive !== false);
+          setPolicies(activePolicies);
+        } catch (policyErr) {
+          console.warn("Không thể tải danh sách chính sách vận hành:", policyErr);
+        }
+
         if (localStorage.getItem("token")) {
           try {
             const myVehicles = await getMyVehicles();
@@ -90,7 +102,6 @@ function Home() {
             }
 
             // 3. Gọi API lấy thông tin giá (Có try/catch riêng)
-            // Nếu Admin chưa cấu hình bảng giá, hệ thống vẫn chạy bình thường với giá = 0
             try {
               pricing = await getPricingPreview(type.id);
             } catch (pricingErr) {
@@ -295,7 +306,7 @@ function Home() {
         </div>
       </section>
 
-      {/* Pricing & Announcements */}
+      {/* Pricing & Operation Policies */}
       <section className="bottom-section">
         <div className="pricing-card">
           <h3 className="card-heading">Bảng giá vé lượt</h3>
@@ -319,23 +330,40 @@ function Home() {
           </table>
         </div>
 
-        {/* <div className="announcements-card">
-          <h3 className="card-heading">Thông báo &amp; vận hành</h3>
+        {/* Khối chính sách vận hành được mở và render data động */}
+        <div className="announcements-card">
+          <h3 className="card-heading">Chính sách &amp; Quy định vận hành</h3>
           <ul className="announcement-list">
-            <li className="announcement-item announcement-item--blue">
-              <span className="announcement-text">Tầng 1 mở cửa 24/7, có camera an ninh toàn bộ khu vực.</span>
-              <span className="announcement-date">12/05/2026</span>
-            </li>
-            <li className="announcement-item announcement-item--blue">
-              <span className="announcement-text">Đang phát triển vé tháng giảm giá 10% trong tháng 6.</span>
-              <span className="announcement-date">08/05/2026</span>
-            </li>
-            <li className="announcement-item announcement-item--yellow">
-              <span className="announcement-text">Bảo trì hệ thống đặt chỗ, quý khách thông cảm cho sự bất tiện.</span>
-              <span className="announcement-date">01/05/2026</span>
-            </li>
+            {policies.length === 0 ? (
+              <li className="announcement-item announcement-item--blue">
+                <span className="announcement-text">Hệ thống đang cập nhật các quy định vận hành mới nhất.</span>
+              </li>
+            ) : (
+              policies.map((policy) => {
+                // Xác định class CSS tương ứng dựa theo độ ưu tiên hoặc loại chính sách nếu có
+                // Ở đây mặc định dùng 'announcement-item--blue' hoặc 'announcement-item--yellow' tùy theo nội dung bắt buộc
+                const isUrgent = policy.title?.toLowerCase().includes("bảo trì") || policy.title?.toLowerCase().includes("khẩn cấp");
+                const itemClass = isUrgent ? "announcement-item--yellow" : "announcement-item--blue";
+
+                return (
+                  <li key={policy.id} className={`announcement-item ${itemClass}`}>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                      <strong className="announcement-title" style={{ fontSize: '14px', color: '#1E293B' }}>
+                        {policy.title}
+                      </strong>
+                      <span className="announcement-text">
+                        {policy.description || policy.content}
+                      </span>
+                    </div>
+                    <span className="announcement-date">
+                      {policy.createdAt ? new Date(policy.createdAt).toLocaleDateString('vi-VN') : ''}
+                    </span>
+                  </li>
+                );
+              })
+            )}
           </ul>
-        </div> */}
+        </div>
       </section>
     </div>
   )
@@ -352,7 +380,6 @@ function FloorCard({ name, badge, badgeType, tags, available, inUse, total, fill
         {tags.map(t => <span key={t} className="floor-tag">{t}</span>)}
       </div>
 
-      {/* Chỉ giữ lại các thông số số lượng đỗ xe thực tế */}
       <div className="floor-stats">
         <div className="floor-stat">
           <span className="floor-stat-number">{total}</span>
