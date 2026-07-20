@@ -82,17 +82,17 @@ export default function Dashboard() {
       let from = '';
       let to = '';
 
-      if (timePeriod === 'ngày') {
+      if (timePeriod === 'day') {
         const today = getTodayStr();
         from = today;
         to = today;
-      } else if (timePeriod === 'tháng') {
+      } else if (timePeriod === 'month') {
         const range = getMonthDateRange(getCurrentMonthStr());
         from = range.startDate;
         to = range.endDate;
       }
 
-      const groupBy = timePeriod === 'ngày' ? 'hour' : 'day'
+      const groupBy = timePeriod === 'day' ? 'month' : 'day'
 
       try {
         const [overviewRes, occupancyRes, revenueRes, trafficRes, slotUsageRes] = await Promise.all([
