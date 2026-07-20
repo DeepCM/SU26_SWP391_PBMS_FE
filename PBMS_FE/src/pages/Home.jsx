@@ -6,7 +6,7 @@ import Navbar from '../components/common/Navbar'
 import BookingPopup from '../components/common/BookingPopup'
 import { getVehicleTypes, getAvailableSlots, getPricingPreview } from '../services/vehicleTypeService'
 import { getMyVehicles } from '../services/vehicleService'
-import { getPolicies } from '../services/adminService';
+import { getPolicies } from '../services/policyService';
 import { getAllPricing } from '../services/pricingService';
 import {
   IconCar,
@@ -176,6 +176,11 @@ function Home() {
   }
 
   const handleBookingClick = () => {
+    if (!localStorage.getItem("token")) {
+      alert("Vui lòng đăng nhập để đặt chỗ.");
+      return;
+    }
+
     if (!selectedSlotStatus) {
       alert("Không tìm thấy loại phương tiện")
       return
@@ -184,11 +189,6 @@ function Home() {
     if (selectedSlotStatus.available <= 0) {
       alert("Không còn chỗ trống")
       return
-    }
-
-    if (!localStorage.getItem("token")) {
-      alert("Vui lòng đăng nhập để đặt chỗ.");
-      return;
     }
 
     const hasMatchingVehicle = vehicles.some((v) => {
@@ -247,14 +247,6 @@ function Home() {
                 Đặt chỗ ngay
               </button>
             </form>
-
-            {showBookingPopup && (
-              <BookingPopup
-                selectedVehicle={selectedVehicle}
-                vehicleTypes={slotStatus}
-                onClose={() => setShowBookingPopup(false)}
-              />
-            )}
           </div>
 
           {/* Status Card (Hôm nay) */}
@@ -287,7 +279,7 @@ function Home() {
 
       {/* Floor Status */}
       <section className="floors-section">
-        <h2 className="section-title">Tình trạng các tầng đỗ xe</h2>
+        <h2 className="section-title">Tình trạng các tầng đỗ {selectedVehicle}</h2>
         <div className="floor-grid">
           {/* .slice(0, 4) đảm bảo render tối đa 4 card */}
           {allFloors.slice(0, 4).map(floor => (
@@ -367,7 +359,15 @@ function Home() {
           </ul>
         </div>
       </section>
+      {showBookingPopup && (
+        <BookingPopup
+          selectedVehicle={selectedVehicle}
+          vehicleTypes={slotStatus}
+          onClose={() => setShowBookingPopup(false)}
+        />
+      )}
     </div>
+
   )
 }
 
