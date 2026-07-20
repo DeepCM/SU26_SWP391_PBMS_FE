@@ -16,9 +16,9 @@ export default function Navbar({ isLoggedIn, userAvatar }) {
           {isDriver ? (
             <>
               <li><a href="#" onClick={() => navigate('/')}>Tổng quan</a></li>
-              <li><a href="#" onClick={() => navigate('/bookings')}>Đặt chỗ của tôi</a></li>
-              <li><a href="#" onClick={() => navigate('/vehicles')}>Xe của tôi</a></li>
-              <li><a href="#" onClick={() => navigate('/my-reviews')}>Đánh giá của tôi</a></li>
+              <li><a href="#" onClick={() => navigate('/bookings')}>Đặt chỗ</a></li>
+              <li><a href="#" onClick={() => navigate('/vehicles')}>Phương tiện</a></li>
+              <li><a href="#" onClick={() => navigate('/my-reviews')}>Đánh giá</a></li>
               <li><a href="#">Liên hệ</a></li>
               <li><a href="#">Giới thiệu</a></li>
             </>

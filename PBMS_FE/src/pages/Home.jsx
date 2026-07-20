@@ -6,7 +6,8 @@ import Navbar from '../components/common/Navbar'
 import BookingPopup from '../components/common/BookingPopup'
 import { getVehicleTypes, getAvailableSlots, getPricingPreview } from '../services/vehicleTypeService'
 import { getMyVehicles } from '../services/vehicleService'
-import { getPolicies } from '../services/policyService';
+import { getPolicies } from '../services/adminService';
+import { getAllPricing } from '../services/pricingService';
 import {
   IconCar,
   IconMotorbike,
@@ -104,6 +105,7 @@ function Home() {
             // 3. Gọi API lấy thông tin giá (Có try/catch riêng)
             try {
               pricing = await getPricingPreview(type.id);
+              //pricing = await getAllPricing();
             } catch (pricingErr) {
               console.warn(`Không thể tải bảng giá cho loại xe ${type.name} (ID: ${type.id}):`, pricingErr);
             }

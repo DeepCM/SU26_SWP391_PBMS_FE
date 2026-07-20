@@ -50,7 +50,7 @@ function Login() {
         } else if (userRole === 'manager') {
           navigate('/dashboard')
         } else if (userRole === 'admin') {
-          navigate('/admin')
+          navigate('/dashboard')
         } else {
           navigate('/')
         }
