@@ -1,58 +1,54 @@
-const API_URL = `${import.meta.env.VITE_API_URL}/api/reports`
-import getAuthHeader from "../components/auth/authHeader"
+const API_URL = `${import.meta.env.VITE_API_URL}/api/reports`;
+import getAuthHeader from '../components/auth/authHeader';
 
-// Helper to log pure text to the console before parsing JSON
-async function logAndParse(response, apiName) {
-    if (!response.ok) {
-        throw new Error(`Không thể tải báo cáo: ${apiName}`);
+function buildQuery(params = {}) {
+  const query = new URLSearchParams();
+
+  Object.entries(params).forEach(([key, value]) => {
+    if (value !== undefined && value !== null && value !== '') {
+      query.set(key, String(value));
     }
-    
-    try {
-        // Clone the response stream to read as pure text without disrupting the JSON parser
-        const clonedResponse = response.clone();
-        const rawText = await clonedResponse.text();
-        
-        console.group(`%c[API RAW RESPONSE] ${apiName}`, "color: #00ff00; font-weight: bold; background: #1e1e1e; padding: 2px 5px;");
-        console.log("Raw Text:\n", rawText);
-        console.groupEnd();
-    } catch (e) {
-        console.error(`Error logging raw text for ${apiName}:`, e);
+  });
+
+  const queryString = query.toString();
+  return queryString ? `?${queryString}` : '';
+}
+
+async function requestReport(endpoint, params = {}) {
+  const response = await fetch(
+    `${API_URL}/${endpoint}${buildQuery(params)}`,
+    {
+      headers: getAuthHeader()
     }
+  );
 
-    return await response.json();
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => ({}));
+
+    throw new Error(
+      errorData.message || `Không thể tải báo cáo: ${endpoint}`
+    );
+  }
+
+  return response.json();
 }
 
-export async function getOverview() {
-    const response = await fetch(`${API_URL}/overview`, {
-        headers: getAuthHeader()
-    })
-    return logAndParse(response, "overview")
+export function getOverview(params = {}) {
+  return requestReport('overview', params);
 }
 
-export async function getRevenue() {
-    const response = await fetch(`${API_URL}/revenue`, {
-        headers: getAuthHeader()
-    })
-    return logAndParse(response, "revenue")
+export function getRevenue(params = {}) {
+  return requestReport('revenue', params);
 }
 
-export async function getTraffic() {
-    const response = await fetch(`${API_URL}/traffic`, {
-        headers: getAuthHeader()
-    })
-    return logAndParse(response, "traffic")
+export function getTraffic(params = {}) {
+  return requestReport('traffic', params);
 }
 
-export async function getOccupancy() {
-    const response = await fetch(`${API_URL}/occupancy`, {
-        headers: getAuthHeader()
-    })
-    return logAndParse(response, "occupancy")
+export function getOccupancy(params = {}) {
+  return requestReport('occupancy', params);
 }
 
-export async function getSlotUsage() {
-    const response = await fetch(`${API_URL}/slot-usage`, {
-        headers: getAuthHeader()
-    })
-    return logAndParse(response, "slot-usage")
+export function getSlotUsage(params = {}) {
+  return requestReport('slot-usage', params);
 }

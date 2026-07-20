@@ -92,7 +92,7 @@ export default function Dashboard() {
         to = range.endDate;
       }
 
-      const groupBy = timePeriod === 'ngày' ? 'month' : 'day'
+      const groupBy = timePeriod === 'ngày' ? 'hour' : 'day'
 
       try {
         const [overviewRes, occupancyRes, revenueRes, trafficRes, slotUsageRes] = await Promise.all([
