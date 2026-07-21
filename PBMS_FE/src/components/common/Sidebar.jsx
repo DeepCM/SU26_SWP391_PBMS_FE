@@ -29,18 +29,23 @@ const STAFF_SUPPORT_ITEMS = [
 
 const MANAGER_ITEMS = [
   { path: '/dashboard', label: 'Thống kê', Icon: ChartIcon },
-  { path: '/manager?tab=pricing', label: 'Bảng giá', Icon: BookIcon }, // Chuyển hướng thẳng tới tab bảng giá
-  { path: '/manager?tab=incidents', label: 'Sự cố', Icon: AlertIcon },  // Chuyển hướng thẳng tới tab sự cố
+  { path: '/manager?tab=pricing', label: 'Bảng giá', Icon: BookIcon },
+  { path: '/manager?tab=incidents', label: 'Sự cố', Icon: AlertIcon }, 
   { path: '/reviews', label: 'Nhận phản hồi', Icon: AlertIcon },
   { path: '/parking-history', label: 'Lịch sử', Icon: ClockIcon },
 ]
 
 // Định nghĩa menu Admin tương ứng với từng bảng
 const ADMIN_ITEMS = [
+  { path: '/dashboard', label: 'Thống kê', Icon: ChartIcon },
   { path: '/admin?tab=users', label: 'Người dùng', Icon: UsersIcon },
   { path: '/admin?tab=policies', label: 'Chính sách', Icon: BookIcon },
+  { path: '/manager?tab=pricing', label: 'Bảng giá', Icon: BookIcon },
   { path: '/admin?tab=floors', label: 'Sơ đồ tầng', Icon: SettingsIcon },
   { path: '/admin?tab=vehicle-types', label: 'Loại xe', Icon: CarIcon },
+  { path: '/manager?tab=incidents', label: 'Sự cố', Icon: AlertIcon },  
+  { path: '/reviews', label: 'Nhận phản hồi', Icon: AlertIcon },
+  { path: '/parking-history', label: 'Lịch sử', Icon: ClockIcon },
 ]
 
 const STORAGE_KEY = 'sidebar-collapsed'

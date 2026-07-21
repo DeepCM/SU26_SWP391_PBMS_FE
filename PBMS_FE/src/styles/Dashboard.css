@@ -65,6 +65,97 @@
   margin-bottom: 20px;
 }
 
+/* 1. Khung bọc ngoài: Đổi sang màu xám nhạt để đồng điệu với cụm nút bên trái */
+.sci-custom-date-form {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  background: #f1f5f9; /* Màu nền nhẹ giống cụm quick filter */
+  padding: 4px 4px 4px 12px; /* Chừa khoảng trống bên trái, thu hẹp bên phải cho nút bấm */
+  border-radius: 30px;
+  border: 1px solid transparent;
+  height: 38px; /* Khóa bằng chiều cao với cụm nút bên trái */
+  box-sizing: border-box;
+  transition: all 0.2s ease-in-out;
+}
+
+/* Hiệu ứng khi người dùng click vào chọn ngày: chuyển sang nền trắng phát sáng nhẹ */
+.sci-custom-date-form:focus-within {
+  background: #ffffff;
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.12);
+}
+
+/* 2. Ô nhập ngày: Triệt tiêu hoàn toàn border/background thừa bị đè từ global */
+.sci-date-input {
+  border: none !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  padding: 0 4px !important;
+  height: 100%;
+  font-size: 14px;
+  font-family: inherit;
+  font-weight: 500;
+  outline: none !important;
+  color: #334155;
+  cursor: pointer;
+}
+
+/* Tinh chỉnh icon lịch của trình duyệt cho tinh tế hơn */
+.sci-date-input::-webkit-calendar-picker-indicator {
+  cursor: pointer;
+  opacity: 0.5;
+  transition: opacity 0.15s ease;
+}
+.sci-date-input::-webkit-calendar-picker-indicator:hover {
+  opacity: 0.9;
+}
+
+/* 3. Chữ "đến" ở giữa */
+.sci-date-separator {
+  font-size: 13px;
+  color: #94a3b8;
+  font-weight: 500;
+  padding: 0 2px;
+  user-select: none;
+}
+
+/* 4. Nút "Áp dụng": Biến thành một chiếc "pill" nằm gọn gàng bên trong thanh nhập */
+.sci-date-submit-btn {
+  margin: 0 !important;
+  height: 30px !important; /* Nhỏ hơn khung ngoài một chút để tạo độ giãn cách chuẩn */
+  padding: 0 14px !important;
+  font-size: 13px !important;
+  font-weight: 600 !important;
+  border-radius: 20px !important;
+  border: none !important;
+  background: #ffffff !important;
+  color: #1e293b !important;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05) !important;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+/* Hiệu ứng khi di chuột vào nút */
+.sci-date-submit-btn:hover {
+  background: #1e293b !important;
+  color: #ffffff !important;
+}
+
+/* Trạng thái khi khoảng ngày Custom đang được active hiển thị 
+.sci-period-pill--active.sci-date-submit-btn {
+  background: #1e293b !important; /* Hoặc đổi mã màu chủ đạo của dự án bạn nếu cần 
+  color: #ffffff !important;
+}
+*/
+/* Trạng thái nút bị khóa (khi chưa nhập đủ ngày) */
+.sci-date-submit-btn:disabled {
+  background: transparent !important;
+  color: #94a3b8 !important;
+  box-shadow: none !important;
+  cursor: not-allowed !important;
+}
+
 /* ========================================================================= */
 /* 2. STATISTICAL KPI CARDS & INTERNAL LAYOUTS                               */
 /* ========================================================================= */
@@ -355,6 +446,14 @@
 
 .bg-green {
   background-color: #c1c2cd;
+}
+
+.bg-green2 {
+  background-color: #10b981;
+}
+
+.bg-orange {
+  background-color: #f59e0b;
 }
 
 .bg-red {
@@ -764,10 +863,6 @@
     flex-direction: column;
     align-items: flex-start;
     gap: 16px;
-  }
-
-  .sci-body {
-    flex-direction: column;
   }
 
   @media (max-width: 560px) {

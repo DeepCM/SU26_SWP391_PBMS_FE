@@ -101,6 +101,9 @@
 .sci-body {
   display: flex;
   flex: 1;
+  flex-wrap: nowrap;
+  width: 100%;
+  min-height: 100vh;
 }
 
 /* ── Sidebar ─────────────────────────────────────────── */
@@ -182,6 +185,7 @@
   flex: 1;
   padding: 24px 28px;
   overflow-y: auto;
+  min-width: 0;
 }
 
 .sci-page-title {
@@ -618,6 +622,7 @@
 }
 
 /* ── Responsive ──────────────────────────────────────── */
+
 @media (max-width: 1200px) {
   .sci-content {
     grid-template-columns: 1fr 1fr;
@@ -640,12 +645,15 @@
   .sci-content {
     grid-template-columns: 1fr;
   }
+  .sci-sidebar{
+    top: 80px;
+  }
 }
 
 @media (max-width: 768px) {
   .sci-sidebar,
   .sci-sidebar--collapsed {
-    display: none;
+    width: 70px;
   }
 
   .sci-main {

@@ -9,6 +9,11 @@ import ManagementLayout from './layouts/ManagementLayout';
 // Auth Guard
 import ProtectedRoute from './components/auth/ProtectedRoute';
 
+//favicon
+import { useEffect } from 'react';
+import { renderToStaticMarkup } from 'react-dom/server';
+import { IconCar } from './components/svg/Icons'; // Adjust path to your file
+
 // Pages
 import Home from './pages/Home';
 import Login from './pages/Login';
@@ -30,8 +35,32 @@ import Admin from './pages/Admin';
 import ParkingHistory from './pages/ParkingHistory';
 import Unknown from './pages/Unknown';
 
+
 function App() {
+  useEffect(() => {
+    // 1. CHANGE THE TAB TEXT NAME HERE
+    document.title = "Hệ Thống Quản Lý Đỗ Xe PBMS"; // Put your custom website name here
+
+    // 2. Convert your JSX component to raw string markup
+    const svgString = renderToStaticMarkup(<IconCar />);
+
+    // 3. Turn it into a data URI
+    const faviconUrl = `data:image/svg+xml;utf8,${encodeURIComponent(svgString)}`;
+
+    // 4. Find or create the favicon link tag
+    let link = document.querySelector("link[rel~='icon']");
+    if (!link) {
+      link = document.createElement('link');
+      link.rel = 'icon';
+      document.head.appendChild(link);
+    }
+
+    // 5. Swap the old Vite icon for your car icon string
+    link.type = 'image/svg+xml';
+    link.href = faviconUrl;
+  }, []);
   return (
+
     <AuthProvider>
       <BrowserRouter>
         <Routes>
@@ -83,7 +112,7 @@ function App() {
           </Route>
 
           {/* ================= MANAGER CONTROL ROUTES ================= */}
-          <Route element={<ProtectedRoute allowedRoles={['manager']} />}>
+          <Route element={<ProtectedRoute allowedRoles={['manager', 'admin']} />}>
             <Route element={<ManagementLayout />}>
               <Route path="/dashboard" element={<Dashboard />} />
               <Route path="/manager" element={<Manager />} />

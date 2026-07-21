@@ -127,7 +127,7 @@ export async function getPolicies() {
   const response = await fetch(`${API_URL}/policies`, {
     headers: getAuthHeader()
   })
-  return handleResponse(response, "Không thể tải danh sách chính sách phí")
+  return handleResponse(response, "Không thể tải danh sách chính sách")
 }
 
 export async function getPolicyById(id) {
