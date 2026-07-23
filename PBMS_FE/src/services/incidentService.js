@@ -1,5 +1,6 @@
 const API_URL = `${import.meta.env.VITE_API_URL}/api/incidents`
 import getAuthHeader from "../components/auth/authHeader"
+import { getToken } from "./authService"
 
 async function handleResponse(response) {
   if (!response.ok) {
@@ -74,6 +75,16 @@ export async function createIncident(data) {
   return handleResponse(response)
 }
 
+export async function createDriverIncident(data) {
+  const response = await fetch(`${API_URL}/driver`, {
+    method: "POST",
+    headers: getAuthHeader(),
+    body: JSON.stringify(data)
+  })
+
+  return handleResponse(response)
+}
+
 export async function handleIncident(id, data) {
   const response = await fetch(`${API_URL}/${id}/handle`, {
     method: "POST",
@@ -109,6 +120,23 @@ export async function provideAdditionalInfo(id, data) {
     method: "POST",
     headers: getAuthHeader(),
     body: JSON.stringify(data)
+  })
+
+  return handleResponse(response)
+}
+
+// multipart/form-data — không dùng getAuthHeader() vì nó ép Content-Type: application/json,
+// browser cần tự set Content-Type kèm boundary cho form data.
+export async function addIncidentAttachments(id, files) {
+  const formData = new FormData()
+  for (const file of files) {
+    formData.append('files', file)
+  }
+
+  const response = await fetch(`${API_URL}/${id}/attachments`, {
+    method: "POST",
+    headers: { Authorization: `Bearer ${getToken()}` },
+    body: formData
   })
 
   return handleResponse(response)

@@ -5,6 +5,7 @@ import { syncPaymentStatus } from '../services/paymentService'
 import { getMyReviewableSessions } from '../services/reviewService'
 import Navbar from '../components/common/Navbar'
 import ReviewModal from '../components/review/ReviewModal'
+import CreateIncidentPopup from '../components/common/CreateIncidentPopup'
 import '../styles/Home.css'
 import '../styles/Bookings.css'
 import {
@@ -73,6 +74,13 @@ const STATUS_CONFIG = {
   },
 }
 
+// Nhãn hiển thị riêng cho status gốc từ BE khi khác với nhãn mặc định của bucket
+// 'done' — booking vẫn được gom vào tab "Đã xong" (mapBookingStatus), chỉ đổi chữ hiển thị.
+const RAW_STATUS_LABELS = {
+  expired: 'Hết hạn',
+  cancelled: 'Đã hủy',
+}
+
 // ─── QR Modal ─────────────────────────────────────────────────
 function QRModal({ qrUrl, onClose }) {
   return (
@@ -91,7 +99,9 @@ function QRModal({ qrUrl, onClose }) {
 function BookingCard({ booking, onCancel, reviewableSession, onReviewSubmitted }) {
   const [showQR, setShowQR] = useState(false)
   const [showReviewModal, setShowReviewModal] = useState(false)
+  const [showIncidentPopup, setShowIncidentPopup] = useState(false)
   const status = STATUS_CONFIG[booking.status] || STATUS_CONFIG['active'];
+  const statusLabel = RAW_STATUS_LABELS[booking.rawStatus] || status.label;
   const vehicle = VEHICLE_ICON[booking.vehicleType] || VEHICLE_ICON['car'];
   const VEHICLE_NAME_MAP = {
     "Xe máy": "Xe máy",
@@ -109,7 +119,7 @@ function BookingCard({ booking, onCancel, reviewableSession, onReviewSubmitted }
         <span className="booking-id">#{booking.id}</span>
         <span className={`status-badge ${status.badgeClass}`}>
           <span className="status-dot" style={{ background: status.dot }} />
-          {status.label}
+          {statusLabel}
         </span>
       </div>
 
@@ -171,7 +181,6 @@ function BookingCard({ booking, onCancel, reviewableSession, onReviewSubmitted }
             <button className="btn-action btn-action--blue" onClick={() => booking.qrUrl && setShowQR(true)}>
               <IconEye /> Xem QR
             </button>
-            <button className="btn-action btn-action--outline">⏱ Gia hạn</button>
             <button className="btn-action btn-action--danger" onClick={() => onCancel(booking.id)}>Hủy</button>
           </>
         )}
@@ -180,21 +189,17 @@ function BookingCard({ booking, onCancel, reviewableSession, onReviewSubmitted }
             <button className="btn-action btn-action--blue" onClick={() => booking.qrUrl && setShowQR(true)}>
               <IconEye /> Xem QR
             </button>
-            <button className="btn-action btn-action--outline">✏️ Sửa</button>
             <button className="btn-action btn-action--danger" onClick={() => onCancel(booking.id)}>Hủy</button>
           </>
         )}
-        {booking.status === 'done' && (
-          <>
-            <button className="btn-action btn-action--outline">🔄 Đặt lại</button>
-            <button className="btn-action btn-action--outline">🧾 Hóa đơn</button>
-            {reviewableSession && (
-              <button className="btn-action btn-action--blue" onClick={() => setShowReviewModal(true)}>
-                ⭐ Đánh giá
-              </button>
-            )}
-          </>
+        {booking.status === 'done' && reviewableSession && (
+          <button className="btn-action btn-action--blue" onClick={() => setShowReviewModal(true)}>
+            ⭐ Đánh giá
+          </button>
         )}
+        <button className="btn-action btn-action--outline" onClick={() => setShowIncidentPopup(true)}>
+          🚨 Báo lỗi
+        </button>
       </div>
 
       {showReviewModal && reviewableSession && (
@@ -205,6 +210,13 @@ function BookingCard({ booking, onCancel, reviewableSession, onReviewSubmitted }
             onReviewSubmitted?.(created)
             setShowReviewModal(false)
           }}
+        />
+      )}
+
+      {showIncidentPopup && (
+        <CreateIncidentPopup
+          onClose={() => setShowIncidentPopup(false)}
+          defaultBookingId={booking.id}
         />
       )}
     </div>
@@ -235,6 +247,7 @@ export default function Bookings() {
     const formatBookings = (data) => data.map(item => ({
       id: item.id,
       status: mapBookingStatus(item.status),
+      rawStatus: item.status,
       vehicleType: getVehicleIconKey(item.vehicleTypeName),
       vehicleLabel: item.vehicleTypeName,
       licensePlate: item.licensePlate,
@@ -288,7 +301,7 @@ export default function Bookings() {
     if (!window.confirm('Bạn có chắc muốn hủy đặt chỗ này không?')) return
     try {
       await cancelBooking(id)
-      setBookings(prev => prev.map(b => b.id === id ? { ...b, status: 'done' } : b))
+      setBookings(prev => prev.map(b => b.id === id ? { ...b, status: 'done', rawStatus: 'cancelled' } : b))
     } catch (err) {
       alert(err.message)
     }
