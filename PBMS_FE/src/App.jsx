@@ -105,7 +105,7 @@ function App() {
           </Route>
 
           {/* ================= SHARED STAFF/MANAGER ROUTES ================= */}
-          <Route element={<ProtectedRoute allowedRoles={['staff', 'manager']} />}>
+          <Route element={<ProtectedRoute allowedRoles={['staff', 'manager', 'admin']} />}>
             <Route element={<ManagementLayout />}>
               <Route path="/parking-history" element={<ParkingHistory />} />
             </Route>

@@ -325,3 +325,29 @@ export async function deactivateVehicleType(id) {
   })
   return handleResponse(response, `Không thể vô hiệu hóa hoạt động loại xe ID: ${id}`)
 }
+
+// ==========================================
+// BOKING SETTINGS APIs
+// ==========================================
+
+export async function getBookingSettings() {
+  const response = await fetch(`${API_URL}/booking-settings`, {
+    method: "GET",
+    headers: {
+      ...getAuthHeader()
+    }
+  })
+  return handleResponse(response, "Không thể lấy cấu hình hệ thống.")
+}
+
+export async function updateBookingSettings(payload) {
+  const response = await fetch(`${API_URL}/booking-settings`, {
+    method: "PUT",
+    headers: {
+      ...getAuthHeader(),
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify(payload)
+  })
+  return handleResponse(response, `Không thể cập nhật cấu hình hệ thống.`)
+}
