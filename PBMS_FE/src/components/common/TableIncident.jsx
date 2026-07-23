@@ -3,7 +3,6 @@ import '../../styles/Table.css'
 import '../../styles/Incident.css'
 import '../../styles/ParkingHistory.css'
 import { getIncidents, getIncidentById, addIncidentAttachments } from '../../services/incidentService'
-import { getUser } from '../../services/authService'
 import { parseIncidentDescription } from '../../utils/incidentDescriptionParser'
 import { INCIDENT_TYPE_LABELS, INCIDENT_STATUS_LABELS } from '../../utils/incidentLabels'
 import { MANAGER_ACTIONS_CONFIG, getManagerAvailableActions } from '../../utils/incidentActions'
@@ -40,7 +39,6 @@ const TableIncident = ({
     const [sortConfig, setSortConfig] = useState({ key: 'createdAt', direction: 'desc' })
     const [showCreatePopup, setShowCreatePopup] = useState(false)
     const [selectedIncident, setSelectedIncident] = useState(null)
-    const isDriver = getUser()?.role?.toLowerCase() === 'driver'
 
     useEffect(() => {
         async function loadIncidents() {
@@ -186,11 +184,9 @@ const TableIncident = ({
                         <option value="id-asc">ID tăng dần</option>
                         <option value="id-desc">ID giảm dần</option>
                     </select>
-                    {!isDriver && (
-                        <button className="sci-btn sci-btn-primary" onClick={() => setShowCreatePopup(true)}>
-                            + Thêm Mới
-                        </button>
-                    )}
+                    <button className="sci-btn sci-btn-primary" onClick={() => setShowCreatePopup(true)}>
+                        + Thêm Mới
+                    </button>
                 </div>
             </div>
 
