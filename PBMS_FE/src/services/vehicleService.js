@@ -30,9 +30,9 @@ export async function getMyVehicles() {
   return await response.json()
 }
 
-export async function cancelVehicle(id) {
-  const response = await fetch(`${API_URL}/${id}`, {
-    method: "DELETE",
+export async function deactivateVehicle(id) {
+  const response = await fetch(`${API_URL}/${id}/deactivate`, {
+    method: "POST",
     headers: getAuthHeader()
   })
 
@@ -40,7 +40,27 @@ export async function cancelVehicle(id) {
     return true
   }
 
-  let message = "Không thể xóa phương tiện";
+  let message = "Không thể vô hiệu hóa phương tiện";
+
+  try {
+    const data = await response.json();
+    message = data.message || message;
+  } catch { }
+
+  throw new Error(message);
+}
+
+export async function activateVehicle(id) {
+  const response = await fetch(`${API_URL}/${id}/activate`, {
+    method: "POST",
+    headers: getAuthHeader()
+  })
+
+  if (response.ok) {
+    return true
+  }
+
+  let message = "Không thể kích hoạt phương tiện";
 
   try {
     const data = await response.json();

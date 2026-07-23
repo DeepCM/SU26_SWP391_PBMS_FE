@@ -193,7 +193,7 @@ function Home() {
 
     const hasMatchingVehicle = vehicles.some((v) => {
       const typeMatches = v.vehicleTypeName === selectedType.name;
-      const isAvailable = v.hasActiveBooking === 'false' || v.hasActiveBooking === false;
+      const isAvailable = (v.hasActiveBooking === 'false' || v.hasActiveBooking === false) && (v.isActive === 'false' || v.isActive === false);
       return typeMatches && isAvailable;
     });
 
