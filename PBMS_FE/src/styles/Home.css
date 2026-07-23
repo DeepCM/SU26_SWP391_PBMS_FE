@@ -327,6 +327,12 @@ text-shadow:
   margin: 0 auto;
 }
 
+.floor-grid > *:only-child {
+  grid-column: 1 / -1;
+  justify-self: center;
+  width: 100%;
+  max-width: 580px; /* Độ rộng tương đương 1 card trong lưới 2 cột */
+}
 
 .floor-card {
   border: 1px solid #e5e7eb;
@@ -427,6 +433,7 @@ text-shadow:
   border: 1px solid #e5e7eb;
   border-radius: 10px;
   padding: 24px 28px;
+  height: fit-content;
 }
 
 .card-heading {
