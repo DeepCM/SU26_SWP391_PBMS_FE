@@ -100,6 +100,12 @@ function App() {
             <Route element={<ManagementLayout />}>
               <Route path="/checkin" element={<CheckIn />} />
               <Route path="/checkout" element={<CheckOut />} />
+            </Route>
+          </Route>
+
+          {/* ================= INCIDENT REPORTING (STAFF + DRIVER) ================= */}
+          <Route element={<ProtectedRoute allowedRoles={['staff', 'driver']} />}>
+            <Route element={<ManagementLayout />}>
               <Route path="/incidents" element={<Incidents />} />
             </Route>
           </Route>
