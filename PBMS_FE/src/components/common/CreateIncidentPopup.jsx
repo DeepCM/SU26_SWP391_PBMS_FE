@@ -2,14 +2,14 @@ import { useState } from 'react'
 import { useForm } from 'react-hook-form'
 import '../../styles/Table.css'
 import '../../styles/Incident.css'
-import { createIncident } from '../../services/incidentService'
+import { createIncident, createDriverIncident } from '../../services/incidentService'
+import { getUser } from '../../services/authService'
 import { INCIDENT_TYPE_LABELS } from '../../utils/incidentLabels'
 
-function CreateIncidentPopup({ onClose, onCreated, defaultSessionId }) {
-    const { register, handleSubmit, reset, formState: { errors } } = useForm({
-        defaultValues: { sessionId: defaultSessionId ?? '' }
-    })
+function CreateIncidentPopup({ onClose, onCreated, defaultSessionId, defaultBookingId }) {
+    const { register, handleSubmit, reset, formState: { errors } } = useForm()
     const [submitting, setSubmitting] = useState(false)
+    const isDriver = getUser()?.role?.toLowerCase() === 'driver'
 
     const onSubmit = async (data) => {
         setSubmitting(true)
@@ -19,10 +19,17 @@ function CreateIncidentPopup({ onClose, onCreated, defaultSessionId }) {
                 description: data.description.trim(),
                 incidentType: data.incidentType,
             }
-            if (data.sessionId) {
-                payload.sessionId = Number(data.sessionId)
+            if (defaultBookingId) {
+                payload.bookingId = Number(defaultBookingId)
             }
-            const created = await createIncident(payload)
+            // Driver dùng POST /incidents/driver (CreateDriverIncidentRequest)
+            // — DTO này không có sessionId, chỉ staff/manager/admin mới gắn được.
+            if (!isDriver && defaultSessionId) {
+                payload.sessionId = Number(defaultSessionId)
+            }
+            const created = isDriver
+                ? await createDriverIncident(payload)
+                : await createIncident(payload)
             onCreated?.(created)
             reset()
             onClose()
@@ -43,9 +50,15 @@ function CreateIncidentPopup({ onClose, onCreated, defaultSessionId }) {
                 <form onSubmit={handleSubmit(onSubmit)}>
                     <div className="sci-incident-modal-body">
                         <div className="sci-form-group">
-                            <label className="sci-form-label">Mã Phiên (tuỳ chọn)</label>
-                            <input className="sci-form-input" type="number" {...register('sessionId')} />
+                            <label className="sci-form-label">Mã Đặt Chỗ</label>
+                            <input className="sci-form-input" value={defaultBookingId ?? '—'} disabled />
                         </div>
+                        {!isDriver && (
+                            <div className="sci-form-group">
+                                <label className="sci-form-label">Mã Đậu Xe</label>
+                                <input className="sci-form-input" value={defaultSessionId ?? '—'} disabled />
+                            </div>
+                        )}
                         <div className="sci-form-group">
                             <label className="sci-form-label">Tiêu Đề</label>
                             <input className="sci-form-input" {...register('title', { required: 'Vui lòng nhập tiêu đề' })} />

@@ -180,6 +180,53 @@
     margin: 0 0 8px 0;
 }
 
+.sci-incident-section-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 8px;
+}
+
+.sci-incident-section-header .sci-incident-section-title {
+    margin: 0;
+}
+
+.sci-incident-section-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-shrink: 0;
+}
+
+.sci-btn-sm {
+    padding: 4px 10px;
+    font-size: 12px;
+}
+
+/* --- ATTACHMENT GALLERY --- */
+.sci-attachment-gallery {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+    gap: 10px;
+}
+
+.sci-attachment-item {
+    aspect-ratio: 1 / 1;
+    border-radius: 8px;
+    overflow: hidden;
+    background-color: #f3f4f6;
+    border: 1px solid #e5e7eb;
+}
+
+.sci-attachment-media {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+    cursor: pointer;
+}
+
 /* --- HISTORY TIMELINE --- */
 .sci-history-list {
     display: flex;
