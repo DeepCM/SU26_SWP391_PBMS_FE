@@ -1,7 +1,9 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import '../../styles/Table.css'
 import '../../styles/Incident.css'
-import { getIncidents, getIncidentById } from '../../services/incidentService'
+import '../../styles/ParkingHistory.css'
+import { getIncidents, getIncidentById, addIncidentAttachments } from '../../services/incidentService'
+import { getUser } from '../../services/authService'
 import { parseIncidentDescription } from '../../utils/incidentDescriptionParser'
 import { INCIDENT_TYPE_LABELS, INCIDENT_STATUS_LABELS } from '../../utils/incidentLabels'
 import { MANAGER_ACTIONS_CONFIG, getManagerAvailableActions } from '../../utils/incidentActions'
@@ -38,6 +40,7 @@ const TableIncident = ({
     const [sortConfig, setSortConfig] = useState({ key: 'createdAt', direction: 'desc' })
     const [showCreatePopup, setShowCreatePopup] = useState(false)
     const [selectedIncident, setSelectedIncident] = useState(null)
+    const isDriver = getUser()?.role?.toLowerCase() === 'driver'
 
     useEffect(() => {
         async function loadIncidents() {
@@ -183,9 +186,11 @@ const TableIncident = ({
                         <option value="id-asc">ID tăng dần</option>
                         <option value="id-desc">ID giảm dần</option>
                     </select>
-                    <button className="sci-btn sci-btn-primary" onClick={() => setShowCreatePopup(true)}>
-                        + Thêm Mới
-                    </button>
+                    {!isDriver && (
+                        <button className="sci-btn sci-btn-primary" onClick={() => setShowCreatePopup(true)}>
+                            + Thêm Mới
+                        </button>
+                    )}
                 </div>
             </div>
 
@@ -264,10 +269,17 @@ function IncidentDetailPopup({ incident, onClose, onUpdated, actionsConfig, getA
     const [activeAction, setActiveAction] = useState(null)
     const [actionInput, setActionInput] = useState('')
     const [submitting, setSubmitting] = useState(false)
+    const [showHistory, setShowHistory] = useState(true)
+    const [showAttachments, setShowAttachments] = useState(true)
+    const [uploading, setUploading] = useState(false)
+    const [enlargedAttachment, setEnlargedAttachment] = useState(null)
+    const fileInputRef = useRef(null)
 
     const { originalDescription, history } = parseIncidentDescription(incident.description)
     const availableActions = getAvailableActions(incident.status)
     const activeActionConfig = activeAction ? actionsConfig[activeAction] : null
+    const attachments = incident.attachments || []
+    const canAttach = incident.status !== 'resolved'
 
     function openAction(action) {
         setActiveAction(action)
@@ -277,6 +289,21 @@ function IncidentDetailPopup({ incident, onClose, onUpdated, actionsConfig, getA
     function cancelAction() {
         setActiveAction(null)
         setActionInput('')
+    }
+
+    async function handleFilesSelected(e) {
+        const files = Array.from(e.target.files || [])
+        e.target.value = ''
+        if (files.length === 0) return
+        setUploading(true)
+        try {
+            const uploaded = await addIncidentAttachments(incident.id, files)
+            onUpdated({ id: incident.id, attachments: [...attachments, ...uploaded] })
+        } catch (err) {
+            alert(err.message || 'Không thể tải tệp lên, vui lòng thử lại!')
+        } finally {
+            setUploading(false)
+        }
     }
 
     async function submitAction() {
@@ -323,7 +350,11 @@ function IncidentDetailPopup({ incident, onClose, onUpdated, actionsConfig, getA
                             <span className="sci-incident-detail-value">{incident.reporterName || `#${incident.reportedBy}`}</span>
                         </div>
                         <div className="sci-incident-detail-item">
-                            <span className="sci-incident-detail-label">Mã Phiên</span>
+                            <span className="sci-incident-detail-label">Mã Đặt Chỗ</span>
+                            <span className="sci-incident-detail-value">{incident.bookingId ?? '—'}</span>
+                        </div>
+                        <div className="sci-incident-detail-item">
+                            <span className="sci-incident-detail-label">Mã Đậu Xe</span>
                             <span className="sci-incident-detail-value">{incident.sessionId ?? '—'}</span>
                         </div>
                         <div className="sci-incident-detail-item">
@@ -351,19 +382,88 @@ function IncidentDetailPopup({ incident, onClose, onUpdated, actionsConfig, getA
 
                     {history.length > 0 && (
                         <div className="sci-incident-section">
-                            <p className="sci-incident-section-title">Lịch Sử Trao Đổi</p>
-                            <div className="sci-history-list">
-                                {history.map((item, index) => (
-                                    <div key={index} className="sci-history-item">
-                                        <span className={`sci-history-badge sci-history-badge--${item.type}`}>
-                                            {HISTORY_TYPE_LABELS[item.type] || item.type}
-                                        </span>
-                                        <p className="sci-history-content">{item.content}</p>
+                            <div className="sci-incident-section-header">
+                                <p className="sci-incident-section-title">Lịch Sử Trao Đổi</p>
+                                <button
+                                    type="button"
+                                    className="sci-btn sci-btn-secondary sci-btn-sm"
+                                    onClick={() => setShowHistory((prev) => !prev)}
+                                >
+                                    {showHistory ? 'Ẩn' : 'Hiện'}
+                                </button>
+                            </div>
+                            {showHistory && (
+                                <div className="sci-history-list">
+                                    {history.map((item, index) => (
+                                        <div key={index} className="sci-history-item">
+                                            <span className={`sci-history-badge sci-history-badge--${item.type}`}>
+                                                {HISTORY_TYPE_LABELS[item.type] || item.type}
+                                            </span>
+                                            <p className="sci-history-content">{item.content}</p>
+                                        </div>
+                                    ))}
+                                </div>
+                            )}
+                        </div>
+                    )}
+
+                    <div className="sci-incident-section">
+                        <div className="sci-incident-section-header">
+                            <p className="sci-incident-section-title">
+                                Tệp Đính Kèm{attachments.length > 0 ? ` (${attachments.length})` : ''}
+                            </p>
+                            <div className="sci-incident-section-actions">
+                                {canAttach && (
+                                    <>
+                                        <input
+                                            ref={fileInputRef}
+                                            type="file"
+                                            accept="image/*,video/*"
+                                            multiple
+                                            style={{ display: 'none' }}
+                                            onChange={handleFilesSelected}
+                                        />
+                                        <button
+                                            type="button"
+                                            className="sci-btn sci-btn-secondary sci-btn-sm"
+                                            onClick={() => fileInputRef.current?.click()}
+                                            disabled={uploading}
+                                        >
+                                            {uploading ? 'Đang tải...' : 'Đính kèm tệp'}
+                                        </button>
+                                    </>
+                                )}
+                                {attachments.length > 0 && (
+                                    <button
+                                        type="button"
+                                        className="sci-btn sci-btn-secondary sci-btn-sm"
+                                        onClick={() => setShowAttachments((prev) => !prev)}
+                                    >
+                                        {showAttachments ? 'Ẩn' : 'Hiện'}
+                                    </button>
+                                )}
+                            </div>
+                        </div>
+                        {attachments.length === 0 ? (
+                            <p className="sci-history-content">Chưa có tệp đính kèm.</p>
+                        ) : showAttachments && (
+                            <div className="sci-attachment-gallery">
+                                {attachments.map((att) => (
+                                    <div key={att.id} className="sci-attachment-item" onClick={() => setEnlargedAttachment(att)}>
+                                        {att.resourceType === 'video' ? (
+                                            <video src={att.fileUrl} className="sci-attachment-media" muted />
+                                        ) : (
+                                            <img
+                                                src={att.fileUrl}
+                                                alt={att.originalFileName || 'Tệp đính kèm'}
+                                                className="sci-attachment-media"
+                                            />
+                                        )}
                                     </div>
                                 ))}
                             </div>
-                        </div>
-                    )}
+                        )}
+                    </div>
 
                     <div className="sci-incident-section">
                         <p className="sci-incident-section-title">Kết Quả Xử Lý</p>
@@ -410,6 +510,28 @@ function IncidentDetailPopup({ incident, onClose, onUpdated, actionsConfig, getA
                     )}
                 </div>
             </div>
+
+            {enlargedAttachment && (
+                <div className="sci-lightbox-overlay" onClick={(e) => { e.stopPropagation(); setEnlargedAttachment(null) }}>
+                    <button className="sci-lightbox-close" onClick={() => setEnlargedAttachment(null)}>×</button>
+                    {enlargedAttachment.resourceType === 'video' ? (
+                        <video
+                            src={enlargedAttachment.fileUrl}
+                            className="sci-lightbox-image"
+                            controls
+                            autoPlay
+                            onClick={(e) => e.stopPropagation()}
+                        />
+                    ) : (
+                        <img
+                            src={enlargedAttachment.fileUrl}
+                            alt={enlargedAttachment.originalFileName || 'Xem chi tiết'}
+                            className="sci-lightbox-image"
+                            onClick={(e) => e.stopPropagation()}
+                        />
+                    )}
+                </div>
+            )}
         </div>
     )
 }

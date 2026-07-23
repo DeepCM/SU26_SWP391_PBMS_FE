@@ -8,6 +8,7 @@ import TableFloor from '../components/common/TableFloor.jsx'
 import TablePolicy from '../components/common/TablePolicy.jsx'
 import TableUser from '../components/common/TableUser.jsx'
 import TableVehicleType from '../components/common/TableVehicleType.jsx'
+import TableBookingSettings from '../components/common/TableBookingSettings.jsx'
 
 export default function Admin() {
   const [searchParams] = useSearchParams()
@@ -34,6 +35,8 @@ export default function Admin() {
         return <TableFloor />
       case 'vehicle-types':
         return <TableVehicleType />
+      case 'booking-settings':
+        return <TableBookingSettings/>
       default:
         return <TableUser />
     }
@@ -50,6 +53,8 @@ export default function Admin() {
         return 'Thiết lập danh sách và trạng thái sức chứa của các tầng đỗ xe.'
       case 'vehicle-types':
         return 'Định cấu hình các loại phương tiện được phép hoạt động trong hệ thống.'
+      case 'booking-settings':
+        return 'Định cấu hình các thông số đặt chỗ trong hệ thống.'
       default:
         return 'Quản lý cấu hình hệ thống PBMS.'
     }

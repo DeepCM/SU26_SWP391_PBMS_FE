@@ -684,7 +684,10 @@ function CheckIn() {
       )}
 
       {showIncidentPopup && (
-        <CreateIncidentPopup onClose={() => setShowIncidentPopup(false)} />
+        <CreateIncidentPopup
+          onClose={() => setShowIncidentPopup(false)}
+          defaultBookingId={sessionData?.bookingId}
+        />
       )}
     </div>
   )

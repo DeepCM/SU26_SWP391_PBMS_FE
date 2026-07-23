@@ -46,6 +46,7 @@ const ADMIN_ITEMS = [
   { path: '/manager?tab=incidents', label: 'Sự cố', Icon: AlertIcon },  
   { path: '/reviews', label: 'Nhận phản hồi', Icon: AlertIcon },
   { path: '/parking-history', label: 'Lịch sử', Icon: ClockIcon },
+  { path: '/admin?tab=booking-settings', label: 'Cấu hình', Icon: SettingsIcon },
 ]
 
 const STORAGE_KEY = 'sidebar-collapsed'
