@@ -606,8 +606,8 @@ function CheckIn() {
                     const color = percentRemaining <= 10
                       ? '#EF4444'
                       : percentRemaining <= 30
-                        ? '#F59E0B'
-                        : '#22C55E'
+                        ? '#de8d02'
+                        : '#0e7b36'
                     return (
                       <option key={f.floorId} value={String(f.floorId)} style={{ color }}>
                         {f.floorName} ({f.availableSlots} chỗ trống)
