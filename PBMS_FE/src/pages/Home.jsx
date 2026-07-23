@@ -193,12 +193,12 @@ function Home() {
 
     const hasMatchingVehicle = vehicles.some((v) => {
       const typeMatches = v.vehicleTypeName === selectedType.name;
-      const isAvailable = (v.hasActiveBooking === 'false' || v.hasActiveBooking === false) && (v.isActive === 'false' || v.isActive === false);
+      const isAvailable = (v.hasActiveBooking === 'false' || v.hasActiveBooking === false) && (v.isActive === 'true' || v.isActive === true);
       return typeMatches && isAvailable;
     });
 
     if (!hasMatchingVehicle) {
-      alert("Bạn chưa đăng ký phương tiện nào thuộc loại này hoặc phương tiện đã có lịch đặt.");
+      alert("Bạn chưa đăng ký phương tiện nào thuộc loại này hoặc phương tiện đã có lịch đặt/bị vô hiệu hóa.");
       return;
     }
 

@@ -5,17 +5,28 @@ import { getMyVehicles } from '../../services/vehicleService';
 import { getPaymentLink } from '../../services/paymentService';
 import '../../styles/BookingPopup.css';
 
-
 function BookingPopup({ selectedVehicle, vehicleTypes, onClose }) {
   const [step, setStep] = useState(1);
   const [loading, setLoading] = useState(false);
   const [paymentData, setPaymentData] = useState(null);
   const [vehicles, setVehicles] = useState([])
+  /**
+   * Lọc danh sách xe đang hoạt động và chưa có Booking/Parking Session
+   */
+  export const getAvailableVehicles = (vehicleList = []) => {
+    return vehicleList.filter(
+      (vehicle) => vehicle.isActive === true && vehicle.hasActiveBooking === false
+    );
+  };
+
   useEffect(() => {
     const fetchVehicles = async () => {
       try {
         const data = await getMyVehicles();
-        const formattedData = data.map(item => ({
+        const availableVehicles = data.filter(
+          (vehicle) => vehicle.isActive && !vehicle.hasActiveBooking
+        );
+        const formattedData = availableVehicles.map(item => ({
           id: item.id,
           status: item.hasActiveBooking ? 'active' : 'none',
           vehicleTypeName: item.vehicleTypeName,
@@ -87,7 +98,7 @@ function BookingPopup({ selectedVehicle, vehicleTypes, onClose }) {
 
     return formatDateTimeLocal(max);
   };
-  
+
   const VEHICLE_OPTIONS = [
     { id: 1, name: "Xe máy" },
     { id: 2, name: "Ô tô" },
