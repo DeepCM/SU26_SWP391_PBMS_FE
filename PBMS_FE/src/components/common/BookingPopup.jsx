@@ -13,7 +13,7 @@ function BookingPopup({ selectedVehicle, vehicleTypes, onClose }) {
   /**
    * Lọc danh sách xe đang hoạt động và chưa có Booking/Parking Session
    */
-  export const getAvailableVehicles = (vehicleList = []) => {
+  const getAvailableVehicles = (vehicleList = []) => {
     return vehicleList.filter(
       (vehicle) => vehicle.isActive === true && vehicle.hasActiveBooking === false
     );
