@@ -1,16 +1,16 @@
 import { useState, useEffect } from 'react'
-import { getMyVehicles, cancelVehicle, updateVehicle } from '../services/vehicleService'
+import { getMyVehicles, deactivateVehicle, activateVehicle, updateVehicle } from '../services/vehicleService'
 import { getVehicleTypes } from '../services/vehicleTypeService'
 import VehiclePopup from '../components/common/VehiclePopup'
 import Navbar from '../components/common/Navbar'
 import '../styles/Home.css'
 import '../styles/Bookings.css'
 import '../styles/BookingPopup.css'
+import '../styles/Table.css'
 import {
   IconCar,
   IconMotorbike,
   IconEbike,
-  IconEye,
   IconExpand,
   IconClock,
   IconPin,
@@ -23,6 +23,7 @@ import {
 
 // ─── Helpers ──────────────────────────────────────────────────
 function getVehicleIconKey(vehicleTypeName) {
+  if (!vehicleTypeName) return 'car'
   const name = vehicleTypeName.toLowerCase()
   if (name.includes('ô tô') || name.includes('car') || name.includes('xe hơi')) return 'car'
   if (name.includes('điện') || name.includes('ebike') || name.includes('electric')) return 'ebike'
@@ -40,7 +41,7 @@ const VEHICLE_ICON = {
 // ─── Status config ─────────────────────────────────────────────
 const STATUS_CONFIG = {
   none: {
-    label: 'Chưa đăng kí',
+    label: 'Chưa đặt chỗ',
     badgeClass: 'badge--upcoming',
     stripClass: 'strip--upcoming',
     dot: '#1B5EF7',
@@ -51,15 +52,20 @@ const STATUS_CONFIG = {
     stripClass: 'strip--active',
     dot: '#22C55E',
   },
-
+  deactive: {
+    label: 'Ngưng hoạt động',
+    badgeClass: 'badge--disabled',
+    stripClass: 'strip--disabled',
+    dot: '#9CA3AF',
+  }
 }
-
 
 // ─── Tab config ────────────────────────────────────────────────
 const TABS = [
   { key: 'all', label: 'Tất cả' },
   { key: 'active', label: 'Đang đặt chỗ' },
   { key: 'none', label: 'Chưa đặt chỗ' },
+  { key: 'deactive', label: 'Ngưng hoạt động' },
 ]
 
 // ─── Main Page ─────────────────────────────────────────────────
@@ -74,7 +80,8 @@ export default function Vehicles() {
   const [vehicleTypes, setVehicleTypes] = useState([]);
   const [selectedVehicle, setSelectedVehicle] = useState(null);
   const [vehicles, setVehicles] = useState([])
-  //Helper
+
+  // Helper chuyển đổi dữ liệu từ API
   const formatVehicles = (data) => data.map(item => ({
     id: item.id,
     status: item.hasActiveBooking ? 'active' : 'none',
@@ -82,20 +89,21 @@ export default function Vehicles() {
     vehicleLabel: item.vehicleTypeName,
     vehicleTypeId: item.vehicleTypeId,
     licensePlate: item.licensePlate,
-    vehicleImgUrl: item.vehicleImgUrl
+    vehicleImgUrl: item.vehicleImgUrl,
+    isActive: item.isActive ?? true,
+    hasActiveBooking: item.hasActiveBooking ?? false
   }));
+
   const refreshVehicleList = async () => {
     try {
       const data = await getMyVehicles();
-
-      // Crucial: Re-apply the transformation here so the UI state remains consistent
-      const formattedData = formatVehicles(data)
-
+      const formattedData = formatVehicles(data);
       setVehicles(formattedData);
     } catch (err) {
       console.error("Refresh failed:", err);
     }
   };
+
   useEffect(() => {
     const fetchVehicles = async () => {
       try {
@@ -104,13 +112,12 @@ export default function Vehicles() {
           getVehicleTypes()
         ]);
         setVehicleTypes(vehicleTypesData);
-        // TRANSFORM the API data to match your component
-        const formattedData = formatVehicles(vehiclesData)
-
+        const formattedData = formatVehicles(vehiclesData);
         setVehicles(formattedData);
         setLoading(false);
       } catch (err) {
         console.error("Error fetching vehicles:", err);
+        setLoading(false);
       }
     };
 
@@ -121,55 +128,101 @@ export default function Vehicles() {
     setSelectedVehicle(null);
     setShowVehiclePopup(true);
   };
-  const handleCancel = async (id) => {
-    if (!window.confirm('Bạn có chắc muốn xóa phương tiện này không?')) return
-    try {
-      await cancelVehicle(id)
-      setVehicles(prev =>
-        prev.filter(v => v.id !== id)
-      )
-    } catch (err) {
-      alert(err.message)
-    }
-  }
+
   const handleUpdate = (vehicle) => {
     setSelectedVehicle(vehicle);
     setShowVehiclePopup(true);
   };
 
+  // Xử lý Ngưng hoạt động / Kích hoạt lại
+  const handleToggleActive = async (vehicle) => {
+    if (vehicle.isActive) {
+      if (vehicle.hasActiveBooking || vehicle.status === 'active') {
+        alert('Xe đang có booking hoặc lượt đỗ chưa hoàn tất, không thể ngưng hoạt động!');
+        return;
+      }
+
+      if (!window.confirm(`Bạn có chắc muốn ngưng hoạt động xe ${vehicle.licensePlate} không?`)) return;
+
+      try {
+        await deactivateVehicle(vehicle.id);
+        await refreshVehicleList();
+      } catch (err) {
+        alert(err.message || 'Không thể ngưng hoạt động xe. Vui lòng kiểm tra lại!');
+      }
+    } else {
+      if (!window.confirm(`Bạn có chắc muốn kích hoạt lại xe ${vehicle.licensePlate} không?`)) return;
+
+      try {
+        await activateVehicle(vehicle.id);
+        await refreshVehicleList();
+      } catch (err) {
+        alert(err.message || 'Không thể kích hoạt lại xe!');
+      }
+    }
+  };
+
+  // Thống kê số lượng từng loại
   const counts = {
     all: vehicles.length,
-    active: vehicles.filter(v => v.status === 'active').length,
-    none: vehicles.filter(v => v.status === 'none').length,
+    active: vehicles.filter(v => v.isActive && v.status === 'active').length,
+    none: vehicles.filter(v => v.isActive && v.status === 'none').length,
+    deactive: vehicles.filter(v => !v.isActive).length,
   }
 
-  const filtered = activeTab === 'all'
-    ? vehicles
-    : vehicles.filter(v => v.status === activeTab)
+  // Lọc theo Tab & Sắp xếp: Xe ngưng hoạt động luôn nằm ở cuối cùng
+  const getFilteredAndSortedVehicles = () => {
+    let list = [];
+    if (activeTab === 'all') {
+      list = vehicles;
+    } else if (activeTab === 'active') {
+      list = vehicles.filter(v => v.isActive && v.status === 'active');
+    } else if (activeTab === 'none') {
+      list = vehicles.filter(v => v.isActive && v.status === 'none');
+    } else if (activeTab === 'deactive') {
+      list = vehicles.filter(v => !v.isActive);
+    }
 
-  // ─── Vehicle Card ──────────────────────────────────────────────
+    // Ưu tiên xe isActive === true lên trước, isActive === false xuống cuối
+    return [...list].sort((a, b) => {
+      if (a.isActive === b.isActive) return 0;
+      return a.isActive ? -1 : 1;
+    });
+  };
+
+  const filtered = getFilteredAndSortedVehicles();
+
+  // ─── Modal phóng to ảnh ────────────────────────────────────────
   function ImgModal({ Url, onClose }) {
     return (
       <div className="qr-modal-overlay" onClick={onClose}>
         <div className="vehicle-modal-box" onClick={e => e.stopPropagation()}>
           <button className="qr-modal-close" onClick={onClose}>✕</button>
           <p className="qr-modal-title">Ảnh phương tiện</p>
-          <img src={Url} alt="QR phóng to" className="vehicle-modal-image" />
+          <img src={Url} alt="Ảnh phương tiện" className="vehicle-modal-image" />
         </div>
       </div>
     )
   }
 
-  function VehicleCard({ vehicle, onCancel }) {
-    const status = STATUS_CONFIG[vehicle.status] || STATUS_CONFIG['none'];
+  // ─── Vehicle Card Component ───────────────────────────────────
+  function VehicleCard({ vehicle, onToggleActive, onUpdate }) {
+    const isDeactive = !vehicle.isActive;
+    const statusKey = isDeactive ? 'deactive' : vehicle.status;
+    const status = STATUS_CONFIG[statusKey] || STATUS_CONFIG['none'];
     const vehicleIcon = VEHICLE_ICON[vehicle.vehicleType] || VEHICLE_ICON['car'];
+
     const VEHICLE_NAME_MAP = {
       "Xe máy": "Xe máy",
       "Ô tô": "Ô tô",
       "Xe máy điện": "Xe máy điện"
     };
+
     return (
-      <div className="booking-card">
+      <div 
+        className={`booking-card ${isDeactive ? 'booking-card--deactive' : ''}`}
+        style={isDeactive ? { opacity: 0.65, backgroundColor: '#f8fafc', filter: 'grayscale(35%)' } : {}}
+      >
         <div className={`card-top-strip ${status.stripClass}`} />
 
         {/* Header */}
@@ -191,10 +244,11 @@ export default function Vehicles() {
             <span className="vehicle-type">{VEHICLE_NAME_MAP[vehicle.vehicleLabel] || vehicle.vehicleLabel}</span>
           </div>
         </div>
+
         {/* Divider */}
         <div className="card-divider" />
 
-        {/* Should display vehicle Img instead */}
+        {/* Vehicle Image */}
         <div className="card-qr">
           <div className="qr-wrap">
             {vehicle.vehicleImgUrl
@@ -220,23 +274,33 @@ export default function Vehicles() {
         {/* Footer actions */}
         <div className="card-footer">
           <button
-            className={`btn-action btn-action--outline ${vehicle.status === 'active' ? 'btn-disabled' : ''}`}
-            onClick={() => vehicle.status !== 'active' && handleUpdate(vehicle)}
-            disabled={vehicle.status === 'active'}
+            className={`btn-action btn-action--outline ${(vehicle.status === 'active' || isDeactive) ? 'btn-disabled' : ''}`}
+            onClick={() => vehicle.status !== 'active' && !isDeactive && onUpdate(vehicle)}
+            disabled={vehicle.status === 'active' || isDeactive}
           >
             Chỉnh sửa
           </button>
 
-          <button
-            className={`btn-action btn-action--danger ${vehicle.status === 'active' ? 'btn-disabled' : ''}`}
-            onClick={() => vehicle.status !== 'active' && onCancel(vehicle.id)}
-            disabled={vehicle.status === 'active'}
-          >
-            Xóa
-          </button>
+          {vehicle.isActive ? (
+            <button
+              className={`btn-action btn-action--danger ${vehicle.hasActiveBooking ? 'btn-disabled' : ''}`}
+              onClick={() => !vehicle.hasActiveBooking && onToggleActive(vehicle)}
+              disabled={vehicle.hasActiveBooking}
+              title={vehicle.hasActiveBooking ? 'Xe đang có booking không thể ngưng hoạt động' : ''}
+            >
+              Ngưng hoạt động
+            </button>
+          ) : (
+            <button
+              className="btn-action btn-action--outline"
+              onClick={() => onToggleActive(vehicle)}
+              style={{ color: '#22C55E', borderColor: '#22C55E' }}
+            >
+              Kích hoạt lại
+            </button>
+          )}
         </div>
       </div>
-
     )
   }
 
@@ -251,7 +315,6 @@ export default function Vehicles() {
             <h1 className="bookings-title">Phương tiện của tôi</h1>
             <p className="bookings-subtitle">Quản lý và theo dõi tất cả các phương tiện đã đăng kí</p>
           </div>
-          {/* a button to add new vehicle, leading to a VehiclePopup.jsx (not implemented yet) */}
           <button className="booking-submit-btn" onClick={handleCreate}>
             Thêm phương tiện
           </button>
@@ -278,6 +341,16 @@ export default function Vehicles() {
               <span className="summary-label">Chưa đặt chỗ</span>
             </div>
           </div>
+
+          <div className="summary-box">
+            <div className="summary-icon" style={{ background: '#F3F4F6', color: '#6B7280' }}>
+              <SummaryUpcomingIcon />
+            </div>
+            <div className="summary-text">
+              <span className="summary-count" style={{ color: '#6B7280' }}>{counts.deactive}</span>
+              <span className="summary-label">Ngưng hoạt động</span>
+            </div>
+          </div>
         </div>
 
         {/* Tabs */}
@@ -297,15 +370,29 @@ export default function Vehicles() {
         </div>
 
         {/* Cards grid */}
-        <div className="bookings-grid">
-          {filtered.map(vehicle => (
-            <VehicleCard key={vehicle.id} vehicle={vehicle} onCancel={handleCancel} onUpdate={handleUpdate} />
-          ))}
-        </div>
+        {loading ? (
+          <div style={{ padding: '40px', textAlign: 'center', color: '#6B7280' }}>Đang tải danh sách phương tiện...</div>
+        ) : (
+          <div className="bookings-grid">
+            {filtered.length === 0 ? (
+              <div style={{ gridColumn: '1 / -1', textAlign: 'center', padding: '40px', color: '#9CA3AF' }}>
+                Không tìm thấy phương tiện nào.
+              </div>
+            ) : (
+              filtered.map(vehicle => (
+                <VehicleCard
+                  key={vehicle.id}
+                  vehicle={vehicle}
+                  onToggleActive={handleToggleActive}
+                  onUpdate={handleUpdate}
+                />
+              ))
+            )}
+          </div>
+        )}
       </main>
-      {/* --- SINGLE SOURCE OF TRUTH FOR POPUPS --- */}
 
-      {/* 1. Only one Modal for images */}
+      {/* Popups */}
       {selectedImageUrl && (
         <ImgModal
           Url={selectedImageUrl}

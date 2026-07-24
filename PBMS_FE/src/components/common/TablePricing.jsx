@@ -1,10 +1,12 @@
 import { useState, useEffect } from 'react';
 import '../../styles/Table.css';
 import { getAllPricing } from '../../services/pricingService';
+import { getVehicleTypes } from '../../services/vehicleTypeService';
 import PricingPopup from './PricingPopup';
 
 const TablePricing = () => {
     const [pricingState, setPricingState] = useState(null);
+    const [vehicleTypesList, setVehicleTypesList] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
     const [showPricingPopup, setShowPricingPopup] = useState(false);
@@ -88,16 +90,21 @@ const TablePricing = () => {
         return { uniqueFloors, uniqueVehicleTypes };
     };
 
-    const loadPricingData = async () => {
+    const loadData = async () => {
         setLoading(true);
         setError(null);
         try {
-            const response = await getAllPricing();
+            const [pricingRes, vehicleTypesRes] = await Promise.all([
+                getAllPricing(),
+                getVehicleTypes()
+            ]);
+
             setPricingState({
-                tableData: response || []
+                tableData: pricingRes || []
             });
+            setVehicleTypesList(vehicleTypesRes || []);
         } catch (err) {
-            console.error("Failed to load pricing data:", err);
+            console.error("Failed to load pricing or vehicle type data:", err);
             setError(err.message || 'Không thể tải cấu hình bảng giá.');
         } finally {
             setLoading(false);
@@ -105,7 +112,7 @@ const TablePricing = () => {
     };
 
     useEffect(() => {
-        loadPricingData();
+        loadData();
     }, []);
 
     if (loading) {
@@ -123,8 +130,6 @@ const TablePricing = () => {
             </div>
         );
     }
-
-    const { uniqueFloors, uniqueVehicleTypes } = getUniqueCategories();
 
     return (
         <div className="sci-table-card">
@@ -151,12 +156,12 @@ const TablePricing = () => {
                 <table className="sci-data-table">
                     <thead>
                         <tr>
-                            <th
+                            {/* <th
                                 className={`sci-sortable ${sortConfig.key === 'floorName' ? `sci-sortable-${sortConfig.direction}` : ''}`}
                                 onClick={() => requestSort('floorName')}
                             >
                                 Tên Tầng
-                            </th>
+                            </th> */}
                             <th
                                 className={`sci-sortable ${sortConfig.key === 'vehicleTypeName' ? `sci-sortable-${sortConfig.direction}` : ''}`}
                                 onClick={() => requestSort('vehicleTypeName')}
@@ -193,14 +198,14 @@ const TablePricing = () => {
                     <tbody>
                         {getFilteredAndSortedData().length === 0 ? (
                             <tr>
-                                <td colSpan="7" className="sci-table-empty-row">
+                                <td colSpan="6" className="sci-table-empty-row">
                                     Không tìm thấy cấu hình giá phù hợp.
                                 </td>
                             </tr>
                         ) : (
                             getFilteredAndSortedData().map((row) => (
                                 <tr key={row.id} className="sci-table-row">
-                                    <td className="sci-cell-id">{row.floorName || '-'}</td>
+                                    {/* <td className="sci-cell-id">{row.floorName || '-'}</td> */}
                                     <td className="sci-font-medium">{row.vehicleTypeName || '-'}</td>
                                     <td className="sci-font-medium">
                                         {row.pricePerHour ? `${row.pricePerHour.toLocaleString('vi-VN')} đ` : '0 đ'}
@@ -232,10 +237,9 @@ const TablePricing = () => {
                 <PricingPopup
                     key={selectedPricing?.id || 'new'}
                     pricingData={selectedPricing}
-                    floorsList={uniqueFloors}
-                    vehicleTypesList={uniqueVehicleTypes}
+                    vehicleTypesList={vehicleTypesList}
                     onClose={() => setShowPricingPopup(false)}
-                    onRefresh={loadPricingData}
+                    onRefresh={loadData}
                 />
             )}
         </div>
