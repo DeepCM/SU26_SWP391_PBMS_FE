@@ -346,11 +346,11 @@ function IncidentDetailPopup({ incident, onClose, onUpdated, actionsConfig, getA
                             <span className="sci-incident-detail-value">{incident.reporterName || `#${incident.reportedBy}`}</span>
                         </div>
                         <div className="sci-incident-detail-item">
-                            <span className="sci-incident-detail-label">Mã Đặt Chỗ</span>
+                            <span className="sci-incident-detail-label">BID</span>
                             <span className="sci-incident-detail-value">{incident.bookingId ?? '—'}</span>
                         </div>
                         <div className="sci-incident-detail-item">
-                            <span className="sci-incident-detail-label">Mã Đậu Xe</span>
+                            <span className="sci-incident-detail-label">PID</span>
                             <span className="sci-incident-detail-value">{incident.sessionId ?? '—'}</span>
                         </div>
                         <div className="sci-incident-detail-item">
