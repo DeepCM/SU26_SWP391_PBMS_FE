@@ -8,8 +8,8 @@ import { PARKING_STATUS_LABELS, SESSION_TYPE_LABELS } from '../../utils/parkingL
 import CreateIncidentPopup from './CreateIncidentPopup'
 
 // Backend chỉ lọc theo SessionCode/LicensePlateSnapshot (xem ParkingSessionRepository.BuildHistoryQuery),
-// không hỗ trợ tìm theo ID hay Booking ID.
-const SEARCH_PLACEHOLDER = 'Tìm kiếm theo mã phiên, biển số...'
+// không hỗ trợ tìm theo PID hay BID.
+const SEARCH_PLACEHOLDER = 'Tìm kiếm theo biển số, mã vé...'
 
 // Chưa có luồng nghiệp vụ nào tự động gán trạng thái "incident" cho phiên gửi xe,
 // nên bỏ khỏi dropdown filter — vẫn giữ trong PARKING_STATUS_LABELS để hiển thị badge nếu có.
@@ -235,8 +235,8 @@ const TableParking = () => {
                 <select className="sci-filter-select" defaultValue="newest" onChange={(e) => applySortPreset(e.target.value)}>
                     <option value="newest">Check-in mới nhất</option>
                     <option value="oldest">Check-in cũ nhất</option>
-                    <option value="id-asc">ID tăng dần</option>
-                    <option value="id-desc">ID giảm dần</option>
+                    <option value="id-asc">PID tăng dần</option>
+                    <option value="id-desc">PID giảm dần</option>
                 </select>
             </div>
 
@@ -248,9 +248,9 @@ const TableParking = () => {
                                 className={`sci-sortable ${sortConfig.key === 'id' ? `sci-sortable-${sortConfig.direction}` : ''}`}
                                 onClick={() => requestSort('id')}
                             >
-                                ID
+                                PID
                             </th>
-                            <th>Booking ID</th>
+                            <th>BID</th>
                             <th>Biển Số</th>
                             <th>Loại Xe</th>
                             <th>Tầng</th>
@@ -413,15 +413,15 @@ function ParkingSessionDetailPopup({ sessionId, onClose }) {
                         <>
                             <div className="sci-incident-detail-grid">
                                 <div className="sci-incident-detail-item">
-                                    <span className="sci-incident-detail-label">ID</span>
+                                    <span className="sci-incident-detail-label">PID</span>
                                     <span className="sci-incident-detail-value">#{detail.id}</span>
                                 </div>
                                 <div className="sci-incident-detail-item">
-                                    <span className="sci-incident-detail-label">Mã Phiên</span>
+                                    <span className="sci-incident-detail-label">Mã Vé</span>
                                     <span className="sci-incident-detail-value">{detail.sessionCode || '—'}</span>
                                 </div>
                                 <div className="sci-incident-detail-item">
-                                    <span className="sci-incident-detail-label">Booking ID</span>
+                                    <span className="sci-incident-detail-label">BID</span>
                                     <span className="sci-incident-detail-value">{detail.bookingId ?? '—'}</span>
                                 </div>
                                 <div className="sci-incident-detail-item">

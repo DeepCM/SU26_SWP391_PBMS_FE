@@ -6,12 +6,15 @@ import Navbar from '../components/common/Navbar'
 import Sidebar from '../components/common/Sidebar'
 import QRSessionModal from '../components/common/QRSessionModal'
 import CreateIncidentPopup from '../components/common/CreateIncidentPopup'
+import IncidentBlockedNotice from '../components/common/IncidentBlockedNotice'
 import { useCheckoutCameraSession, SESSION_PHASES } from '../hooks/useCheckoutCameraSession'
 import { useCheckoutScanSession, SCAN_SESSION_PHASES } from '../hooks/useCheckoutScanSession'
 import { verifyGuestCheckOut, verifyBookingCheckOut, confirmGuestCheckOut, confirmBookingCheckOut } from '../services/checkOutService'
+import { completeCameraSession } from '../services/cameraSessionService'
 import { syncCheckoutPaymentStatus } from '../services/paymentService'
 import { parseCheckoutQrContent } from '../utils/checkoutQr'
 import { redirectToLoginIfUnauthorized } from '../utils/authRedirect'
+import { isIncidentBlockedError, incidentBlockMessage } from '../utils/incidentBlock'
 
 function formatCurrency(value) {
   if (value === null || value === undefined) return '—'
@@ -143,6 +146,7 @@ function CheckOut() {
   const [verifyLoading, setVerifyLoading] = useState(false)
   const [verifyError, setVerifyError] = useState(null)
   const [sessionInfo, setSessionInfo] = useState(null) // { flowType: 'guest' | 'booking', ...verifyResponse }
+  const [checkoutBlocked, setCheckoutBlocked] = useState(false)
 
   // Ghi chú & thanh toán
   const [note, setNote] = useState('')
@@ -192,6 +196,33 @@ function CheckOut() {
     }
   }, [phase])
 
+  // Ngay khi đã có đủ 2 ảnh checkout (mặt + biển số), tự gọi complete camera
+  // session để chuyển status sang Completed — polling sẽ nhận status này ở
+  // lượt kế tiếp và tự đóng QR modal, không cần đợi session hết hạn.
+  const completeAttemptedForRef = useRef(null)
+  useEffect(() => {
+    if (!checkoutSessionData?.sessionId || checkoutSessionData.status === 'Completed') return
+    if (!checkoutSessionData.checkinFaceImg || !checkoutSessionData.checkinVehicleImg) return
+    if (completeAttemptedForRef.current === checkoutSessionData.sessionId) return
+    completeAttemptedForRef.current = checkoutSessionData.sessionId
+
+    completeCameraSession(checkoutSessionData.sessionId)
+      .then(({ status, data }) => {
+        if (status === 200) return
+        const blockErr = { status, message: data?.message }
+        if (isIncidentBlockedError(blockErr)) {
+          setCheckoutBlocked(true)
+          setConfirmError(incidentBlockMessage(blockErr))
+          return
+        }
+        // Lỗi khác (vd tạm thời) — cho phép thử lại ở lượt poll kế tiếp.
+        completeAttemptedForRef.current = null
+      })
+      .catch(() => {
+        completeAttemptedForRef.current = null
+      })
+  }, [checkoutSessionData])
+
   const isCheckoutSessionActive = phase === SESSION_PHASES.ACTIVE
 
   function handleCloseQrModal() {
@@ -209,6 +240,7 @@ function CheckOut() {
     async (parsed) => {
       setVerifyError(null)
       setVerifyLoading(true)
+      setCheckoutBlocked(false)
       try {
         let info
         if (parsed.flowType === 'booking') {
@@ -229,7 +261,12 @@ function CheckOut() {
         startSession(info.parkingSessionId, parsed.flowType === 'booking' ? 'BOOKING' : 'GUEST')
       } catch (err) {
         if (redirectToLoginIfUnauthorized(err, navigate)) return
-        setVerifyError(err.message || 'Không tìm thấy thông tin. Vui lòng kiểm tra lại mã.')
+        if (isIncidentBlockedError(err)) {
+          setCheckoutBlocked(true)
+          setVerifyError(incidentBlockMessage(err))
+        } else {
+          setVerifyError(err.message || 'Không tìm thấy thông tin. Vui lòng kiểm tra lại mã.')
+        }
       } finally {
         setVerifyLoading(false)
       }
@@ -320,6 +357,7 @@ function CheckOut() {
     if (!sessionInfo) return
     setConfirmError(null)
     setConfirmSuccess(null)
+    setCheckoutBlocked(false)
     setIsPaying(true)
     try {
       // Checkout chỉ dùng PayOS — Backend tự tính số tiền, Frontend không gửi paidAmount.
@@ -354,7 +392,12 @@ function CheckOut() {
       }
     } catch (err) {
       if (redirectToLoginIfUnauthorized(err, navigate)) return
-      setConfirmError(err.message || 'Lỗi kết nối server. Vui lòng thử lại.')
+      if (isIncidentBlockedError(err)) {
+        setCheckoutBlocked(true)
+        setConfirmError(incidentBlockMessage(err))
+      } else {
+        setConfirmError(err.message || 'Lỗi kết nối server. Vui lòng thử lại.')
+      }
     } finally {
       setIsPaying(false)
     }
@@ -527,7 +570,19 @@ function CheckOut() {
                       </button>
                     )}
                   </div>
-                  {verifyError && <p className="sci-confirm-error">{verifyError}</p>}
+                  {checkoutBlocked && verifyError ? (
+                    <IncidentBlockedNotice
+                      message={verifyError}
+                      onRetry={handleLookup}
+                      onDismiss={() => {
+                        setCheckoutBlocked(false)
+                        setVerifyError(null)
+                      }}
+                      retrying={verifyLoading}
+                    />
+                  ) : (
+                    verifyError && <p className="sci-confirm-error">{verifyError}</p>
+                  )}
                 </div>
                 <div className="co-info-cell">
                   <p className="co-info-label">BIỂN SỐ</p>
@@ -605,13 +660,25 @@ function CheckOut() {
                 </div>
               </div>
 
-              {confirmError && <p className="sci-confirm-error">{confirmError}</p>}
+              {checkoutBlocked && confirmError ? (
+                <IncidentBlockedNotice
+                  message={confirmError}
+                  onRetry={handlePayment}
+                  onDismiss={() => {
+                    setCheckoutBlocked(false)
+                    setConfirmError(null)
+                  }}
+                  retrying={isPaying}
+                />
+              ) : (
+                confirmError && <p className="sci-confirm-error">{confirmError}</p>
+              )}
               {confirmSuccess && <p className="sci-confirm-success">{confirmSuccess}</p>}
 
               <button
                 className="co-confirm-btn"
                 onClick={handlePayment}
-                disabled={!sessionInfo || isPaying || barrierReady}
+                disabled={!sessionInfo || isPaying || barrierReady || checkoutBlocked}
               >
                 {isPaying ? 'Đang xử lý...' : 'Thanh toán'}
               </button>
