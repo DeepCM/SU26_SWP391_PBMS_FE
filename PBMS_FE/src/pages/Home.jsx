@@ -93,7 +93,7 @@ function Home() {
           types.map(async (type) => {
             // 1. Khởi tạo giá trị mặc định đề phòng API lỗi
             let slots = { totalAvailableSlots: 0, floors: [] };
-            let pricing = { pricePerHour: 0, depositAmount: 0 };
+            let pricing = { pricePerHour: 0, depositAmount: 0,  };
 
             // 2. Gọi API lấy số chỗ trống (Có try/catch riêng)
             try {
@@ -119,7 +119,10 @@ function Home() {
               total: totalSlots,
               floors: slots.floors || [],
               pricePerHour: pricing.pricePerHour || 0,
-              deposit: pricing.depositAmount || 0
+              deposit: pricing.depositAmount || 0,
+              bookAhead: pricing.maxBookingHoursAhead || 0,
+              earlyChekin: pricing.earlyCheckinAllowanceMinutes || 0,
+              lateChekin: pricing.checkinGraceMinutes || 0
             };
           })
         );
@@ -230,7 +233,7 @@ function Home() {
                       setValue('vehicleTypeID', vehicle.id) // SỬA: Gán chính xác 'vehicleTypeID' bằng ID của xe
                     }}
                   >
-                    {VEHICLE_NAME_MAP[vehicle.name]?.icon}
+                    {VEHICLE_NAME_MAP[vehicle.name]?.icon || <IconCar/>}
                     {VEHICLE_NAME_MAP[vehicle.name]?.label || vehicle.name}
                   </button>
                 ))}
@@ -335,14 +338,13 @@ function Home() {
             ) : (
               policies.map((policy) => {
                 // Xác định class CSS tương ứng dựa theo độ ưu tiên hoặc loại chính sách nếu có
-                // Ở đây mặc định dùng 'announcement-item--blue' hoặc 'announcement-item--yellow' tùy theo nội dung bắt buộc
                 const isUrgent = policy.title?.toLowerCase().includes("bảo trì") || policy.title?.toLowerCase().includes("khẩn cấp");
                 const itemClass = isUrgent ? "announcement-item--yellow" : "announcement-item--blue";
 
                 return (
                   <li key={policy.id} className={`announcement-item ${itemClass}`}>
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                      <strong className="announcement-title" style={{ fontSize: '14px', color: '#1E293B' }}>
+                    <div className="announcement-list" >
+                      <strong className="announcement-title">
                         {policy.title}
                       </strong>
                       <span className="announcement-text">
