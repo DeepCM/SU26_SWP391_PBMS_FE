@@ -10,7 +10,6 @@ import IncidentBlockedNotice from '../components/common/IncidentBlockedNotice'
 import { useCheckoutCameraSession, SESSION_PHASES } from '../hooks/useCheckoutCameraSession'
 import { useCheckoutScanSession, SCAN_SESSION_PHASES } from '../hooks/useCheckoutScanSession'
 import { verifyGuestCheckOut, verifyBookingCheckOut, confirmGuestCheckOut, confirmBookingCheckOut } from '../services/checkOutService'
-import { completeCameraSession } from '../services/cameraSessionService'
 import { syncCheckoutPaymentStatus } from '../services/paymentService'
 import { parseCheckoutQrContent } from '../utils/checkoutQr'
 import { redirectToLoginIfUnauthorized } from '../utils/authRedirect'
@@ -195,33 +194,6 @@ function CheckOut() {
       setShowQrModal(false)
     }
   }, [phase])
-
-  // Ngay khi đã có đủ 2 ảnh checkout (mặt + biển số), tự gọi complete camera
-  // session để chuyển status sang Completed — polling sẽ nhận status này ở
-  // lượt kế tiếp và tự đóng QR modal, không cần đợi session hết hạn.
-  const completeAttemptedForRef = useRef(null)
-  useEffect(() => {
-    if (!checkoutSessionData?.sessionId || checkoutSessionData.status === 'Completed') return
-    if (!checkoutSessionData.checkinFaceImg || !checkoutSessionData.checkinVehicleImg) return
-    if (completeAttemptedForRef.current === checkoutSessionData.sessionId) return
-    completeAttemptedForRef.current = checkoutSessionData.sessionId
-
-    completeCameraSession(checkoutSessionData.sessionId)
-      .then(({ status, data }) => {
-        if (status === 200) return
-        const blockErr = { status, message: data?.message }
-        if (isIncidentBlockedError(blockErr)) {
-          setCheckoutBlocked(true)
-          setConfirmError(incidentBlockMessage(blockErr))
-          return
-        }
-        // Lỗi khác (vd tạm thời) — cho phép thử lại ở lượt poll kế tiếp.
-        completeAttemptedForRef.current = null
-      })
-      .catch(() => {
-        completeAttemptedForRef.current = null
-      })
-  }, [checkoutSessionData])
 
   const isCheckoutSessionActive = phase === SESSION_PHASES.ACTIVE
 
