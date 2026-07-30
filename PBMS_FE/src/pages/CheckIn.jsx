@@ -10,7 +10,6 @@ import CreateIncidentPopup from '../components/common/CreateIncidentPopup'
 import IncidentBlockedNotice from '../components/common/IncidentBlockedNotice'
 import { getVehicleTypes, getAvailableSlots } from '../services/vehicleTypeService'
 import { confirmGuestCheckIn, confirmBookingCheckIn } from '../services/checkInService'
-import { completeCameraSession } from '../services/cameraSessionService'
 import { redirectToLoginIfUnauthorized } from '../utils/authRedirect'
 import { isIncidentBlockedError, incidentBlockMessage } from '../utils/incidentBlock'
 
@@ -134,33 +133,6 @@ function CheckIn() {
   useEffect(() => {
     setQrPopupUrl(mobileUrl)
   }, [mobileUrl])
-
-  // Ngay khi đã có đủ 2 ảnh (mặt + biển số), tự gọi complete camera session
-  // để chuyển status sang Completed — polling sẽ nhận status này ở lượt kế
-  // tiếp và tự đóng QR modal, không cần đợi session hết hạn.
-  const completeAttemptedForRef = useRef(null)
-  useEffect(() => {
-    if (!sessionData?.sessionId || sessionData.status === 'Completed') return
-    if (!sessionData.checkinFaceImg || !sessionData.checkinVehicleImg) return
-    if (completeAttemptedForRef.current === sessionData.sessionId) return
-    completeAttemptedForRef.current = sessionData.sessionId
-
-    completeCameraSession(sessionData.sessionId)
-      .then(({ status, data }) => {
-        if (status === 200) return
-        const blockErr = { status, message: data?.message }
-        if (isIncidentBlockedError(blockErr)) {
-          setCheckinBlocked(true)
-          setConfirmError(incidentBlockMessage(blockErr))
-          return
-        }
-        // Lỗi khác (vd tạm thời) — cho phép thử lại ở lượt poll kế tiếp.
-        completeAttemptedForRef.current = null
-      })
-      .catch(() => {
-        completeAttemptedForRef.current = null
-      })
-  }, [sessionData])
 
   // Load danh sách loại xe
   useEffect(() => {
