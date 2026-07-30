@@ -7,9 +7,12 @@ import QRSessionModal from '../components/common/QRSessionModal'
 import Navbar from '../components/common/Navbar'
 import Sidebar from '../components/common/Sidebar'
 import CreateIncidentPopup from '../components/common/CreateIncidentPopup'
+import IncidentBlockedNotice from '../components/common/IncidentBlockedNotice'
 import { getVehicleTypes, getAvailableSlots } from '../services/vehicleTypeService'
 import { confirmGuestCheckIn, confirmBookingCheckIn } from '../services/checkInService'
+import { completeCameraSession } from '../services/cameraSessionService'
 import { redirectToLoginIfUnauthorized } from '../utils/authRedirect'
+import { isIncidentBlockedError, incidentBlockMessage } from '../utils/incidentBlock'
 
 // Backend trả message là chính error code (xem CheckInController.cs) — map sang
 // tiếng Việt dễ hiểu cho staff thay vì hiện thẳng code thô.
@@ -81,6 +84,7 @@ function CheckIn() {
   const [isConfirming, setIsConfirming] = useState(false)
   const [confirmError, setConfirmError] = useState(null)
   const [confirmSuccess, setConfirmSuccess] = useState(null)
+  const [checkinBlocked, setCheckinBlocked] = useState(false)
 
   const [now, setNow] = useState(new Date())
   const [isLoggedIn, setIsLoggedIn] = useState(!!localStorage.getItem('token'))
@@ -130,6 +134,33 @@ function CheckIn() {
   useEffect(() => {
     setQrPopupUrl(mobileUrl)
   }, [mobileUrl])
+
+  // Ngay khi đã có đủ 2 ảnh (mặt + biển số), tự gọi complete camera session
+  // để chuyển status sang Completed — polling sẽ nhận status này ở lượt kế
+  // tiếp và tự đóng QR modal, không cần đợi session hết hạn.
+  const completeAttemptedForRef = useRef(null)
+  useEffect(() => {
+    if (!sessionData?.sessionId || sessionData.status === 'Completed') return
+    if (!sessionData.checkinFaceImg || !sessionData.checkinVehicleImg) return
+    if (completeAttemptedForRef.current === sessionData.sessionId) return
+    completeAttemptedForRef.current = sessionData.sessionId
+
+    completeCameraSession(sessionData.sessionId)
+      .then(({ status, data }) => {
+        if (status === 200) return
+        const blockErr = { status, message: data?.message }
+        if (isIncidentBlockedError(blockErr)) {
+          setCheckinBlocked(true)
+          setConfirmError(incidentBlockMessage(blockErr))
+          return
+        }
+        // Lỗi khác (vd tạm thời) — cho phép thử lại ở lượt poll kế tiếp.
+        completeAttemptedForRef.current = null
+      })
+      .catch(() => {
+        completeAttemptedForRef.current = null
+      })
+  }, [sessionData])
 
   // Load danh sách loại xe
   useEffect(() => {
@@ -278,6 +309,7 @@ function CheckIn() {
   async function handleConfirm() {
     setConfirmError(null)
     setConfirmSuccess(null)
+    setCheckinBlocked(false)
 
     const sessionId = sessionData?.sessionId
     if (!sessionId) {
@@ -345,7 +377,12 @@ function CheckIn() {
       setNote('')
     } catch (err) {
       if (redirectToLoginIfUnauthorized(err, navigate)) return
-      setConfirmError(resolveCheckInErrorMessage(err))
+      if (isIncidentBlockedError(err)) {
+        setCheckinBlocked(true)
+        setConfirmError(incidentBlockMessage(err))
+      } else {
+        setConfirmError(resolveCheckInErrorMessage(err))
+      }
     } finally {
       setIsConfirming(false)
     }
@@ -545,7 +582,7 @@ function CheckIn() {
               <button
                 className="sci-qr-btn"
                 onClick={handleCapturePhoto}
-                disabled={phase === SESSION_PHASES.CREATING}
+                disabled={phase === SESSION_PHASES.CREATING || checkinBlocked}
               >
                 {phase === SESSION_PHASES.CREATING ? 'Đang tạo phiên...' : 'Chụp ảnh'}
               </button>
@@ -639,8 +676,18 @@ function CheckIn() {
                 />
               </div>
 
-              {confirmError && (
-                <p className="sci-confirm-error">{confirmError}</p>
+              {checkinBlocked ? (
+                <IncidentBlockedNotice
+                  message={confirmError}
+                  onRetry={handleConfirm}
+                  onDismiss={() => {
+                    setCheckinBlocked(false)
+                    setConfirmError(null)
+                  }}
+                  retrying={isConfirming}
+                />
+              ) : (
+                confirmError && <p className="sci-confirm-error">{confirmError}</p>
               )}
               {confirmSuccess && (
                 <p className="sci-confirm-success">{confirmSuccess}</p>
@@ -649,7 +696,7 @@ function CheckIn() {
               <button
                 className="sci-confirm-btn"
                 onClick={handleConfirm}
-                disabled={isConfirming || !hasRequiredCheckInPhotos}
+                disabled={isConfirming || !hasRequiredCheckInPhotos || checkinBlocked}
               >
                 {isConfirming ? 'Đang xử lý...' : 'Xác nhận vào – Mở barrier'}
               </button>

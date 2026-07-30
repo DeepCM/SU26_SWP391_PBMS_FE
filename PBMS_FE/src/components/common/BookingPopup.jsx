@@ -10,6 +10,7 @@ function BookingPopup({ selectedVehicle, vehicleTypes, onClose }) {
   const [loading, setLoading] = useState(false);
   const [paymentData, setPaymentData] = useState(null);
   const [vehicles, setVehicles] = useState([])
+  const [settings, setSettings] = useState([])
   /**
    * Lọc danh sách xe đang hoạt động và chưa có Booking/Parking Session
    */
@@ -23,6 +24,7 @@ function BookingPopup({ selectedVehicle, vehicleTypes, onClose }) {
     const fetchVehicles = async () => {
       try {
         const data = await getMyVehicles();
+        
         const availableVehicles = data.filter(
           (vehicle) => vehicle.isActive && !vehicle.hasActiveBooking
         );
@@ -94,7 +96,7 @@ function BookingPopup({ selectedVehicle, vehicleTypes, onClose }) {
 
   const getMaxDateTime = () => {
     const max = getVietnamTime();
-    max.setHours(max.getHours() + 4);
+    max.setHours(max.getHours() + settings);
 
     return formatDateTimeLocal(max);
   };
@@ -115,6 +117,7 @@ function BookingPopup({ selectedVehicle, vehicleTypes, onClose }) {
     vehicleTypes.find(
       v => v.name === selectedVehicleName
     );
+  
   return (
     <div className="booking-overlay">
       <div className="booking-popup">
@@ -140,18 +143,19 @@ function BookingPopup({ selectedVehicle, vehicleTypes, onClose }) {
                 </option>
               ))}
             </select>
+            
           </div>
-
           <div className="booking-pricing-preview">
-            <div>
+            <div className='booking-item'>
               <strong>Tiền cọc:</strong>{" "}
               {selectedVehicleInfo?.deposit?.toLocaleString()} VNĐ
             </div>
 
-            <div>
+            <div className='booking-item'>
               <strong>Giá theo giờ:</strong>{" "}
               {selectedVehicleInfo?.pricePerHour?.toLocaleString()} VNĐ/giờ
             </div>
+
           </div>
           <div className="booking-group">
             <label>Thời gian vào</label>
@@ -163,19 +167,32 @@ function BookingPopup({ selectedVehicle, vehicleTypes, onClose }) {
                 required: "Vui lòng chọn giờ vào",
                 validate: (value) => {
                   const selected = new Date(value);
-
                   const now = getVietnamTime();
-
+                  setSettings(selectedVehicleInfo.bookAhead);
                   const max = new Date(now);
-                  max.setHours(max.getHours() + 4);
+                  max.setHours(max.getHours() + settings);
 
                   return (
                     selected >= now &&
                     selected <= max
-                  ) || "Giờ đặt vào phải nằm trong vòng 4 giờ từ bây giờ";
+                  ) || "Giờ đặt vào phải nằm trong vòng " + settings + " giờ từ bây giờ";
                 }
               })}
             />
+          </div>
+          <div className="booking-pricing-preview">
+            <div className='booking-item'>
+              <strong>Đặt chỗ trước tối đa:</strong>{" "}
+              {selectedVehicleInfo?.bookAhead?.toLocaleString()} giờ
+            </div>
+            <div className='booking-item'>
+              <strong>Vào bãi trước giờ đặt:</strong>{" "}
+              {selectedVehicleInfo?.earlyChekin?.toLocaleString()} phút
+            </div>
+            <div className='booking-item'>
+              <strong>Vào bãi trễ giờ đặt:</strong>{" "}
+              {selectedVehicleInfo?.lateChekin?.toLocaleString()} phút
+            </div>
           </div>
           <div className="booking-group">
             <label>Phương tiện</label>
@@ -194,7 +211,6 @@ function BookingPopup({ selectedVehicle, vehicleTypes, onClose }) {
               }
             </select>
           </div>
-
 
           {errors.entryTime && (
             <span className="booking-error">

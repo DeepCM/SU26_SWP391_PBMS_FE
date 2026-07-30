@@ -109,6 +109,13 @@
   font-weight: 700;
 }
 
+.booking-pricing-preview{
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+
 .booking-qr {
   width: 180px;
   height: 180px;
@@ -228,3 +235,4 @@
   background: #eff6ff;
   /* Very light blue on hover */
 }
+

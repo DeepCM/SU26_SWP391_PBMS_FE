@@ -7,14 +7,14 @@ const SETTING_DEFINITIONS = [
     {
         key: 'checkinGraceMinutes',
         title: 'Thời gian gia hạn check-in',
-        description: 'Cho phép khách trễ hẹn tối đa mà không bị mất cọc',
+        description: 'Cho phép khách trễ hẹn tối đa mà không bị mất cọc (0 - 180 phút)',
         unit: 'Phút',
         minValue: 0
     },
     {
         key: 'earlyCheckinAllowanceMinutes',
         title: 'Cho phép check-in sớm',
-        description: 'Thời gian khách có thể vào bãi sớm hơn so với khung giờ đặt',
+        description: 'Thời gian khách có thể vào bãi sớm hơn so với khung giờ đặt (0 - 180 phút)',
         unit: 'Phút',
         minValue: 0
     },
