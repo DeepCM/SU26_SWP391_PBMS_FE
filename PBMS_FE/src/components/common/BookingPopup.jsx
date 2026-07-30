@@ -24,7 +24,7 @@ function BookingPopup({ selectedVehicle, vehicleTypes, onClose }) {
     const fetchVehicles = async () => {
       try {
         const data = await getMyVehicles();
-        
+
         const availableVehicles = data.filter(
           (vehicle) => vehicle.isActive && !vehicle.hasActiveBooking
         );
@@ -77,16 +77,16 @@ function BookingPopup({ selectedVehicle, vehicleTypes, onClose }) {
   };
 
   const getVietnamTime = () => {
-    return new Date(
-      new Date().toLocaleString("en-US", {
-        timeZone: "Asia/Ho_Chi_Minh"
-      })
+    const now = new Date(
+      new Date().toLocaleString("en-US", { timeZone: "Asia/Ho_Chi_Minh" })
     );
+    // Zero out seconds and milliseconds so selecting current minute isn't treated as past time
+    now.setSeconds(0, 0);
+    return now;
   };
 
   const formatDateTimeLocal = (date) => {
     const pad = (n) => String(n).padStart(2, "0");
-
     return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}`;
   };
 
@@ -96,8 +96,8 @@ function BookingPopup({ selectedVehicle, vehicleTypes, onClose }) {
 
   const getMaxDateTime = () => {
     const max = getVietnamTime();
-    max.setHours(max.getHours() + settings);
-
+    const bookAheadHours = selectedVehicleInfo?.bookAhead || 0;
+    max.setHours(max.getHours() + bookAheadHours);
     return formatDateTimeLocal(max);
   };
 
@@ -117,7 +117,7 @@ function BookingPopup({ selectedVehicle, vehicleTypes, onClose }) {
     vehicleTypes.find(
       v => v.name === selectedVehicleName
     );
-  
+
   return (
     <div className="booking-overlay">
       <div className="booking-popup">
@@ -143,7 +143,7 @@ function BookingPopup({ selectedVehicle, vehicleTypes, onClose }) {
                 </option>
               ))}
             </select>
-            
+
           </div>
           <div className="booking-pricing-preview">
             <div className='booking-item'>
@@ -168,14 +168,18 @@ function BookingPopup({ selectedVehicle, vehicleTypes, onClose }) {
                 validate: (value) => {
                   const selected = new Date(value);
                   const now = getVietnamTime();
-                  setSettings(selectedVehicleInfo.bookAhead);
-                  const max = new Date(now);
-                  max.setHours(max.getHours() + settings);
+                  const bookAheadHours = selectedVehicleInfo?.bookAhead || 0;
 
-                  return (
-                    selected >= now &&
-                    selected <= max
-                  ) || "Giờ đặt vào phải nằm trong vòng " + settings + " giờ từ bây giờ";
+                  const max = new Date(now);
+                  max.setHours(max.getHours() + bookAheadHours);
+
+                  if (selected < now) {
+                    return "Thời gian đặt không được ở trong quá khứ";
+                  }
+                  if (selected > max) {
+                    return `Giờ đặt vào phải nằm trong vòng ${bookAheadHours} giờ từ bây giờ`;
+                  }
+                  return true;
                 }
               })}
             />
