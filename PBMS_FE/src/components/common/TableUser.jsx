@@ -59,12 +59,7 @@ const TableUser = () => {
                 await activateUser(userItem.id);
             }
 
-            setAnalyticsData(prev => ({
-                ...prev,
-                tableData: prev.tableData.map(row =>
-                    row.id === userItem.id ? { ...row, isActive: !row.isActive } : row
-                )
-            }));
+            await loadTableData();
         } catch (err) {
             alert(err.message || `Không thể thực hiện tác vụ ${actionText}.`);
         }

@@ -542,3 +542,83 @@
   color: #64748b;
   font-weight: 500;
 }
+
+/* Modal Error Banner */
+.sci-modal-error-banner {
+    background-color: #f8d7da;
+    color: #842029;
+    border: 1px solid #f5c2c7;
+    padding: 12px 16px;
+    border-radius: 6px;
+    margin-bottom: 16px;
+    font-size: 14px;
+}
+
+/* Modal Info Notice Banner */
+.sci-info-banner {
+    background-color: #cff4fc;
+    color: #055160;
+    border: 1px solid #b6effb;
+    padding: 12px 16px;
+    border-radius: 6px;
+    margin-bottom: 16px;
+    font-size: 13px;
+    line-height: 1.5;
+}
+
+.sci-audit-summary {
+  margin-top: 16px;
+  padding: 12px;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  background: #f8fafc;
+}
+
+.sci-audit-meta {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px 16px;
+}
+
+.sci-json-diff {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  max-height: 320px;
+  overflow-y: auto;
+  background: #0f172a;
+  color: #e2e8f0;
+  padding: 12px;
+  border-radius: 6px;
+  font-size: 12px;
+}
+
+.sci-alert-margin {
+  margin: 12px 0 16px;
+}
+
+/* Table Expired / Superseded Row Styling */
+tr.sci-row-expired {
+    background-color: #f8f9fa;
+    color: #6c757d;
+    opacity: 0.75;
+}
+
+tr.sci-row-expired td {
+    color: #6c757d;
+}
+
+.sci-badge-secondary {
+    background-color: #6c757d;
+    color: #ffffff;
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 12px;
+}
+
+.sci-badge-success {
+    background-color: #198754;
+    color: #ffffff;
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 12px;
+}

@@ -34,12 +34,7 @@ const TableVehicleType = () => {
                 await activateVehicleType(item.id);
             }
 
-            setAnalyticsData(prev => ({
-                ...prev,
-                tableData: prev.tableData.map(row =>
-                    row.id === item.id ? { ...row, isActive: !row.isActive } : row
-                )
-            }));
+            await loadTableData();
         } catch (err) {
             alert(err.message || `Không thể thực hiện tác vụ ${actionText}.`);
         }

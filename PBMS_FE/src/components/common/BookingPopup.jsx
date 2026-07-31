@@ -3,29 +3,40 @@ import { useForm } from 'react-hook-form';
 import { createBooking } from '../../services/bookingService';
 import { getMyVehicles } from '../../services/vehicleService';
 import { getPaymentLink } from '../../services/paymentService';
+import { getPricingPreview } from '../../services/vehicleTypeService';
 import '../../styles/BookingPopup.css';
 
-function BookingPopup({ selectedVehicle, vehicleTypes, onClose }) {
-  const [step, setStep] = useState(1);
+function BookingPopup({ selectedVehicle, vehicleTypes = [], onClose }) {
   const [loading, setLoading] = useState(false);
-  const [paymentData, setPaymentData] = useState(null);
-  const [vehicles, setVehicles] = useState([])
-  const [settings, setSettings] = useState([])
-  /**
-   * Lọc danh sách xe đang hoạt động và chưa có Booking/Parking Session
-   */
-  const getAvailableVehicles = (vehicleList = []) => {
-    return vehicleList.filter(
-      (vehicle) => vehicle.isActive === true && vehicle.hasActiveBooking === false
-    );
-  };
+  const [pricingLoading, setPricingLoading] = useState(false);
+  const [vehicles, setVehicles] = useState([]);
+  const [pricingPreview, setPricingPreview] = useState(null);
+  const [pricingError, setPricingError] = useState(null);
 
+  const { register, handleSubmit, watch, setValue, formState: { errors } } = useForm({
+    defaultValues: {
+      vehicleType: selectedVehicle || (vehicleTypes[0]?.name || ''),
+      entryTime: '',
+      vehicleId: ''
+    }
+  });
+
+  const watchedVehicleType = watch('vehicleType');
+  const watchedEntryTime = watch('entryTime');
+
+  // Active Vehicle Type Configuration Object
+  const currentVehicleTypeObj = vehicleTypes.find(
+    (v) => v.name === watchedVehicleType || v.id === Number(watchedVehicleType)
+  );
+
+  // 1. Fetch User's Registered Vehicles on Mount
   useEffect(() => {
+    let isMounted = true;
     const fetchVehicles = async () => {
       try {
         const data = await getMyVehicles();
-
-        const availableVehicles = data.filter(
+        if (!isMounted) return;
+        const availableVehicles = (data || []).filter(
           (vehicle) => vehicle.isActive && !vehicle.hasActiveBooking
         );
         const formattedData = availableVehicles.map(item => ({
@@ -37,50 +48,55 @@ function BookingPopup({ selectedVehicle, vehicleTypes, onClose }) {
           vehicleImgUrl: item.vehicleImgUrl
         }));
         setVehicles(formattedData);
-        setLoading(false);
       } catch (err) {
-        console.error("Lỗi khi lấy phương tiện:", err);
+        console.error("Lỗi khi lấy danh sách phương tiện:", err);
       }
     };
 
     fetchVehicles();
+    return () => { isMounted = false; };
   }, []);
-  const { register, handleSubmit, watch, formState: { errors } } = useForm({
-    defaultValues: { vehicleType: selectedVehicle }
-  });
 
-  const onSubmit = async (data) => {
-    setLoading(true);
-    try {
-      // 0. Set time
-      const localDate = new Date(data.entryTime);
-      const booking = await createBooking({
-        vehicleId: data.vehicleId,
-        scheduledCheckin: localDate.toISOString()
-      });
-
-      // 2. Fetch the payment URL
-      const payment = await getPaymentLink(booking.id);
-
-      // 3. Trigger the redirect immediately
-      if (payment?.paymentUrl) {
-        window.open(payment.paymentUrl, "_blank", "noopener,noreferrer");
-        // Optionally close the popup after redirecting
-        onClose();
-      }
-    } catch (err) {
-      console.error("Booking error:", err);
-      alert(err.message || "Có lỗi xảy ra, vui lòng thử lại!");
-    } finally {
-      setLoading(false);
+  // 2. Fetch Dynamic Pricing Preview based on Selected Check-in Timestamp
+  useEffect(() => {
+    if (!currentVehicleTypeObj?.id) {
+      setPricingPreview(null);
+      return;
     }
-  };
 
+    const controller = new AbortController();
+    const fetchDynamicPricing = async () => {
+      setPricingLoading(true);
+      setPricingError(null);
+      try {
+        const entryTimeIso = watchedEntryTime ? new Date(watchedEntryTime).toISOString() : null;
+        const preview = await getPricingPreview(currentVehicleTypeObj.id, entryTimeIso, { signal: controller.signal });
+        setPricingPreview(preview);
+      } catch (err) {
+        if (err.name !== 'AbortError') {
+          console.error("Lỗi khi lấy thông tin giá:", err);
+          setPricingError(err.message || "Không thể tải thông tin giá áp dụng.");
+          setPricingPreview(null);
+        }
+      } finally {
+        setPricingLoading(false);
+      }
+    };
+
+    fetchDynamicPricing();
+    return () => controller.abort();
+  }, [currentVehicleTypeObj?.id, watchedEntryTime]);
+
+  // 3. Reset vehicle choice when Vehicle Type selection changes
+  useEffect(() => {
+    setValue('vehicleId', '');
+  }, [watchedVehicleType, setValue]);
+
+  // Time Utilities
   const getVietnamTime = () => {
     const now = new Date(
       new Date().toLocaleString("en-US", { timeZone: "Asia/Ho_Chi_Minh" })
     );
-    // Zero out seconds and milliseconds so selecting current minute isn't treated as past time
     now.setSeconds(0, 0);
     return now;
   };
@@ -90,85 +106,107 @@ function BookingPopup({ selectedVehicle, vehicleTypes, onClose }) {
     return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}`;
   };
 
-  const getMinDateTime = () => {
-    return formatDateTimeLocal(getVietnamTime());
-  };
+  const getMinDateTime = () => formatDateTimeLocal(getVietnamTime());
 
   const getMaxDateTime = () => {
     const max = getVietnamTime();
-    const bookAheadHours = selectedVehicleInfo?.bookAhead || 0;
+    const bookAheadHours = currentVehicleTypeObj?.bookAhead || 24;
     max.setHours(max.getHours() + bookAheadHours);
     return formatDateTimeLocal(max);
   };
 
-  const VEHICLE_OPTIONS = [
-    { id: 1, name: "Xe máy" },
-    { id: 2, name: "Ô tô" },
-    { id: 3, name: "Xe đạp" }
-  ];
-  const VEHICLE_NAME_MAP = {
-    "Xe máy": "Xe máy",
-    "Ô tô": "Ô tô",
-    "Xe máy điện": "Xe máy điện"
+  // Submit Handler
+  const onSubmit = async (data) => {
+    setLoading(true);
+    try {
+      const localDate = new Date(data.entryTime);
+      const booking = await createBooking({
+        vehicleId: Number(data.vehicleId),
+        scheduledCheckin: localDate.toISOString()
+      });
 
+      const payment = await getPaymentLink(booking.id);
+
+      if (payment?.paymentUrl) {
+        window.open(payment.paymentUrl, "_blank", "noopener,noreferrer");
+        onClose();
+      } else {
+        alert("Đã tạo đặt chỗ thành công nhưng không tìm thấy URL thanh toán.");
+      }
+    } catch (err) {
+      console.error("Booking error:", err);
+      alert(err.message || "Có lỗi xảy ra, vui lòng thử lại!");
+    } finally {
+      setLoading(false);
+    }
   };
-  const selectedVehicleName = watch('vehicleType');
-  const selectedVehicleInfo =
-    vehicleTypes.find(
-      v => v.name === selectedVehicleName
-    );
+
+  const filteredVehicles = vehicles.filter(v =>
+    v.status === 'none' &&
+    (v.vehicleTypeName === watchedVehicleType || v.vehicleTypeId === currentVehicleTypeObj?.id)
+  );
 
   return (
     <div className="booking-overlay">
       <div className="booking-popup">
-        <button className="booking-close-btn" onClick={onClose}>✕</button>
+        <button className="booking-close-btn" onClick={onClose} disabled={loading}>✕</button>
 
         <form onSubmit={handleSubmit(onSubmit)} className="booking-form">
-          <h2 className="booking-title">Đặt chỗ {VEHICLE_NAME_MAP[selectedVehicle] || selectedVehicle}</h2>
+          <h2 className="booking-title">
+            Đặt Chỗ {currentVehicleTypeObj?.name || selectedVehicle || ''}
+          </h2>
 
+          {/* Vehicle Type Selection */}
           <div className="booking-group">
             <label>Loại xe</label>
-
             <select
               {...register("vehicleType", {
                 required: "Vui lòng chọn loại xe"
               })}
+              disabled={loading}
             >
               {vehicleTypes.map(vehicle => (
-                <option
-                  key={vehicle.id}
-                  value={vehicle.name}
-                >
+                <option key={vehicle.id} value={vehicle.name}>
                   {vehicle.name}
                 </option>
               ))}
             </select>
-
+            {errors.vehicleType && <span className="booking-error">{errors.vehicleType.message}</span>}
           </div>
+          {/* Pricing Preview Box */}
           <div className="booking-pricing-preview">
-            <div className='booking-item'>
-              <strong>Tiền cọc:</strong>{" "}
-              {selectedVehicleInfo?.deposit?.toLocaleString()} VNĐ
-            </div>
-
-            <div className='booking-item'>
-              <strong>Giá theo giờ:</strong>{" "}
-              {selectedVehicleInfo?.pricePerHour?.toLocaleString()} VNĐ/giờ
-            </div>
-
+            {pricingLoading ? (
+              <div className="booking-pricing-loading">Đang cập nhật mức giá áp dụng...</div>
+            ) : pricingError ? (
+              <div className="booking-error">{pricingError}</div>
+            ) : (
+              <>
+                <div className="booking-item">
+                  <strong>Tiền cọc:</strong>{" "}
+                  {(pricingPreview?.depositAmount ?? currentVehicleTypeObj?.deposit ?? 0).toLocaleString('vi-VN')} VNĐ
+                </div>
+                <div className="booking-item">
+                  <strong>Giá theo giờ:</strong>{" "}
+                  {(pricingPreview?.pricePerHour ?? currentVehicleTypeObj?.pricePerHour ?? 0).toLocaleString('vi-VN')} VNĐ/giờ
+                </div>
+              </>
+            )}
           </div>
+
+          {/* Entry Time Selection */}
           <div className="booking-group">
-            <label>Thời gian vào</label>
+            <label>Thời gian vào bãi dự kiến</label>
             <input
               type="datetime-local"
               min={getMinDateTime()}
               max={getMaxDateTime()}
+              disabled={loading}
               {...register("entryTime", {
                 required: "Vui lòng chọn giờ vào",
                 validate: (value) => {
                   const selected = new Date(value);
                   const now = getVietnamTime();
-                  const bookAheadHours = selectedVehicleInfo?.bookAhead || 0;
+                  const bookAheadHours = currentVehicleTypeObj?.bookAhead || 24;
 
                   const max = new Date(now);
                   max.setHours(max.getHours() + bookAheadHours);
@@ -183,46 +221,49 @@ function BookingPopup({ selectedVehicle, vehicleTypes, onClose }) {
                 }
               })}
             />
+            {errors.entryTime && <span className="booking-error">{errors.entryTime.message}</span>}
           </div>
-          <div className="booking-pricing-preview">
-            <div className='booking-item'>
+
+          {/* Rule Metadata Preview */}
+          <div className="booking-pricing-preview secondary">
+            <div className="booking-item">
               <strong>Đặt chỗ trước tối đa:</strong>{" "}
-              {selectedVehicleInfo?.bookAhead?.toLocaleString()} giờ
+              {(currentVehicleTypeObj?.bookAhead ?? 0).toLocaleString('vi-VN')} giờ
             </div>
-            <div className='booking-item'>
-              <strong>Vào bãi trước giờ đặt:</strong>{" "}
-              {selectedVehicleInfo?.earlyChekin?.toLocaleString()} phút
+            <div className="booking-item">
+              <strong>Vào bãi sớm tối đa:</strong>{" "}
+              {(currentVehicleTypeObj?.earlyCheckin ?? currentVehicleTypeObj?.earlyChekin ?? 0).toLocaleString('vi-VN')} phút
             </div>
-            <div className='booking-item'>
-              <strong>Vào bãi trễ giờ đặt:</strong>{" "}
-              {selectedVehicleInfo?.lateChekin?.toLocaleString()} phút
+            <div className="booking-item">
+              <strong>Vào bãi trễ tối đa:</strong>{" "}
+              {(currentVehicleTypeObj?.lateCheckin ?? currentVehicleTypeObj?.lateChekin ?? 0).toLocaleString('vi-VN')} phút
             </div>
           </div>
+
+          {/* User Vehicle Selection */}
           <div className="booking-group">
-            <label>Phương tiện</label>
-            <select {...register('vehicleId', { required: true })}>
-              <option value="">Chọn phương tiện</option>
-              {vehicles
-                .filter(v =>
-                  v.status === 'none' &&
-                  v.vehicleTypeName === selectedVehicleName
-                )
-                .map(vehicle => (
-                  <option key={vehicle.id} value={vehicle.id}>
-                    {vehicle.licensePlate}
-                  </option>
-                ))
-              }
+            <label>Phương tiện của bạn</label>
+            <select
+              disabled={loading}
+              {...register('vehicleId', { required: "Vui lòng chọn xe của bạn" })}
+            >
+              <option value="">-- Chọn biển số xe --</option>
+              {filteredVehicles.map(vehicle => (
+                <option key={vehicle.id} value={vehicle.id}>
+                  {vehicle.licensePlate}
+                </option>
+              ))}
             </select>
+            {errors.vehicleId && <span className="booking-error">{errors.vehicleId.message}</span>}
+            {filteredVehicles.length === 0 && (
+              <small className="booking-hint">
+                Bạn chưa có xe thuộc loại này hoặc phương tiện đang trong lượt gửi/đặt chỗ khác.
+              </small>
+            )}
           </div>
 
-          {errors.entryTime && (
-            <span className="booking-error">
-              {errors.entryTime.message}
-            </span>
-          )}
-
-          <button type="submit" className="booking-submit-btn" disabled={loading}>
+          {/* Submit Action */}
+          <button type="submit" className="booking-submit-btn" disabled={loading || pricingLoading}>
             {loading ? "Đang xử lý..." : "Tiếp tục thanh toán"}
           </button>
         </form>

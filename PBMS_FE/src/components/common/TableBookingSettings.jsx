@@ -168,6 +168,16 @@ const TableBookingSettings = () => {
             {error && <div className="sci-confirm-error sci-alert-margin">{error}</div>}
 
             {/* TABLE DATA */}
+            <div className="sci-audit-summary" style={{ marginBottom: 16 }}>
+                <h4>Thông tin kiểm soát</h4>
+                <div className="sci-audit-meta">
+                    <div><strong>Người tạo:</strong> {settings?.createdByName || 'Không xác định'}</div>
+                    <div><strong>Ngày tạo:</strong> {settings?.createdAt ? new Date(settings.createdAt).toLocaleString('vi-VN') : '—'}</div>
+                    <div><strong>Cập nhật cuối:</strong> {settings?.updatedByName || settings?.createdByName || 'Chưa có cập nhật'}</div>
+                    <div><strong>Thời gian sửa:</strong> {settings?.updatedAt ? new Date(settings.updatedAt).toLocaleString('vi-VN') : '—'}</div>
+                </div>
+            </div>
+
             <div className="sci-table-responsive">
                 <table className="sci-data-table">
                     <thead>

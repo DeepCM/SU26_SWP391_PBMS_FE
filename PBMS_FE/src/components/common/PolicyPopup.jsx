@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { createPolicy, updatePolicy } from '../../services/adminService';
+import { formatAuditActor, formatAuditDate } from '../../utils/auditFormatters';
 
 const PolicyPopup = ({ policyData, onClose, onRefresh }) => {
     const isEditMode = !!policyData;
@@ -130,6 +131,18 @@ const PolicyPopup = ({ policyData, onClose, onRefresh }) => {
                                 disabled={submitting}
                             ></textarea>
                         </div>
+
+                        {isEditMode && (
+                            <div className="sci-audit-summary">
+                                <h4>Thông tin cập nhật</h4>
+                                <div className="sci-audit-meta">
+                                    <div><strong>Người tạo:</strong> {formatAuditActor(policyData?.createdByName)}</div>
+                                    <div><strong>Ngày tạo:</strong> {formatAuditDate(policyData?.createdAt)}</div>
+                                    <div><strong>Cập nhật cuối:</strong> {formatAuditActor(policyData?.updatedByName || policyData?.createdByName)}</div>
+                                    <div><strong>Thời gian sửa:</strong> {formatAuditDate(policyData?.updatedAt || policyData?.createdAt)}</div>
+                                </div>
+                            </div>
+                        )}
                     </div>
 
                     <div className="sci-modal-footer">
