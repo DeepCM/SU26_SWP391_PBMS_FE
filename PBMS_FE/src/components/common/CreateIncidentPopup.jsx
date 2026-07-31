@@ -50,12 +50,12 @@ function CreateIncidentPopup({ onClose, onCreated, defaultSessionId, defaultBook
                 <form onSubmit={handleSubmit(onSubmit)}>
                     <div className="sci-incident-modal-body">
                         <div className="sci-form-group">
-                            <label className="sci-form-label">BID</label>
+                            <label className="sci-form-label">Booking ID</label>
                             <input className="sci-form-input" value={defaultBookingId ?? '—'} disabled />
                         </div>
                         {!isDriver && (
                             <div className="sci-form-group">
-                                <label className="sci-form-label">PID</label>
+                                <label className="sci-form-label">Parking ID</label>
                                 <input className="sci-form-input" value={defaultSessionId ?? '—'} disabled />
                             </div>
                         )}

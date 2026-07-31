@@ -346,14 +346,6 @@ function IncidentDetailPopup({ incident, onClose, onUpdated, actionsConfig, getA
                             <span className="sci-incident-detail-value">{incident.reporterName || `#${incident.reportedBy}`}</span>
                         </div>
                         <div className="sci-incident-detail-item">
-                            <span className="sci-incident-detail-label">BID</span>
-                            <span className="sci-incident-detail-value">{incident.bookingId ?? '—'}</span>
-                        </div>
-                        <div className="sci-incident-detail-item">
-                            <span className="sci-incident-detail-label">PID</span>
-                            <span className="sci-incident-detail-value">{incident.sessionId ?? '—'}</span>
-                        </div>
-                        <div className="sci-incident-detail-item">
                             <span className="sci-incident-detail-label">Người Xử Lý</span>
                             <span className="sci-incident-detail-value">{incident.handlerName || 'Chưa có'}</span>
                         </div>
@@ -369,6 +361,30 @@ function IncidentDetailPopup({ incident, onClose, onUpdated, actionsConfig, getA
                             <span className="sci-incident-detail-label">Thời Gian Giải Quyết</span>
                             <span className="sci-incident-detail-value">{formatDateTime(incident.resolvedAt)}</span>
                         </div>
+                    </div>
+
+                    <div className="sci-incident-section">
+                        <p className="sci-incident-section-title">Tham Chiếu</p>
+                        {incident.bookingId == null && incident.sessionId == null ? (
+                            <p className="sci-history-content">
+                                Sự cố không gắn với Booking hoặc Parking Session.
+                            </p>
+                        ) : (
+                            <div className="sci-incident-detail-grid">
+                                {incident.bookingId != null && (
+                                    <div className="sci-incident-detail-item">
+                                        <span className="sci-incident-detail-label">Booking ID</span>
+                                        <span className="sci-incident-detail-value">#{incident.bookingId}</span>
+                                    </div>
+                                )}
+                                {incident.sessionId != null && (
+                                    <div className="sci-incident-detail-item">
+                                        <span className="sci-incident-detail-label">Parking ID</span>
+                                        <span className="sci-incident-detail-value">#{incident.sessionId}</span>
+                                    </div>
+                                )}
+                            </div>
+                        )}
                     </div>
 
                     <div className="sci-incident-section">
