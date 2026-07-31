@@ -125,8 +125,8 @@ export default function TableActivityLog() {
 
       <div className="sci-form-grid-2col" style={{ marginBottom: 16 }}>
         <div className="sci-form-group">
-          <label className="sci-form-label">Bảng (Table)</label>
-          <input className="sci-form-input" name="targetTable" value={pendingFilters.targetTable || ''} onChange={handleFilterChange} placeholder="Nhập tên bảng (VD: floor, fl, floors)..." />
+          <label className="sci-form-label">Đối tượng</label>
+          <input className="sci-form-input" name="targetTable" value={pendingFilters.targetTable || ''} onChange={handleFilterChange} placeholder="Nhập tên đối tượng (VD: floor, fl, floors)..." />
         </div>
         <div className="sci-form-group">
           <label className="sci-form-label">Hành động</label>
@@ -137,8 +137,8 @@ export default function TableActivityLog() {
           <input className="sci-form-input" name="userName" value={pendingFilters.userName || ''} onChange={handleFilterChange} placeholder="Nhập tên người thao tác..." />
         </div>
         <div className="sci-form-group">
-          <label className="sci-form-label">ID bảng</label>
-          <input className="sci-form-input" name="targetId" value={pendingFilters.targetId || ''} onChange={handleFilterChange} placeholder="Nhập ID bảng..." />
+          <label className="sci-form-label">ID đối tượng</label>
+          <input className="sci-form-input" name="targetId" value={pendingFilters.targetId || ''} onChange={handleFilterChange} placeholder="Nhập ID đối tượng..." />
         </div>
         <div className="sci-form-group">
           <label className="sci-form-label">Từ ngày</label>
@@ -178,13 +178,13 @@ export default function TableActivityLog() {
                 className={`sci-sortable ${sortConfig.key === 'targetTable' ? `sci-sortable-${sortConfig.direction}` : ''}`}
                 onClick={() => requestSort('targetTable')}
               >
-                Bảng
+                Đối tượng
               </th>
               <th
                 className={`sci-sortable ${sortConfig.key === 'targetId' ? `sci-sortable-${sortConfig.direction}` : ''}`}
                 onClick={() => requestSort('targetId')}
               >
-                ID bảng
+                ID đối tượng
               </th>
               <th>Địa chỉ IP</th>
               <th>Chi tiết</th>
