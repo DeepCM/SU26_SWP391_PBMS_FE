@@ -711,6 +711,7 @@ function CheckOut() {
       {showIncidentPopup && (
         <CreateIncidentPopup
           defaultSessionId={sessionInfo?.parkingSessionId}
+          defaultBookingId={sessionInfo?.bookingId}
           onClose={() => setShowIncidentPopup(false)}
         />
       )}
