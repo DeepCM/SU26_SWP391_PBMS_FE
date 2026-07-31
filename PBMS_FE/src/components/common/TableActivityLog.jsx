@@ -27,7 +27,6 @@ export default function TableActivityLog() {
     setLoading(true);
     setError(null);
     try {
-      // Normalize targetTable for partial/flexible floor matching ("floor", "fl" -> "floors")
       let targetTableParam = filters.targetTable ? filters.targetTable.trim() : '';
       const lowerTarget = targetTableParam.toLowerCase();
       if (lowerTarget === 'fl' || lowerTarget === 'floor' || lowerTarget === 'floo' || lowerTarget === 'flo') {
@@ -37,15 +36,12 @@ export default function TableActivityLog() {
       const response = await getActivityLogs({
         ...filters,
         targetTable: targetTableParam || undefined,
-        sortBy: sortConfig.key,
-        sortOrder: sortConfig.direction,
         page,
         pageSize: PAGE_SIZE
       });
 
       let fetchedItems = response?.items || [];
 
-      // Client-side partial substring fallback for targetTable filter
       if (filters.targetTable) {
         const term = filters.targetTable.trim().toLowerCase();
         fetchedItems = fetchedItems.filter(item =>
@@ -126,7 +122,7 @@ export default function TableActivityLog() {
       <div className="sci-form-grid-2col" style={{ marginBottom: 16 }}>
         <div className="sci-form-group">
           <label className="sci-form-label">Đối tượng</label>
-          <input className="sci-form-input" name="targetTable" value={pendingFilters.targetTable || ''} onChange={handleFilterChange} placeholder="Nhập tên đối tượng (VD: floor, fl, floors)..." />
+          <input className="sci-form-input" name="targetTable" value={pendingFilters.targetTable || ''} onChange={handleFilterChange} placeholder="Nhập tên Đối tượng (VD: floor, fl, floors)..." />
         </div>
         <div className="sci-form-group">
           <label className="sci-form-label">Hành động</label>
@@ -180,29 +176,22 @@ export default function TableActivityLog() {
               >
                 Đối tượng
               </th>
-              <th
-                className={`sci-sortable ${sortConfig.key === 'targetId' ? `sci-sortable-${sortConfig.direction}` : ''}`}
-                onClick={() => requestSort('targetId')}
-              >
-                ID đối tượng
-              </th>
               <th>Địa chỉ IP</th>
               <th>Chi tiết</th>
             </tr>
           </thead>
           <tbody>
             {loading ? (
-              <tr><td colSpan="7" className="sci-table-empty-row">Đang tải...</td></tr>
+              <tr><td colSpan="6" className="sci-table-empty-row">Đang tải...</td></tr>
             ) : sortedItems.length === 0 ? (
-              <tr><td colSpan="7" className="sci-table-empty-row">Không có dữ liệu nhật ký.</td></tr>
+              <tr><td colSpan="6" className="sci-table-empty-row">Không có dữ liệu nhật ký.</td></tr>
             ) : (
               sortedItems.map((row) => (
                 <tr key={row.id}>
                   <td>{formatAuditDate(row.createdAt)}</td>
                   <td>{formatAuditActor(row.userName || row.userEmail, 'Không xác định')}</td>
                   <td>{getActionLabel(row.action)}</td>
-                  <td>{row.targetTable || '—'}</td>
-                  <td>{row.targetId ? `#${row.targetId}` : '—'}</td>
+                  <td>{row.targetTable}{row.targetId ? `#${row.targetId}` : ''}</td>
                   <td>{row.ipAddress || '—'}</td>
                   <td>
                     <button className="sci-btn-edit" onClick={() => setSelectedLog(row)}>Xem</button>
