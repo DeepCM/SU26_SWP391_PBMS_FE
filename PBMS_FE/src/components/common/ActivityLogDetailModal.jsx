@@ -53,7 +53,8 @@ export default function ActivityLogDetailModal({ log, isOpen, onClose }) {
               <div><strong>Thời gian:</strong> {formatAuditDate(log.createdAt)}</div>
               <div><strong>Người thao tác:</strong> {formatAuditActor(log.userName || log.userEmail)}</div>
               <div><strong>Hành động:</strong> {getActionLabel(log.action)}</div>
-              <div><strong>Đối tượng:</strong> {log.targetTable}{log.targetId ? `#${log.targetId}` : ''}</div>
+              <div><strong>Bảng:</strong> {log.targetTable || '—'}</div>
+              <div><strong>ID bảng:</strong> {log.targetId ? `#${log.targetId}` : '—'}</div>
               <div><strong>IP:</strong> {log.ipAddress || '—'}</div>
             </div>
           </div>

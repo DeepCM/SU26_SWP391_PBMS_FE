@@ -1,11 +1,17 @@
 import { useState, useEffect } from 'react';
-import { createPricing } from '../../services/pricingService';
+import { createPricing, updatePricing } from '../../services/pricingService';
 import { formatAuditActor, formatAuditDate } from '../../utils/auditFormatters';
 import { getFloors } from '../../services/adminService';
 
 const PricingPopup = ({ pricingData, vehicleTypesList = [], onClose, onRefresh }) => {
-    // If pricingData is passed, we are deriving a new version from an existing entry
-    const isDerivingNewVersion = !!pricingData;
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    const originalEffectiveDate = pricingData?.effectiveFrom ? new Date(pricingData.effectiveFrom) : null;
+    if (originalEffectiveDate) originalEffectiveDate.setHours(0, 0, 0, 0);
+
+    const isEditingUpcoming = !!pricingData && originalEffectiveDate && originalEffectiveDate > today;
+    const isDerivingNewVersion = !!pricingData && !isEditingUpcoming;
 
     const [vehicleTypeId, setVehicleTypeId] = useState('');
     const [pricePerHour, setPricePerHour] = useState('');
@@ -34,16 +40,20 @@ const PricingPopup = ({ pricingData, vehicleTypesList = [], onClose, onRefresh }
             setVehicleTypeId(pricingData.vehicleTypeId || '');
             setPricePerHour(pricingData.pricePerHour ?? '');
             setDepositAmount(pricingData.depositAmount ?? '');
-            // Default effectiveFrom to today's date for new version creation
-            const today = new Date().toISOString().substring(0, 10);
-            setEffectiveFrom(today);
+
+            if (isEditingUpcoming) {
+                setEffectiveFrom(pricingData.effectiveFrom ? pricingData.effectiveFrom.substring(0, 10) : '');
+            } else {
+                const todayStr = new Date().toISOString().substring(0, 10);
+                setEffectiveFrom(todayStr);
+            }
         } else {
             setVehicleTypeId('');
             setPricePerHour('');
             setDepositAmount('');
             setEffectiveFrom('');
         }
-    }, [pricingData]);
+    }, [pricingData, isEditingUpcoming]);
 
     const handleSubmit = async (e) => {
         e.preventDefault();
@@ -99,13 +109,16 @@ const PricingPopup = ({ pricingData, vehicleTypesList = [], onClose, onRefresh }
         };
 
         try {
-            // ALWAYS call createPricing to preserve append-only history
-            await createPricing(payload);
+            if (isEditingUpcoming) {
+                await updatePricing(pricingData.id, payload);
+            } else {
+                await createPricing(payload);
+            }
             onRefresh();
             onClose();
         } catch (err) {
-            console.error("Pricing creation failed:", err);
-            setPopupError(err.message || "Không thể tạo cấu hình giá mới. Vui lòng thử lại.");
+            console.error("Pricing operation failed:", err);
+            setPopupError(err.message || "Không thể lưu cấu hình giá. Vui lòng thử lại.");
         } finally {
             setSubmitting(false);
         }
@@ -115,8 +128,9 @@ const PricingPopup = ({ pricingData, vehicleTypesList = [], onClose, onRefresh }
         <div className="sci-modal-overlay">
             <div className="sci-modal-container">
                 <div className="sci-modal-header">
+                    {/* MODAL HEADER TITLE */}
                     <h3 className="sci-modal-title">
-                        {isDerivingNewVersion ? 'Cập Nhật Giá (Tạo Phiên Bản Mới)' : 'Thêm Mới Cấu Hình Giá'}
+                        {isEditingUpcoming ? 'Chỉnh Sửa Cấu Hình Giá (Sắp Áp Dụng)' : (isDerivingNewVersion ? 'Cập Nhật Giá (Tạo Phiên Bản Mới)' : 'Thêm Mới Cấu Hình Giá')}
                     </h3>
                     <button className="sci-btn-close-modal" onClick={onClose} disabled={submitting}>
                         &times;
@@ -132,23 +146,15 @@ const PricingPopup = ({ pricingData, vehicleTypesList = [], onClose, onRefresh }
                             </div>
                         )}
 
-                        {/* INFO NOTICE FOR APPEND-ONLY MODEL */}
-                        {isDerivingNewVersion && (
+                        {/* INFO NOTICE */}
+                        {isEditingUpcoming ? (
                             <div className="sci-info-banner">
-                                ℹ️ <strong>Lưu ý:</strong> Hệ thống lưu trữ lịch sử giá dạng nhật ký. 
-                                Việc chỉnh sửa sẽ **tạo một bản ghi giá mới** áp dụng từ ngày bạn chọn. Bản ghi cũ sẽ giữ nguyên để phục vụ tra cứu.
+                                ℹ️ <strong>Lưu ý:</strong> Chính sách giá này đang ở trạng thái <strong>Sắp áp dụng</strong>. Bạn đang chỉnh sửa trực tiếp bản ghi này.
                             </div>
-                        )}
-
-                        {/* AUDIT SUMMARY OF SOURCE RECORD */}
-                        {isDerivingNewVersion && (
-                            <div className="sci-audit-summary">
-                                <h4>Thông tin bản ghi nguồn</h4>
-                                <div className="sci-audit-meta">
-                                    <div><strong>Người tạo:</strong> {formatAuditActor(pricingData?.createdByName)}</div>
-                                    <div><strong>Ngày tạo:</strong> {formatAuditDate(pricingData?.createdAt)}</div>
-                                    <div><strong>Áp dụng từ:</strong> {formatAuditDate(pricingData?.effectiveFrom)}</div>
-                                </div>
+                        ) : isDerivingNewVersion && (
+                            <div className="sci-info-banner">
+                                ℹ️ <strong>Lưu ý:</strong> Hệ thống lưu trữ lịch sử giá dạng nhật ký.
+                                Việc chỉnh sửa sẽ **tạo một bản ghi giá mới** áp dụng từ ngày bạn chọn. Bản ghi cũ sẽ giữ nguyên để phục vụ tra cứu.
                             </div>
                         )}
 
