@@ -433,9 +433,9 @@ function CheckIn() {
             <div className="sci-detection-panel">
               <h3 className="sci-panel-heading">
                 Ảnh nhận diện phương tiện và tài xế
-                {isSessionActive && (
+                {/* {isSessionActive && (
                   <span className="sci-session-badge">● Đang chờ...</span>
-                )}
+                )} */}
               </h3>
 
               <div className={`sci-camera-row${activeTab === 'booking' ? ' sci-camera-row--col' : ''}`}>
@@ -485,9 +485,9 @@ function CheckIn() {
               <div className="sci-detection-panel">
                 <h3 className="sci-panel-heading">
                   Ảnh tham chiếu từ đặt chỗ
-                  {isSessionActive && (
+                  {/* {isSessionActive && (
                     <span className="sci-session-badge">● Đang chờ QR...</span>
-                  )}
+                  )} */}
                 </h3>
 
                 <div className="sci-camera-row sci-camera-row--col">

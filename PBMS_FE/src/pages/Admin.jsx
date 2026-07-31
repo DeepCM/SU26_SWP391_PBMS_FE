@@ -9,6 +9,7 @@ import TablePolicy from '../components/common/TablePolicy.jsx'
 import TableUser from '../components/common/TableUser.jsx'
 import TableVehicleType from '../components/common/TableVehicleType.jsx'
 import TableBookingSettings from '../components/common/TableBookingSettings.jsx'
+import TableActivityLog from '../components/common/TableActivityLog.jsx'
 
 export default function Admin() {
   const [searchParams] = useSearchParams()
@@ -37,6 +38,8 @@ export default function Admin() {
         return <TableVehicleType />
       case 'booking-settings':
         return <TableBookingSettings/>
+      case 'activity-logs':
+        return <TableActivityLog />
       default:
         return <TableUser />
     }
@@ -55,6 +58,8 @@ export default function Admin() {
         return 'Định cấu hình các loại phương tiện được phép hoạt động trong hệ thống.'
       case 'booking-settings':
         return 'Định cấu hình các thông số đặt chỗ trong hệ thống.'
+      case 'activity-logs':
+        return 'Theo dõi lịch sử thao tác và thay đổi dữ liệu trong hệ thống.'
       default:
         return 'Quản lý cấu hình hệ thống PBMS.'
     }

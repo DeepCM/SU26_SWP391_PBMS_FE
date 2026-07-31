@@ -183,7 +183,7 @@ export default function UserProfile({ onLogout, stats, recentHistory, notificati
       <Navbar isLoggedIn userAvatar={displayedAvatar} onLogout={onLogout} />
 
       <div className="profile-layout">
-        <ProfileSidebar activeKey={activeNav} onSelect={setActiveNav} />
+        {/* <ProfileSidebar activeKey={activeNav} onSelect={setActiveNav} /> */}
 
         <main className="profile-main">
           {/* Page heading */}
@@ -197,7 +197,7 @@ export default function UserProfile({ onLogout, stats, recentHistory, notificati
             <p className="profile-page-subtitle">Quản lý thông tin cá nhân, phương tiện và cài đặt tài khoản</p>
           </div>
 
-          {/* Stats bar */}
+          {/* Stats bar 
           <div className="profile-stats-bar">
             <div className="stat-card">
               <span className="stat-card-label">Tổng lượt đỗ</span>
@@ -338,7 +338,7 @@ export default function UserProfile({ onLogout, stats, recentHistory, notificati
             </form>
           </div>
 
-          {/* Recent parking history */}
+          {/* Recent parking history 
           <div className="profile-card">
             <h2 className="card-section-title">
               <IconHistory />

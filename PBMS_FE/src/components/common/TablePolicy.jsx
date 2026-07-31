@@ -39,12 +39,7 @@ const TablePolicy = () => {
                 await activatePolicy(policyItem.id);
             }
 
-            setAnalyticsData(prev => ({
-                ...prev,
-                tableData: prev.tableData.map(row =>
-                    row.id === policyItem.id ? { ...row, isActive: !row.isActive } : row
-                )
-            }));
+            await loadTableData();
         } catch (err) {
             alert(err.message || `Không thể thực hiện tác vụ ${actionText}.`);
         }
@@ -93,6 +88,7 @@ const TablePolicy = () => {
             const rawPoliciesList = await getPolicies();
 
             const mappedPolicies = (rawPoliciesList || []).map((policy) => ({
+                ...policy,
                 id: policy.id,
                 title: policy.title || '',
                 policyType: policy.policyType || '',

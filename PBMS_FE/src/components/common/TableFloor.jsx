@@ -37,12 +37,7 @@ const TableFloor = () => {
                 await activateFloor(floorItem.id);
             }
 
-            setAnalyticsData(prev => ({
-                ...prev,
-                tableData: prev.tableData.map(row => 
-                    row.id === floorItem.id ? { ...row, isActive: !row.isActive } : row
-                )
-            }));
+            await loadTableData();
         } catch (err) {
             alert(err.message || `Không thể thực hiện tác vụ ${actionText}.`);
         }

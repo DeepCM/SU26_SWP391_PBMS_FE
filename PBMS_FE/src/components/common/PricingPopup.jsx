@@ -1,53 +1,62 @@
 import { useState, useEffect } from 'react';
-import { createPricing, updatePricing } from '../../services/pricingService';
+import { createPricing } from '../../services/pricingService';
+import { formatAuditActor, formatAuditDate } from '../../utils/auditFormatters';
+import { getFloors } from '../../services/adminService';
 
 const PricingPopup = ({ pricingData, vehicleTypesList = [], onClose, onRefresh }) => {
-    const isEditMode = !!pricingData;
+    // If pricingData is passed, we are deriving a new version from an existing entry
+    const isDerivingNewVersion = !!pricingData;
 
     const [vehicleTypeId, setVehicleTypeId] = useState('');
     const [pricePerHour, setPricePerHour] = useState('');
     const [depositAmount, setDepositAmount] = useState('');
-
-    const formatDateForInput = (dateString) => {
-        if (!dateString) return '';
-        return dateString.substring(0, 10);
-    };
-
     const [effectiveFrom, setEffectiveFrom] = useState('');
-    const [effectiveTo, setEffectiveTo] = useState('');
+    const [floorsList, setFloorsList] = useState([]);
 
     const [submitting, setSubmitting] = useState(false);
     const [popupError, setPopupError] = useState(null);
+
+    // Fetch floors on component mount to map vehicle type to a valid floorId
+    useEffect(() => {
+        const fetchFloors = async () => {
+            try {
+                const response = await getFloors();
+                setFloorsList(response || []);
+            } catch (err) {
+                console.error("Failed to load floors:", err);
+            }
+        };
+        fetchFloors();
+    }, []);
 
     useEffect(() => {
         if (pricingData) {
             setVehicleTypeId(pricingData.vehicleTypeId || '');
             setPricePerHour(pricingData.pricePerHour ?? '');
             setDepositAmount(pricingData.depositAmount ?? '');
-            setEffectiveFrom(formatDateForInput(pricingData.effectiveFrom));
-            setEffectiveTo(formatDateForInput(pricingData.effectiveTo));
+            // Default effectiveFrom to today's date for new version creation
+            const today = new Date().toISOString().substring(0, 10);
+            setEffectiveFrom(today);
         } else {
             setVehicleTypeId('');
             setPricePerHour('');
             setDepositAmount('');
             setEffectiveFrom('');
-            setEffectiveTo('');
         }
     }, [pricingData]);
 
     const handleSubmit = async (e) => {
         e.preventDefault();
 
-        // XỬ LÝ FALLBACK: Giữ nguyên giá trị cũ nếu rỗng ở chế độ Chỉnh sửa
-        const finalVehicleTypeId = vehicleTypeId || (isEditMode ? pricingData?.vehicleTypeId : '');
-        const finalPricePerHour = pricePerHour !== '' ? pricePerHour : (isEditMode ? pricingData?.pricePerHour : '');
-        const finalDepositAmount = depositAmount !== '' ? depositAmount : (isEditMode ? pricingData?.depositAmount : '');
-        const finalEffectiveFrom = effectiveFrom || (isEditMode ? formatDateForInput(pricingData?.effectiveFrom) : '');
-        const finalEffectiveTo = effectiveTo || (isEditMode ? formatDateForInput(pricingData?.effectiveTo) : '');
+        // Fallback checks
+        const finalVehicleTypeId = vehicleTypeId || (isDerivingNewVersion ? pricingData?.vehicleTypeId : '');
+        const finalPricePerHour = pricePerHour !== '' ? pricePerHour : (isDerivingNewVersion ? pricingData?.pricePerHour : '');
+        const finalDepositAmount = depositAmount !== '' ? depositAmount : (isDerivingNewVersion ? pricingData?.depositAmount : '');
+        const finalEffectiveFrom = effectiveFrom;
 
-        // VALIDATION
+        // Validation Rules
         if (!finalVehicleTypeId) {
-            setPopupError("Vui lòng chọn Loại Phương Tiện.");
+            setPopupError("Vui lòng chọn loại phương tiện.");
             return;
         }
         if (finalPricePerHour === '' || Number(finalPricePerHour) < 0) {
@@ -58,39 +67,45 @@ const PricingPopup = ({ pricingData, vehicleTypesList = [], onClose, onRefresh }
             setPopupError("Tiền đặt cọc phải lớn hơn hoặc bằng 0.");
             return;
         }
-        if (!finalEffectiveFrom || !finalEffectiveTo) {
-            setPopupError("Vui lòng điền đầy đủ mốc thời gian hiệu lực.");
+        if (!finalEffectiveFrom) {
+            setPopupError("Vui lòng chọn ngày bắt đầu áp dụng giá mới.");
             return;
         }
-        if (new Date(finalEffectiveFrom) > new Date(finalEffectiveTo)) {
-            setPopupError("Ngày bắt đầu không được lớn hơn ngày kết thúc.");
+
+        // Determine floorId: Use existing floorId if available, otherwise find the first floor matching the vehicle type
+        let finalFloorId = pricingData?.floorId;
+        if (!finalFloorId || finalFloorId === 0) {
+            const matchedFloor = floorsList.find(floor =>
+                floor.vehicleTypes?.some(vt => Number(vt.id) === Number(finalVehicleTypeId))
+            );
+            finalFloorId = matchedFloor ? matchedFloor.id : null;
+        }
+
+        if (!finalFloorId) {
+            setPopupError("Không tìm thấy tầng phù hợp hỗ trợ loại phương tiện này.");
             return;
         }
 
         setSubmitting(true);
         setPopupError(null);
 
-        // PAYLOAD: Tự động gửi floorId nhận được từ backend (hoặc mặc định là 0 khi thêm mới)
+        // PAYLOAD: Always creates a new pricing record
         const payload = {
             vehicleTypeId: Number(finalVehicleTypeId),
-            floorId: pricingData?.floorId ?? 0,
+            floorId: Number(finalFloorId),
             pricePerHour: Number(finalPricePerHour),
             depositAmount: Number(finalDepositAmount),
-            effectiveFrom: finalEffectiveFrom,
-            effectiveTo: finalEffectiveTo
+            effectiveFrom: finalEffectiveFrom
         };
 
         try {
-            if (isEditMode) {
-                await updatePricing(pricingData.id, payload);
-            } else {
-                await createPricing(payload);
-            }
+            // ALWAYS call createPricing to preserve append-only history
+            await createPricing(payload);
             onRefresh();
             onClose();
         } catch (err) {
-            console.error("Pricing submission failed:", err);
-            setPopupError(err.message || "Xảy ra lỗi trong quá trình xử lý.");
+            console.error("Pricing creation failed:", err);
+            setPopupError(err.message || "Không thể tạo cấu hình giá mới. Vui lòng thử lại.");
         } finally {
             setSubmitting(false);
         }
@@ -101,7 +116,7 @@ const PricingPopup = ({ pricingData, vehicleTypesList = [], onClose, onRefresh }
             <div className="sci-modal-container">
                 <div className="sci-modal-header">
                     <h3 className="sci-modal-title">
-                        {isEditMode ? 'Chỉnh Sửa Bảng Giá' : 'Thêm Mới Cấu Hình Giá'}
+                        {isDerivingNewVersion ? 'Cập Nhật Giá (Tạo Phiên Bản Mới)' : 'Thêm Mới Cấu Hình Giá'}
                     </h3>
                     <button className="sci-btn-close-modal" onClick={onClose} disabled={submitting}>
                         &times;
@@ -110,18 +125,43 @@ const PricingPopup = ({ pricingData, vehicleTypesList = [], onClose, onRefresh }
 
                 <form onSubmit={handleSubmit} className="sci-modal-form">
                     <div className="sci-modal-body">
-                        {popupError && <div className="sci-modal-error-banner">{popupError}</div>}
+                        {/* ERROR BANNER */}
+                        {popupError && (
+                            <div className="sci-modal-error-banner" role="alert">
+                                <strong>Lỗi:</strong> {popupError}
+                            </div>
+                        )}
 
-                        {/* ROW 1: Vehicle Type ID */}
+                        {/* INFO NOTICE FOR APPEND-ONLY MODEL */}
+                        {isDerivingNewVersion && (
+                            <div className="sci-info-banner">
+                                ℹ️ <strong>Lưu ý:</strong> Hệ thống lưu trữ lịch sử giá dạng nhật ký. 
+                                Việc chỉnh sửa sẽ **tạo một bản ghi giá mới** áp dụng từ ngày bạn chọn. Bản ghi cũ sẽ giữ nguyên để phục vụ tra cứu.
+                            </div>
+                        )}
+
+                        {/* AUDIT SUMMARY OF SOURCE RECORD */}
+                        {isDerivingNewVersion && (
+                            <div className="sci-audit-summary">
+                                <h4>Thông tin bản ghi nguồn</h4>
+                                <div className="sci-audit-meta">
+                                    <div><strong>Người tạo:</strong> {formatAuditActor(pricingData?.createdByName)}</div>
+                                    <div><strong>Ngày tạo:</strong> {formatAuditDate(pricingData?.createdAt)}</div>
+                                    <div><strong>Áp dụng từ:</strong> {formatAuditDate(pricingData?.effectiveFrom)}</div>
+                                </div>
+                            </div>
+                        )}
+
+                        {/* ROW 1: Vehicle Type */}
                         <div className="sci-form-group">
                             <label className="sci-form-label">
-                                Loại Phương Tiện {!isEditMode && <span className="sci-required">*</span>}
+                                Loại Phương Tiện <span className="sci-required">*</span>
                             </label>
                             <select
                                 className="sci-form-input"
                                 value={vehicleTypeId}
                                 onChange={(e) => setVehicleTypeId(e.target.value)}
-                                disabled={submitting}
+                                disabled={submitting || isDerivingNewVersion}
                             >
                                 <option value="">-- Chọn loại phương tiện --</option>
                                 {vehicleTypesList.map(type => (
@@ -136,14 +176,14 @@ const PricingPopup = ({ pricingData, vehicleTypesList = [], onClose, onRefresh }
                         <div className="sci-form-grid-2col">
                             <div className="sci-form-group">
                                 <label className="sci-form-label">
-                                    Giá Theo Giờ (VNĐ) {!isEditMode && <span className="sci-required">*</span>}
+                                    Giá Theo Giờ Mới (VNĐ) <span className="sci-required">*</span>
                                 </label>
                                 <input
                                     type="number"
                                     className="sci-form-input"
                                     value={pricePerHour}
                                     onChange={(e) => setPricePerHour(e.target.value)}
-                                    placeholder={isEditMode ? `Hiện tại: ${pricingData?.pricePerHour}` : "Ví dụ: 10000"}
+                                    placeholder="Nhập giá mới..."
                                     min="0"
                                     disabled={submitting}
                                 />
@@ -151,47 +191,32 @@ const PricingPopup = ({ pricingData, vehicleTypesList = [], onClose, onRefresh }
 
                             <div className="sci-form-group">
                                 <label className="sci-form-label">
-                                    Tiền Đặt Cọc (VNĐ) {!isEditMode && <span className="sci-required">*</span>}
+                                    Tiền Đặt Cọc Mới (VNĐ) <span className="sci-required">*</span>
                                 </label>
                                 <input
                                     type="number"
                                     className="sci-form-input"
                                     value={depositAmount}
                                     onChange={(e) => setDepositAmount(e.target.value)}
-                                    placeholder={isEditMode ? `Hiện tại: ${pricingData?.depositAmount}` : "Ví dụ: 50000"}
+                                    placeholder="Nhập tiền cọc mới..."
                                     min="0"
                                     disabled={submitting}
                                 />
                             </div>
                         </div>
 
-                        {/* ROW 3: Effective From & Effective To */}
-                        <div className="sci-form-grid-2col">
-                            <div className="sci-form-group">
-                                <label className="sci-form-label">
-                                    Áp Dụng Từ {!isEditMode && <span className="sci-required">*</span>}
-                                </label>
-                                <input
-                                    type="date"
-                                    className="sci-form-input"
-                                    value={effectiveFrom}
-                                    onChange={(e) => setEffectiveFrom(e.target.value)}
-                                    disabled={submitting}
-                                />
-                            </div>
-
-                            <div className="sci-form-group">
-                                <label className="sci-form-label">
-                                    Áp Dụng Đến
-                                </label>
-                                <input
-                                    type="date"
-                                    className="sci-form-input"
-                                    value={effectiveTo}
-                                    onChange={(e) => setEffectiveTo(e.target.value)}
-                                    disabled={submitting}
-                                />
-                            </div>
+                        {/* ROW 3: Effective From */}
+                        <div className="sci-form-group">
+                            <label className="sci-form-label">
+                                Áp Dụng Từ Ngày <span className="sci-required">*</span>
+                            </label>
+                            <input
+                                type="date"
+                                className="sci-form-input"
+                                value={effectiveFrom}
+                                onChange={(e) => setEffectiveFrom(e.target.value)}
+                                disabled={submitting}
+                            />
                         </div>
                     </div>
 
@@ -210,7 +235,7 @@ const PricingPopup = ({ pricingData, vehicleTypesList = [], onClose, onRefresh }
                             className="sci-btn-submit"
                             disabled={submitting}
                         >
-                            {submitting ? 'Đang Xử Lý...' : 'Lưu Thay Đổi'}
+                            {submitting ? 'Đang Lưu...' : 'Xác Nhận Tạo Giá Mới'}
                         </button>
                     </div>
                 </form>

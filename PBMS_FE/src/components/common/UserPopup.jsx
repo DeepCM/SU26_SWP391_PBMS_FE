@@ -10,6 +10,7 @@ import {
 import {
     IconEye
 } from '../../components/svg/Icons'
+import { formatAuditActor, formatAuditDate } from '../../utils/auditFormatters';
 
 const UserPopup = ({ userData, onClose, onRefresh }) => {
     const isEditMode = !!userData;
@@ -244,6 +245,18 @@ const UserPopup = ({ userData, onClose, onRefresh }) => {
                                 </div>
                             )}
                         </div>
+
+                        {isEditMode && (
+                            <div className="sci-audit-summary">
+                                <h4>Thông tin tài khoản</h4>
+                                <div className="sci-audit-meta">
+                                    <div><strong>Người tạo:</strong> {formatAuditActor(userData?.createdByName || (userData?.createdBy ? `#${userData.createdBy}` : null), 'Tự đăng ký')}</div>
+                                    <div><strong>Ngày tạo:</strong> {formatAuditDate(userData?.createdAt, '—')}</div>
+                                    <div><strong>Cập nhật cuối:</strong> {formatAuditActor(userData?.updatedByName || userData?.createdByName, 'Chưa có cập nhật')}</div>
+                                    <div><strong>Thời gian sửa:</strong> {formatAuditDate(userData?.updatedAt || userData?.createdAt, '—')}</div>
+                                </div>
+                            </div>
+                        )}
 
                         {/* HÀNG 3: Mật khẩu */}
                         <div className="sci-form-grid-2col">

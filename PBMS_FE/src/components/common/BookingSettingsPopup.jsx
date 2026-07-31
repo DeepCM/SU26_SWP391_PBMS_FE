@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { updateBookingSettings } from '../../services/adminService';
+import { formatAuditActor, formatAuditDate } from '../../utils/auditFormatters';
 
 export default function BookingSettingsPopup({ isOpen, onClose, currentSettings, onSaveSuccess }) {
     const [formData, setFormData] = useState({
@@ -74,6 +75,16 @@ export default function BookingSettingsPopup({ isOpen, onClose, currentSettings,
                 <form onSubmit={handleSubmit} className="sci-modal-form">
                     <div className="sci-modal-body">
                         {error && <div className="sci-modal-error-banner">{error}</div>}
+
+                        <div className="sci-audit-summary">
+                            <h4>Thông tin cấu hình</h4>
+                            <div className="sci-audit-meta">
+                                <div><strong>Người tạo:</strong> {formatAuditActor(currentSettings?.createdByName)}</div>
+                                <div><strong>Ngày tạo:</strong> {formatAuditDate(currentSettings?.createdAt)}</div>
+                                <div><strong>Cập nhật cuối:</strong> {formatAuditActor(currentSettings?.updatedByName || currentSettings?.createdByName)}</div>
+                                <div><strong>Thời gian sửa:</strong> {formatAuditDate(currentSettings?.updatedAt || currentSettings?.createdAt)}</div>
+                            </div>
+                        </div>
 
                         <div className="sci-form-group">
                             <label className="sci-form-label">
