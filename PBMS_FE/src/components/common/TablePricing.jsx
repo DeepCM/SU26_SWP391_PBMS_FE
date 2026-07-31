@@ -44,8 +44,8 @@ const TablePricing = () => {
 
     // Pure FE calculation helper for Effective To and Status
     const getPolicyLifecycle = useCallback((row, allData) => {
-        const categoryPolicies = allData.filter(p => 
-            p.vehicleTypeId === row.vehicleTypeId && 
+        const categoryPolicies = allData.filter(p =>
+            p.vehicleTypeId === row.vehicleTypeId &&
             p.floorId === row.floorId
         ).sort((a, b) => new Date(a.effectiveFrom) - new Date(b.effectiveFrom));
 
@@ -60,7 +60,7 @@ const TablePricing = () => {
 
         const today = new Date();
         today.setHours(0, 0, 0, 0);
-        
+
         const fromDate = row.effectiveFrom ? new Date(row.effectiveFrom) : null;
         if (fromDate) fromDate.setHours(0, 0, 0, 0);
 
@@ -309,7 +309,7 @@ const TablePricing = () => {
                                             </div>
                                         </td>
                                         <td className="sci-text-right">
-                                            <div className="sci-table-actions-wrapper">
+                                            <div className="sci-table-actions-wrapper" style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '4px' }}>
                                                 <button
                                                     className="sci-btn-edit"
                                                     onClick={() => handleUpdate(row)}
@@ -318,6 +318,11 @@ const TablePricing = () => {
                                                 >
                                                     Sửa
                                                 </button>
+                                                {isLocked && (
+                                                    <span className="sci-status-tooltip-outward" style={{ fontSize: '11px', color: '#dc3545', textAlign: 'right', maxWidth: '200px' }}>
+                                                        {statusTooltip}
+                                                    </span>
+                                                )}
                                             </div>
                                         </td>
                                     </tr>
