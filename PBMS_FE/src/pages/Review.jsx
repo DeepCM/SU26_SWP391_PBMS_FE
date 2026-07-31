@@ -147,11 +147,11 @@ function ReviewableSessionDetailPopup({ session, onClose, onReview }) {
                 <div className="sci-incident-modal-body">
                     <div className="sci-incident-detail-grid">
                         <div className="sci-incident-detail-item">
-                            <span className="sci-incident-detail-label">PID</span>
+                            <span className="sci-incident-detail-label">Parking ID</span>
                             <span className="sci-incident-detail-value">{session.sessionId}</span>
                         </div>
                         <div className="sci-incident-detail-item">
-                            <span className="sci-incident-detail-label">BID</span>
+                            <span className="sci-incident-detail-label">Booking ID</span>
                             <span className="sci-incident-detail-value">{session.bookingId ?? 'Không có booking'}</span>
                         </div>
                         <div className="sci-incident-detail-item">
@@ -323,11 +323,11 @@ function MyReviewDetailPopup({ review, onClose }) {
                         <p className="sci-incident-section-title">Thông Tin Lượt Gửi Xe</p>
                         <div className="sci-incident-detail-grid">
                             <div className="sci-incident-detail-item">
-                                <span className="sci-incident-detail-label">PID</span>
+                                <span className="sci-incident-detail-label">Parking ID</span>
                                 <span className="sci-incident-detail-value">{review.sessionId}</span>
                             </div>
                             <div className="sci-incident-detail-item">
-                                <span className="sci-incident-detail-label">BID</span>
+                                <span className="sci-incident-detail-label">Booking ID</span>
                                 <span className="sci-incident-detail-value">{review.bookingId ?? 'Không có booking'}</span>
                             </div>
                             <div className="sci-incident-detail-item">

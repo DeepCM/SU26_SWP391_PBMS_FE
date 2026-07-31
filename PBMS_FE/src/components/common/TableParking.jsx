@@ -8,7 +8,7 @@ import { PARKING_STATUS_LABELS, SESSION_TYPE_LABELS } from '../../utils/parkingL
 import CreateIncidentPopup from './CreateIncidentPopup'
 
 // Backend chỉ lọc theo SessionCode/LicensePlateSnapshot (xem ParkingSessionRepository.BuildHistoryQuery),
-// không hỗ trợ tìm theo PID hay BID.
+// không hỗ trợ tìm theo Parking ID hay Booking ID.
 const SEARCH_PLACEHOLDER = 'Tìm kiếm theo biển số, mã vé...'
 
 // Chưa có luồng nghiệp vụ nào tự động gán trạng thái "incident" cho phiên gửi xe,
@@ -235,8 +235,8 @@ const TableParking = () => {
                 <select className="sci-filter-select" defaultValue="newest" onChange={(e) => applySortPreset(e.target.value)}>
                     <option value="newest">Check-in mới nhất</option>
                     <option value="oldest">Check-in cũ nhất</option>
-                    <option value="id-asc">PID tăng dần</option>
-                    <option value="id-desc">PID giảm dần</option>
+                    <option value="id-asc">Parking ID tăng dần</option>
+                    <option value="id-desc">Parking ID giảm dần</option>
                 </select>
             </div>
 
@@ -248,9 +248,9 @@ const TableParking = () => {
                                 className={`sci-sortable ${sortConfig.key === 'id' ? `sci-sortable-${sortConfig.direction}` : ''}`}
                                 onClick={() => requestSort('id')}
                             >
-                                PID
+                                Parking ID
                             </th>
-                            <th>BID</th>
+                            <th>Booking ID</th>
                             <th>Biển Số</th>
                             <th>Loại Xe</th>
                             <th>Tầng</th>
@@ -413,7 +413,7 @@ function ParkingSessionDetailPopup({ sessionId, onClose }) {
                         <>
                             <div className="sci-incident-detail-grid">
                                 <div className="sci-incident-detail-item">
-                                    <span className="sci-incident-detail-label">PID</span>
+                                    <span className="sci-incident-detail-label">Parking ID</span>
                                     <span className="sci-incident-detail-value">#{detail.id}</span>
                                 </div>
                                 <div className="sci-incident-detail-item">
@@ -421,7 +421,7 @@ function ParkingSessionDetailPopup({ sessionId, onClose }) {
                                     <span className="sci-incident-detail-value">{detail.sessionCode || '—'}</span>
                                 </div>
                                 <div className="sci-incident-detail-item">
-                                    <span className="sci-incident-detail-label">BID</span>
+                                    <span className="sci-incident-detail-label">Booking ID</span>
                                     <span className="sci-incident-detail-value">{detail.bookingId ?? '—'}</span>
                                 </div>
                                 <div className="sci-incident-detail-item">
