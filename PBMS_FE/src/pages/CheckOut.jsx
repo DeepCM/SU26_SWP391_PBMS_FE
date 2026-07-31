@@ -472,9 +472,9 @@ function CheckOut() {
             <div className="sci-detection-panel">
               <h3 className="sci-panel-heading">
                 Ảnh check-out nhận diện phương tiện và tài xế
-                {isCheckoutSessionActive && (
+                {/* {isCheckoutSessionActive && (
                   <span className="sci-session-badge">● Đang chờ...</span>
-                )}
+                )} */}
               </h3>
               <div className="sci-camera-row co-camera-col">
                 <div className="sci-camera-box">
